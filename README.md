@@ -7,8 +7,9 @@
 
 ## Description
 
-ozzo-validation is a Go package that provides configurable and extensible validation capabilities for data of
-various types. It has the following features:
+ozzo-validation is a Go package that provides configurable and extensible data validation capabilities.
+It uses programming constructs to specify how data should be validated rather than relying on struct tags,
+which makes your code more flexible and less error prone. ozzo-validation has the following features:
 
 * rule-based data validation that allows specifying a list of validation rules to validate a data value.
 * validation rules are declared via normal code constructs instead of error-prone struct tags.
@@ -31,49 +32,59 @@ Run the following command to install the package:
 go get github.com/go-ozzo/ozzo-validation
 ```
 
-## Getting Started
 
-Create a `main.go` file with the following content:
+## Validating Struct Values
+
+Struct validation is perhaps the most common use case for data validation. Typically, validation is needed
+after a struct is populated with the client-side data. You can use `validation.StructRules` to specify how
+struct fields should be validated, and then call `StructRules.Validate()` to perform validation when needed.
+For example,
 
 ```go
 package main
 
 import (
 	"fmt"
-
+	"regexp"
 	"github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/is"
 )
 
 type Customer struct {
-	FirstName string
-	LastName  string
-	Email     string
-	SSN       string
-}
-
-func (c Customer) Validate(attrs ...string) error {
-	return validation.StructRules{}.
-		Add("FirstName", validation.NotEmpty, validation.Length(0, 50)).
-		Add("LastName", validation.NotEmpty, validation.Length(0, 50)).
-		Add("Email", validation.NotEmpty, is.Email).
-		Add("SSN", validation.NotEmpty, is.SSN).
-		Validate(c, attrs...)
+	Name  string
+	Email string
+	Zip   string
 }
 
 func main() {
-	c := Customer{
-		FirstName: "Qiang",
-		Email:     "q",
-		SSN:       "123456",
-	}
+	rules := validation.StructRules{}.
+		Add("Name", validation.NotEmpty).
+		Add("Email", validation.NotEmpty, is.Email).
+		Add("Zip", validation.NotEmpty, validation.Match(regexp.MustCompile("^[0-9]{5}$")))
 
-	err := c.Validate() // alternatively, err := validation.Validate(c)
+	customer := Customer{}
+
+	// validates every field listed in rules
+	err := rules.Validate(customer)
 	fmt.Println(err)
-	// Output:
-	// Email: must be a valid email address; LastName: cannot be blank; SSN: must be a valid social security number.
+
+	// only validates Email and Zip
+	err = rules.Validate(customer, "Email", "Zip")
+	fmt.Println(err)
 }
 ```
+
+The method `StructRules.Add()` can be used to specify the rules for validating a particular struct field.
+A single field can be associated with multiple rules, and a single struct can have rules for multiple fields.
+
+When validation is performed, the fields are validated in the order they are added to `StructRules`, and for
+each field being validated, the rules are also executed in the order they are associated with the field.
+If a rule fails, an error is recorded for that field, and the validation will continue with the next field.
+
+The method `StructRules.Validate()` returns validation errors as `validation.Errors` which is a map of fields
+and their corresponding errors. Nil is returned if validation passes.
+
+
 
 ## Validating Simple Values
 
@@ -107,45 +118,6 @@ err := rules.Validate(data, nil)
 The method `Rules.Validate()` will run through the rules in the order they are declared. If a rule returns an error,
 it will return the error and skip the rest of the rules.
 
-## Validating Struct Values
-
-For struct values, validation rules may be declared using `validation.StructRules` which allows you to validate
-each individual struct field. For example,
-
-```go
-import (
-	"regexp"
-	"github.com/go-ozzo/ozzo-validation"
-	"github.com/go-ozzo/ozzo-validation/is"
-)
-
-type Address struct {
-	Street string
-	City   string
-	State  string
-	Zip    string
-}
-
-rules := validation.StructRules{}.
-	Add("Street", validation.NotEmpty).
-	Add("City", validation.NotEmpty).
-	Add("State", validation.NotEmpty, validation.Match(regexp.MustCompile("^[A-Z]{2}$"))).
-	Add("Zip", validation.NotEmpty, validation.Match(regexp.MustCompile("^[0-9]{5}$")))
-}
-```
-
-You can call `StructRules.Validate()` to validate a struct. Every field listed in `StructRules` will
-be validated. You can also specify a subset of the fields to be validated. For example,
-
-```go
-address := Customer{}
-
-// validates every field listed in rules
-err := rules.Validate(address, "State", "Zip")
-
-// only validates State and Zip
-err = rules.Validate(address, "State", "Zip")
-```
 
 ## Validating Maps, Slices, and Arrays
 
