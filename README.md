@@ -3,8 +3,7 @@
 [![GoDoc](https://godoc.org/github.com/go-ozzo/ozzo-validation?status.png)](http://godoc.org/github.com/go-ozzo/ozzo-validation)
 [![Build Status](https://travis-ci.org/go-ozzo/ozzo-validation.svg?branch=master)](https://travis-ci.org/go-ozzo/ozzo-validation)
 [![Coverage](http://gocover.io/_badge/github.com/go-ozzo/ozzo-validation)](http://gocover.io/github.com/go-ozzo/ozzo-validation)
-[![Go Report](http://goreportcard.com/badge/go-ozzo/ozzo-validation)](http://goreportcard.com/report/go-ozzo/ozzo-validation)
-
+[![Go Report](https://goreportcard.com/badge/github.com/go-ozzo/ozzo-validation)](https://goreportcard.com/report/github.com/go-ozzo/ozzo-validation)
 
 ## Description
 
