@@ -102,7 +102,7 @@ func TestLengthOfValue(t *testing.T) {
 }
 
 func TestIsEmpty(t *testing.T) {
-	var s1 string = ""
+	var s1 string
 	var s2 string = "a"
 	var s3 *string
 	s4 := struct{}{}

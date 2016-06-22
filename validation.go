@@ -130,7 +130,7 @@ func (r StructRules) Add(name string, rules ...Rule) StructRules {
 
 // Validate validates a struct or a pointer to a struct.
 // A list of attributes may be provided to specify which fields of the struct should be validated.
-func (rules StructRules) Validate(object interface{}, attrs ...string) Errors {
+func (r StructRules) Validate(object interface{}, attrs ...string) Errors {
 	// ensure object is a struct
 	value := reflect.ValueOf(object)
 	if value.Kind() == reflect.Interface || value.Kind() == reflect.Ptr {
@@ -147,7 +147,7 @@ func (rules StructRules) Validate(object interface{}, attrs ...string) Errors {
 
 	errs := Errors{}
 
-	for _, fieldRules := range rules {
+	for _, fieldRules := range r {
 		if len(attrs) > 0 {
 			found := false
 			for _, attr := range attrs {

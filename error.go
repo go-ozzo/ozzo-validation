@@ -23,7 +23,7 @@ func (es SliceErrors) Error() string {
 	}
 
 	keys := []int{}
-	for key, _ := range es {
+	for key := range es {
 		keys = append(keys, key)
 	}
 	sort.Ints(keys)
@@ -45,7 +45,7 @@ func (es Errors) Error() string {
 	}
 
 	keys := []string{}
-	for key, _ := range es {
+	for key := range es {
 		keys = append(keys, key)
 	}
 	sort.Strings(keys)

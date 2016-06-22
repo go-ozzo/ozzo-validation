@@ -28,7 +28,7 @@ var (
 	Digit = validation.NewStringRule(isDigit, "must contain digits only")
 	// Alphanumeric validates if a string contains English letters and digits only (a-zA-Z0-9)
 	Alphanumeric = validation.NewStringRule(govalidator.IsAlphanumeric, "must contain English letters and digits only")
-	// UTFLetterNumeric validates if a string contains unicode letters only
+	// UTFLetter validates if a string contains unicode letters only
 	UTFLetter = validation.NewStringRule(govalidator.IsUTFLetter, "must contain unicode letter characters only")
 	// UTFDigit validates if a string contains unicode decimal digits only
 	UTFDigit = validation.NewStringRule(govalidator.IsUTFDigit, "must contain unicode decimal digits only")

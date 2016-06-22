@@ -37,7 +37,7 @@ func (r *inRule) Validate(value interface{}, context interface{}) error {
 }
 
 // Error sets the error message for the rule.
-func (v *inRule) Error(message string) *inRule {
-	v.message = message
-	return v
+func (r *inRule) Error(message string) *inRule {
+	r.message = message
+	return r
 }
