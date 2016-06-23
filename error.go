@@ -40,7 +40,7 @@ func (es SliceErrors) Error() string {
 	return s + "."
 }
 
-// MarshalJSON converts the SliceErrors
+// MarshalJSON converts SliceErrors
 // into a valid JSON.
 func (es SliceErrors) MarshalJSON() ([]byte, error) {
 	errs := map[string]string{}
@@ -72,7 +72,7 @@ func (es Errors) Error() string {
 	return s + "."
 }
 
-// MarshalJSON converts the SliceErrors
+// MarshalJSON converts the Errors
 // into a valid JSON.
 func (es Errors) MarshalJSON() ([]byte, error) {
 	errs := map[string]string{}
