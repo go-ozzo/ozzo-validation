@@ -48,17 +48,19 @@ var (
 	validatableType = reflect.TypeOf((*Validatable)(nil)).Elem()
 )
 
-// Validate validates the given value and returns an error if validation fails.
+// Validate validates the given value and returns the validation error, if any.
 //
-// Validate will call the value's Validate() method if the value implements Validatable.
+// Validate only performs validation if
+// - the value being validated implements `Validatable`;
+// - or the value is a map, slice, or array of elements that implement `Validatable`.
+//
+// Nil is returned if no validation error or validation is not performed.
 //
 // If the value is an array, a slice, or a map, and its elements implement Validatable,
 // Validate will call Validate of every element and return the validation errors
-// in terms of SliceErrors or Errors.
+// in terms of SliceErrors (for slices and arrays) or Errors (for maps).
 //
 // A list of attributes may be specified when validating specific fields of a struct.
-//
-// Nil is returned if there is no validation error or no validation is performed.
 func Validate(value interface{}, attrs ...string) error {
 	if v, ok := value.(Validatable); ok {
 		return v.Validate(attrs...)
@@ -130,7 +132,8 @@ func (r StructRules) Add(name string, rules ...Rule) StructRules {
 
 // Validate validates a struct or a pointer to a struct.
 // A list of attributes may be provided to specify which fields of the struct should be validated.
-func (r StructRules) Validate(object interface{}, attrs ...string) Errors {
+// Nil is returned if there is no validation error.
+func (r StructRules) Validate(object interface{}, attrs ...string) error {
 	// ensure object is a struct
 	value := reflect.ValueOf(object)
 	if value.Kind() == reflect.Interface || value.Kind() == reflect.Ptr {

@@ -33,7 +33,7 @@ func (es SliceErrors) Error() string {
 		if i > 0 {
 			s += "; "
 		}
-		s += fmt.Sprintf("%v: %v", key, es[key].Error())
+		s += formatError(key, es[key])
 	}
 	return s + "."
 }
@@ -55,7 +55,16 @@ func (es Errors) Error() string {
 		if i > 0 {
 			s += "; "
 		}
-		s += fmt.Sprintf("%v: %v", key, es[key].Error())
+		s += formatError(key, es[key])
 	}
 	return s + "."
+}
+
+func formatError(key interface{}, err error) string {
+	switch err.(type) {
+	case SliceErrors, Errors:
+		return fmt.Sprintf("%v: (%v)", key, err.Error())
+	default:
+		return fmt.Sprintf("%v: %v", key, err.Error())
+	}
 }
