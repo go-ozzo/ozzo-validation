@@ -28,6 +28,16 @@ func TestErrors_Error(t *testing.T) {
 	assert.Equal(t, "", errs.Error())
 }
 
+func TestError_MarshalMessage(t *testing.T) {
+	errs := Errors{"A": errors.New("A1")}
+	errsJSON, err := errs.MarshalJSON()
+	if err != nil {
+		t.Error("Failed to marshal Errors.")
+	}
+
+	assert.Equal(t, "{\"A\":\"A1\"}", string(errsJSON))
+}
+
 func TestSliceErrors_Error(t *testing.T) {
 	errs := SliceErrors{
 		3: errors.New("B1"),
@@ -43,4 +53,14 @@ func TestSliceErrors_Error(t *testing.T) {
 
 	errs = SliceErrors{}
 	assert.Equal(t, "", errs.Error())
+}
+
+func TestSliceError_MarshalMessage(t *testing.T) {
+	errs := SliceErrors{0: errors.New("A1")}
+	errsJSON, err := errs.MarshalJSON()
+	if err != nil {
+		t.Error("Failed to marshal Errors.")
+	}
+
+	assert.Equal(t, "{\"0\":\"A1\"}", string(errsJSON))
 }

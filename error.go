@@ -5,8 +5,10 @@
 package validation
 
 import (
+	"encoding/json"
 	"fmt"
 	"sort"
+	"strconv"
 )
 
 type (
@@ -38,6 +40,16 @@ func (es SliceErrors) Error() string {
 	return s + "."
 }
 
+// MarshalJSON converts the SliceErrors
+// into a valid JSON.
+func (es SliceErrors) MarshalJSON() ([]byte, error) {
+	errs := map[string]string{}
+	for key := range es {
+		errs[strconv.Itoa(key)] = es[key].Error()
+	}
+	return json.Marshal(errs)
+}
+
 // Error returns the error string of Errors.
 func (es Errors) Error() string {
 	if len(es) == 0 {
@@ -58,6 +70,16 @@ func (es Errors) Error() string {
 		s += formatError(key, es[key])
 	}
 	return s + "."
+}
+
+// MarshalJSON converts the SliceErrors
+// into a valid JSON.
+func (es Errors) MarshalJSON() ([]byte, error) {
+	errs := map[string]string{}
+	for key := range es {
+		errs[key] = es[key].Error()
+	}
+	return json.Marshal(errs)
 }
 
 func formatError(key interface{}, err error) string {
