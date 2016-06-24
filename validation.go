@@ -43,6 +43,9 @@ type (
 )
 
 var (
+	// ErrorTag is the struct tag name used to customize the error field name for a struct field.
+	ErrorTag = "validation"
+
 	// Skip is a special validation rule that indicates all rules following it should be skipped.
 	Skip = &skipRule{}
 
@@ -166,7 +169,12 @@ func (r StructRules) Validate(object interface{}, attrs ...string) error {
 		}
 
 		if err := fieldRules.validate(value, object, attrs); err != nil {
-			errs[fieldRules.Field] = err
+			ft, _ := value.Type().FieldByName(fieldRules.Field)
+			if tag := ft.Tag.Get(ErrorTag); tag != "" {
+				errs[tag] = err
+			} else {
+				errs[fieldRules.Field] = err
+			}
 		}
 	}
 

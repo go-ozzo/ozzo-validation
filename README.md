@@ -16,6 +16,7 @@ which makes your code more flexible and less error prone. ozzo-validation has th
 * can validate data of different types, e.g., structs, strings, byte slices, slices, maps, arrays.
 * can validate custom data types as long as they implement the `Validatable` interface.
 * support validating selective struct fields.
+* customizable and well-formatted validation errors.
 * provide a rich set of validation rules right out of box.
 * extremely easy to create and use custom validation rules.
 
@@ -209,6 +210,23 @@ All validation methods return an `error` when validation fails. The `error` may 
 if the value being validated is a struct, a map/slice/array of validatables. `validation.Errors` implements both
 `error` and `json.Marshaler` interfaces and can return a well-formatted text or JSON string.
 
+By default, `validation.Errors` uses struct field names as its keys when the validation errors come from a struct.
+You can customize the key names using struct tags named `validation`. For example,
+
+```go
+type Address struct {
+	Street string `validation:"street"`
+	City   string `validation:"city"`
+	State  string `validation:"state"`
+	Zip    string `validation:"zip"`
+}
+```
+
+This could be useful if you are using snake case or camelCase in your JSON responses.
+
+You may even customize the tag name by changing `validation.ErrorTag` so that you can reuse other tags you set
+for struct fields (e.g. `json`) without adding a new tag for every needed field.
+
 
 ## Required vs. Not Empty
 
@@ -232,6 +250,7 @@ The following rules are provided in the `validation` package:
   This rule should only be used for strings and byte slices.
 * `NotEmpty`: checks if a value is not empty (neither nil nor zero)
 * `Required`: checks if a value is entered (not nil)
+* `Skip`: this is a special rule used to indicate that all rules following it should be skipped (including the nested ones).
 
 The `is` sub-package provides a list of commonly used string validation rules that can be used to check if the format
 of a value satisfies certain requirements. Note that these rules only handle strings and byte slices and if a string
@@ -296,7 +315,7 @@ of the rules, e.g.,
 
 ```go
 rules := validation.Rules{
-	validation.NotEmpty,          // not empty
+	validation.NotEmpty.Error("is required"),
 	validation.Match(regexp.MustCompile("^[0-9]{5}$")).Error("must be a string with five digits"),
 }
 

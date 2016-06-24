@@ -102,6 +102,8 @@ func TestStructRules_Validate(t *testing.T) {
 		{"t10", (*Model1)(nil), StructRules{}.Add("A", &validateAbc{}), nil, ""},
 		// non-struct
 		{"t11", 123, StructRules{}.Add("A", &validateAbc{}), nil, "_: only struct or pointer to struct can be validated."},
+		// struct tag
+		{"t12", Model1{G: "xyz"}, StructRules{}.Add("G", &validateAbc{}), nil, "g: error abc."},
 	}
 	for _, test := range tests {
 		err := test.rules.Validate(test.model, test.attrs...)
@@ -201,6 +203,7 @@ type Model1 struct {
 	D *string
 	E String123
 	F *String123
+	G string `validation:"g"`
 }
 
 type String123 string
