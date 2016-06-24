@@ -29,13 +29,15 @@ func TestErrors_Error(t *testing.T) {
 }
 
 func TestError_MarshalMessage(t *testing.T) {
-	errs := Errors{"A": errors.New("A1")}
-	errsJSON, err := errs.MarshalJSON()
-	if err != nil {
-		t.Error("Failed to marshal Errors.")
+	errs := Errors{
+		"A": errors.New("A1"),
+		"B": SliceErrors{
+			2: errors.New("B1"),
+		},
 	}
-
-	assert.Equal(t, "{\"A\":\"A1\"}", string(errsJSON))
+	errsJSON, err := errs.MarshalJSON()
+	assert.Nil(t, err)
+	assert.Equal(t, "{\"A\":\"A1\",\"B\":{\"2\":\"B1\"}}", string(errsJSON))
 }
 
 func TestSliceErrors_Error(t *testing.T) {
@@ -56,11 +58,13 @@ func TestSliceErrors_Error(t *testing.T) {
 }
 
 func TestSliceError_MarshalMessage(t *testing.T) {
-	errs := SliceErrors{0: errors.New("A1")}
-	errsJSON, err := errs.MarshalJSON()
-	if err != nil {
-		t.Error("Failed to marshal Errors.")
+	errs := SliceErrors{
+		2: Errors{
+			"B": errors.New("B1"),
+		},
+		0: errors.New("A1"),
 	}
-
-	assert.Equal(t, "{\"0\":\"A1\"}", string(errsJSON))
+	errsJSON, err := errs.MarshalJSON()
+	assert.Nil(t, err)
+	assert.Equal(t, "{\"0\":\"A1\",\"2\":{\"B\":\"B1\"}}", string(errsJSON))
 }

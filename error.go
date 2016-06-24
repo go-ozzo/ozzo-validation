@@ -40,12 +40,15 @@ func (es SliceErrors) Error() string {
 	return s + "."
 }
 
-// MarshalJSON converts SliceErrors
-// into a valid JSON.
+// MarshalJSON converts SliceErrors into a valid JSON.
 func (es SliceErrors) MarshalJSON() ([]byte, error) {
-	errs := map[string]string{}
-	for key := range es {
-		errs[strconv.Itoa(key)] = es[key].Error()
+	errs := map[string]interface{}{}
+	for key, err := range es {
+		if ms, ok := err.(json.Marshaler); ok {
+			errs[strconv.Itoa(key)] = ms
+		} else {
+			errs[strconv.Itoa(key)] = err.Error()
+		}
 	}
 	return json.Marshal(errs)
 }
@@ -72,12 +75,15 @@ func (es Errors) Error() string {
 	return s + "."
 }
 
-// MarshalJSON converts the Errors
-// into a valid JSON.
+// MarshalJSON converts the Errors into a valid JSON.
 func (es Errors) MarshalJSON() ([]byte, error) {
-	errs := map[string]string{}
-	for key := range es {
-		errs[key] = es[key].Error()
+	errs := map[string]interface{}{}
+	for key, err := range es {
+		if ms, ok := err.(json.Marshaler); ok {
+			errs[key] = ms
+		} else {
+			errs[key] = err.Error()
+		}
 	}
 	return json.Marshal(errs)
 }
