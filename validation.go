@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strconv"
 )
 
 type (
@@ -58,7 +59,7 @@ var (
 //
 // If the value is an array, a slice, or a map, and its elements implement Validatable,
 // Validate will call Validate of every element and return the validation errors
-// in terms of SliceErrors (for slices and arrays) or Errors (for maps).
+// in terms of Errors.
 //
 // A list of attributes may be specified when validating specific fields of a struct.
 func Validate(value interface{}, attrs ...string) error {
@@ -86,12 +87,12 @@ func Validate(value interface{}, attrs ...string) error {
 			return errs
 		}
 	} else if (rk == reflect.Slice || rk == reflect.Array) && rt.Elem().Implements(validatableType) {
-		errs := SliceErrors{}
+		errs := Errors{}
 		l := rv.Len()
 		for i := 0; i < l; i++ {
 			if ev := rv.Index(i).Interface(); ev != nil {
 				if err := ev.(Validatable).Validate(attrs...); err != nil {
-					errs[i] = err
+					errs[strconv.Itoa(i)] = err
 				}
 			}
 		}

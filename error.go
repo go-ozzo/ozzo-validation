@@ -8,50 +8,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"sort"
-	"strconv"
 )
 
 type (
-	// Errors represents the validation errors for a struct object. The keys are the struct field names.
+	// Errors represents the validation errors that are indexed by struct field names, map or slice keys.
 	Errors map[string]error
-	// SliceErrors represents the validation errors for a slice. The keys are the indices of the slice elements having errors.
-	SliceErrors map[int]error
 )
-
-// Error returns the error string of SliceErrors.
-func (es SliceErrors) Error() string {
-	if len(es) == 0 {
-		return ""
-	}
-
-	keys := []int{}
-	for key := range es {
-		keys = append(keys, key)
-	}
-	sort.Ints(keys)
-
-	s := ""
-	for i, key := range keys {
-		if i > 0 {
-			s += "; "
-		}
-		s += formatError(key, es[key])
-	}
-	return s + "."
-}
-
-// MarshalJSON converts SliceErrors into a valid JSON.
-func (es SliceErrors) MarshalJSON() ([]byte, error) {
-	errs := map[string]interface{}{}
-	for key, err := range es {
-		if ms, ok := err.(json.Marshaler); ok {
-			errs[strconv.Itoa(key)] = ms
-		} else {
-			errs[strconv.Itoa(key)] = err.Error()
-		}
-	}
-	return json.Marshal(errs)
-}
 
 // Error returns the error string of Errors.
 func (es Errors) Error() string {
@@ -70,7 +32,11 @@ func (es Errors) Error() string {
 		if i > 0 {
 			s += "; "
 		}
-		s += formatError(key, es[key])
+		if errs, ok := es[key].(Errors); ok {
+			s += fmt.Sprintf("%v: (%v)", key, errs)
+		} else {
+			s += fmt.Sprintf("%v: %v", key, es[key].Error())
+		}
 	}
 	return s + "."
 }
@@ -86,13 +52,4 @@ func (es Errors) MarshalJSON() ([]byte, error) {
 		}
 	}
 	return json.Marshal(errs)
-}
-
-func formatError(key interface{}, err error) string {
-	switch err.(type) {
-	case SliceErrors, Errors:
-		return fmt.Sprintf("%v: (%v)", key, err.Error())
-	default:
-		return fmt.Sprintf("%v: %v", key, err.Error())
-	}
 }
