@@ -70,13 +70,13 @@ type Customer struct {
 func (a Address) Validate(attrs ...string) error {
 	return validation.StructRules{}.
 		// Street cannot be empty, and the length must between 5 and 50
-		Add("Street", validation.NotEmpty, validation.Length(5, 50)).
+		Add("Street", validation.Required, validation.Length(5, 50)).
 		// City cannot be empty, and the length must between 5 and 50
-		Add("City", validation.NotEmpty, validation.Length(5, 50)).
+		Add("City", validation.Required, validation.Length(5, 50)).
 		// State cannot be empty, and must be a string consisting of two letters in upper case
-		Add("State", validation.NotEmpty, validation.Match(regexp.MustCompile("^[A-Z]{2}$"))).
+		Add("State", validation.Required, validation.Match(regexp.MustCompile("^[A-Z]{2}$"))).
 		// State cannot be empty, and must be a string consisting of five digits
-		Add("Zip", validation.NotEmpty, validation.Match(regexp.MustCompile("^[0-9]{5}$"))).
+		Add("Zip", validation.Required, validation.Match(regexp.MustCompile("^[0-9]{5}$"))).
 		// performs validation
 		Validate(a, attrs...)
 }
@@ -84,11 +84,11 @@ func (a Address) Validate(attrs ...string) error {
 func (c Customer) Validate(attrs ...string) error {
 	return validation.StructRules{}.
 		// Name cannot be empty, and the length must be between 5 and 20.
-		Add("Name", validation.NotEmpty, validation.Length(5, 20)).
+		Add("Name", validation.Required, validation.Length(5, 20)).
 		// Gender is optional, and should be either "Female" or "Male".
 		Add("Gender", validation.In("Female", "Male")).
 		// Email cannot be empty and should be in a valid email format.
-		Add("Email", validation.NotEmpty, is.Email).
+		Add("Email", validation.Required, is.Email).
 		// Validate Address using its own validation rules
 		Add("Address").
 		// performs validation
@@ -161,7 +161,7 @@ which represents a list of validation rules and calling `Rules.Validate()`. For 
 
 ```go
 rules := validation.Rules{
-	validation.NotEmpty,          // not empty
+	validation.Required,          // not empty
 	validation.Length(5, 100),    // length between 5 and 100
 	is.URL,                       // is a valid URL
 }
@@ -201,7 +201,7 @@ fmt.Println(err)
 When a value being validated is a pointer, most validation rules will validate the actual value pointed to by the pointer.
 If the pointer is nil, these rules will skip the validation.
 
-An exception is the `validation.Required` and `validation.NotEmpty` rules. When a pointer is nil, they
+An exception is the `validation.Required` and `validation.Required` rules. When a pointer is nil, they
 will report a validation error.
 
 ## Processing Validation Errors
@@ -228,16 +228,16 @@ You may even customize the tag name by changing `validation.ErrorTag` so that yo
 for struct fields (e.g. `json`) without adding a new tag for every needed field.
 
 
-## Required vs. Not Empty
+## Required vs. Not Nil
 
 When validating input values, there are two different scenarios about checking if input values are provided or not.
 
 In the first scenario, an input value is considered missing if it is not entered or it is entered as a zero value
-(e.g. an empty string, a zero integer). You can use the `validation.NotEmpty` rule in this case.
+(e.g. an empty string, a zero integer). You can use the `validation.Required` rule in this case.
 
 In the second scenario, an input value is considered missing only if it is not entered. A pointer field is usually
 used in this case so that you can detect if a value is entered or not by checking if the pointer is nil or not.
-You can use the `validation.Required` rule to ensure a value is entered (even if it is a zero value).
+You can use the `validation.NotNil` rule to ensure a value is entered (even if it is a zero value).
 
 ## Built-in Validation Rules
 
@@ -248,13 +248,13 @@ The following rules are provided in the `validation` package:
   This rule should only be used for validating strings, slices, maps, and arrays.
 * `Match(*regexp.Regexp)`: checks if a value matches the specified regular expression.
   This rule should only be used for strings and byte slices.
-* `NotEmpty`: checks if a value is not empty (neither nil nor zero)
-* `Required`: checks if a value is entered (not nil)
+* `Required`: checks if a value is not empty (neither nil nor zero).
+* `NotNil`: checks if a pointer value is not nil. Non-pointer values are considered valid.
 * `Skip`: this is a special rule used to indicate that all rules following it should be skipped (including the nested ones).
 
 The `is` sub-package provides a list of commonly used string validation rules that can be used to check if the format
 of a value satisfies certain requirements. Note that these rules only handle strings and byte slices and if a string
- or byte slice is empty, it is considered valid. You may use a `NotEmpty` rule to ensure a value is not empty.
+ or byte slice is empty, it is considered valid. You may use a `Required` rule to ensure a value is not empty.
 Below is the whole list of the rules provided by the `is` package:
 
 * `Email`: validates if a string is an email or not
@@ -315,7 +315,7 @@ of the rules, e.g.,
 
 ```go
 rules := validation.Rules{
-	validation.NotEmpty.Error("is required"),
+	validation.Required.Error("is required"),
 	validation.Match(regexp.MustCompile("^[0-9]{5}$")).Error("must be a string with five digits"),
 }
 

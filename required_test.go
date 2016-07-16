@@ -10,28 +10,18 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type MyInterface interface {
-	Hello()
-}
-
 func TestRequired(t *testing.T) {
-	var v1 []int
-	var v2 map[string]int
-	var v3 *int
-	var v4 interface{}
-	var v5 MyInterface
+	s1 := "123"
+	s2 := ""
 	tests := []struct {
 		tag   string
 		value interface{}
 		err   string
 	}{
-		{"t1", v1, "is required"},
-		{"t2", v2, "is required"},
-		{"t3", v3, "is required"},
-		{"t4", v4, "is required"},
-		{"t5", v5, "is required"},
-		{"t6", "", ""},
-		{"t7", 0, ""},
+		{"t1", 123, ""},
+		{"t2", "", "cannot be blank"},
+		{"t3", &s1, ""},
+		{"t4", &s2, "cannot be blank"},
 	}
 
 	for _, test := range tests {
@@ -43,8 +33,8 @@ func TestRequired(t *testing.T) {
 
 func Test_requiredRule_Error(t *testing.T) {
 	r := Required
-	assert.Equal(t, "is required", r.message)
+	assert.Equal(t, "cannot be blank", r.message)
 	r2 := r.Error("123")
-	assert.Equal(t, "is required", r.message)
+	assert.Equal(t, "cannot be blank", r.message)
 	assert.Equal(t, "123", r2.message)
 }

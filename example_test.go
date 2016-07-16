@@ -25,24 +25,24 @@ type Customer struct {
 func (a Address) Validate(attrs ...string) error {
 	return validation.StructRules{}.
 		// Street cannot be empty, and the length must between 5 and 50
-		Add("Street", validation.NotEmpty, validation.Length(5, 50)).
+		Add("Street", validation.Required, validation.Length(5, 50)).
 		// City cannot be empty, and the length must between 5 and 50
-		Add("City", validation.NotEmpty, validation.Length(5, 50)).
+		Add("City", validation.Required, validation.Length(5, 50)).
 		// State cannot be empty, and must be a string consisting of two letters in upper case
-		Add("State", validation.NotEmpty, validation.Match(regexp.MustCompile("^[A-Z]{2}$"))).
+		Add("State", validation.Required, validation.Match(regexp.MustCompile("^[A-Z]{2}$"))).
 		// State cannot be empty, and must be a string consisting of five digits
-		Add("Zip", validation.NotEmpty, validation.Match(regexp.MustCompile("^[0-9]{5}$"))).
+		Add("Zip", validation.Required, validation.Match(regexp.MustCompile("^[0-9]{5}$"))).
 		Validate(a, attrs...)
 }
 
 func (c Customer) Validate(attrs ...string) error {
 	return validation.StructRules{}.
 		// Name cannot be empty, and the length must be between 5 and 20.
-		Add("Name", validation.NotEmpty, validation.Length(5, 20)).
+		Add("Name", validation.Required, validation.Length(5, 20)).
 		// Gender is optional, and should be either "Female" or "Male".
 		Add("Gender", validation.In("Female", "Male")).
 		// Email cannot be empty and should be in a valid email format.
-		Add("Email", validation.NotEmpty, is.Email).
+		Add("Email", validation.Required, is.Email).
 		// Validate Address using its own validation rules
 		Add("Address").
 		Validate(c, attrs...)
@@ -68,7 +68,7 @@ func Example() {
 
 func Example_second() {
 	rules := validation.Rules{
-		validation.NotEmpty,       // not empty
+		validation.Required,       // not empty
 		validation.Length(5, 100), // length between 5 and 100
 		is.URL, // is a valid URL
 	}
