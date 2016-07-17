@@ -8,7 +8,7 @@ import "errors"
 
 // In returns a validation rule that checks if a value can be found in the given list of values.
 // Note that the value being checked and the possible range of values must be of the same type.
-// An empty value is considered valid. Use the NotEmpty rule to make sure a value is not empty.
+// An empty value is considered valid. Use the Required rule to make sure a value is not empty.
 func In(values ...interface{}) *inRule {
 	return &inRule{
 		elements: values,
@@ -24,7 +24,7 @@ type inRule struct {
 // Validate checks if the given value is valid or not.
 func (r *inRule) Validate(value interface{}, context interface{}) error {
 	value, isNil := Indirect(value)
-	if isNil {
+	if isNil || IsEmpty(value) {
 		return nil
 	}
 

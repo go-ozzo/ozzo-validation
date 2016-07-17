@@ -31,10 +31,24 @@ func TestStringValidator_Error(t *testing.T) {
 func TestStringValidator_Validate(t *testing.T) {
 	v := NewStringRule(validateMe, "wrong")
 
-	err := v.Validate("me", nil)
+	value := "me"
+
+	err := v.Validate(value, nil)
 	assert.Nil(t, err)
 
-	err = v.Validate("", nil)
+	err = v.Validate(&value, nil)
+	assert.Nil(t, err)
+
+	value = ""
+
+	err = v.Validate(value, nil)
+	assert.Nil(t, err)
+
+	err = v.Validate(&value, nil)
+	assert.Nil(t, err)
+
+	var s *string
+	err = v.Validate(s, nil)
 	assert.Nil(t, err)
 
 	err = v.Validate("not me", nil)

@@ -12,7 +12,7 @@ import (
 // Length returns a validation rule that checks if a value's length is within the specified range.
 // If max is 0, it means there is no upper bound for the length.
 // This rule should only be used for validating strings, slices, maps, and arrays.
-// A nil pointer is considered valid. Use the NotNil rule to make sure a value is not nil.
+// An empty value is considered valid. Use the Required rule to make sure a value is not empty.
 func Length(min, max int) *lengthRule {
 	message := "the value must be empty"
 	if min == 0 && max > 0 {
@@ -37,7 +37,7 @@ type lengthRule struct {
 // Validate checks if the given value is valid or not.
 func (v *lengthRule) Validate(value interface{}, context interface{}) error {
 	value, isNil := Indirect(value)
-	if isNil {
+	if isNil || IsEmpty(value) {
 		return nil
 	}
 

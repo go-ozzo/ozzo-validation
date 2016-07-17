@@ -110,7 +110,7 @@ func main() {
 	err := validation.Validate(c) // or alternatively, err := c.Validate()
 	fmt.Println(err)
 	// Output:
-	// Address: (State: must be in a valid format.); Email: must be a valid email address; Gender: must be a valid value.
+	// Address: (State: must be in a valid format.); Email: must be a valid email address.
 }
 ```
 

@@ -19,6 +19,7 @@ func TestIn(t *testing.T) {
 		value  interface{}
 		err    string
 	}{
+		{"t0", []interface{}{1, 2}, 0, ""},
 		{"t1", []interface{}{1, 2}, 1, ""},
 		{"t2", []interface{}{1, 2}, 2, ""},
 		{"t3", []interface{}{1, 2}, 3, "must be a valid value"},

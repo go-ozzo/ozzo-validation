@@ -76,7 +76,11 @@ func TestAll(t *testing.T) {
 		assert.Nil(t, err, test.tag)
 		err = test.rule.Validate(test.valid, nil)
 		assert.Nil(t, err, test.tag)
+		err = test.rule.Validate(&test.valid, nil)
+		assert.Nil(t, err, test.tag)
 		err = test.rule.Validate(test.invalid, nil)
+		assertError(t, test.err, err, test.tag)
+		err = test.rule.Validate(&test.invalid, nil)
 		assertError(t, test.err, err, test.tag)
 	}
 }

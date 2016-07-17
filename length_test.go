@@ -19,7 +19,7 @@ func TestLength(t *testing.T) {
 		err      string
 	}{
 		{"t1", 2, 4, "abc", ""},
-		{"t2", 2, 4, "", "the length must be between 2 and 4"},
+		{"t2", 2, 4, "", ""},
 		{"t3", 2, 4, "abcdf", "the length must be between 2 and 4"},
 		{"t4", 0, 4, "ab", ""},
 		{"t5", 0, 4, "abcde", "the length must be no more than 4"},
