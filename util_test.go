@@ -7,6 +7,8 @@ package validation
 import (
 	"testing"
 
+	"database/sql"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -183,6 +185,14 @@ func TestIndirect(t *testing.T) {
 		{"t2", &a, 100, false},
 		{"t3", b, nil, true},
 		{"t4", nil, nil, true},
+		{"t5", sql.NullInt64{0, false}, nil, true},
+		{"t6", sql.NullInt64{1, false}, nil, true},
+		{"t7", &sql.NullInt64{0, false}, nil, true},
+		{"t8", &sql.NullInt64{1, false}, nil, true},
+		{"t9", sql.NullInt64{0, true}, int64(0), false},
+		{"t10", sql.NullInt64{1, true}, int64(1), false},
+		{"t11", &sql.NullInt64{0, true}, int64(0), false},
+		{"t12", &sql.NullInt64{1, true}, int64(1), false},
 	}
 
 	for _, test := range tests {

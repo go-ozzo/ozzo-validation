@@ -6,11 +6,9 @@ package validation
 
 import (
 	"errors"
-	"testing"
-
-	"strings"
-
 	"reflect"
+	"strings"
+	"testing"
 
 	"github.com/stretchr/testify/assert"
 )

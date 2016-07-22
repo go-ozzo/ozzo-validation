@@ -15,6 +15,7 @@ which makes your code more flexible and less error prone. ozzo-validation has th
 * validation rules are declared via normal programming constructs instead of error-prone struct tags.
 * can validate data of different types, e.g., structs, strings, byte slices, slices, maps, arrays.
 * can validate custom data types as long as they implement the `Validatable` interface.
+* support validating data types that implement the `sql.Valuer` interface (e.g. `sql.NullString`).
 * support validating selective struct fields.
 * customizable and well-formatted validation errors.
 * provide a rich set of validation rules right out of box.
@@ -203,6 +204,14 @@ If the pointer is nil, these rules will skip the validation.
 
 An exception is the `validation.Required` and `validation.Required` rules. When a pointer is nil, they
 will report a validation error.
+
+
+## Validating `sql.Valuer`
+
+If a data type implements the `sql.Valuer` interface (e.g. `sql.NullString`), the built-in validation rules will handle
+it properly. In particular, when a rule is validating such data, it will cause the `Value()` method and validate
+the returned value instead.
+
 
 ## Processing Validation Errors
 

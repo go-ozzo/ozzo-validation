@@ -7,6 +7,8 @@ package validation
 import (
 	"testing"
 
+	"database/sql"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -45,6 +47,14 @@ func TestStringValidator_Validate(t *testing.T) {
 	assert.Nil(t, err)
 
 	err = v.Validate(&value, nil)
+	assert.Nil(t, err)
+
+	nullValue := sql.NullString{"me", true}
+	err = v.Validate(nullValue, nil)
+	assert.Nil(t, err)
+
+	nullValue = sql.NullString{"", true}
+	err = v.Validate(nullValue, nil)
 	assert.Nil(t, err)
 
 	var s *string

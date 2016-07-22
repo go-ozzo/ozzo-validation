@@ -5,12 +5,16 @@
 package validation
 
 import (
+	"database/sql/driver"
 	"errors"
 	"fmt"
 	"reflect"
 )
 
-var typeOfBytes = reflect.TypeOf([]byte(nil))
+var (
+	bytesType  = reflect.TypeOf([]byte(nil))
+	valuerType = reflect.TypeOf((*driver.Valuer)(nil)).Elem()
+)
 
 // EnsureString ensures the given value is a string.
 // If the value is a byte slice, it will be typecast into a string.
@@ -20,7 +24,7 @@ func EnsureString(value interface{}) (string, error) {
 	if v.Kind() == reflect.String {
 		return v.String(), nil
 	}
-	if v.Type() == typeOfBytes {
+	if v.Type() == bytesType {
 		return string(v.Interface().([]byte)), nil
 	}
 	return "", errors.New("must be either a string or byte slice")
@@ -33,7 +37,7 @@ func StringOrBytes(value interface{}) (isString bool, str string, isBytes bool, 
 	if v.Kind() == reflect.String {
 		str = v.String()
 		isString = true
-	} else if v.Kind() == reflect.Slice && v.Type() == typeOfBytes {
+	} else if v.Kind() == reflect.Slice && v.Type() == bytesType {
 		bs = v.Interface().([]byte)
 		isBytes = true
 	}
@@ -84,15 +88,49 @@ func IsEmpty(value interface{}) bool {
 }
 
 // Indirect returns the value that the given interface or pointer references to.
-// A boolean value is also returned indicating if the value is nil or not.
+// If the value implements driver.Valuer, it will deal with the value returned by
+// the Value() method instead. A boolean value is also returned to indicate if
+// the value is nil or not (only applicable to interface, pointer, map, and slice).
 // If the value is neither an interface nor a pointer, it will be returned back.
 func Indirect(value interface{}) (interface{}, bool) {
 	rv := reflect.ValueOf(value)
-	if rv.Kind() == reflect.Interface || rv.Kind() == reflect.Ptr {
+	if !rv.IsValid() {
+		return nil, true
+	}
+
+	if rv.Type().Implements(valuerType) {
+		var isNil bool
+		value, isNil = indirectValuer(value.(driver.Valuer))
+		if isNil {
+			return nil, true
+		}
+		rv = reflect.ValueOf(value)
+	}
+
+	switch rv.Kind() {
+	case reflect.Interface, reflect.Ptr:
 		if rv.IsNil() {
 			return nil, true
 		}
 		return rv.Elem().Interface(), false
+	case reflect.Slice, reflect.Map:
+		if rv.IsNil() {
+			return nil, true
+		}
+	case reflect.Invalid:
+		return nil, true
 	}
-	return value, !rv.IsValid()
+
+	return value, false
+}
+
+func indirectValuer(valuer driver.Valuer) (interface{}, bool) {
+	if valuer == nil {
+		return nil, true
+	}
+	value, err := valuer.Value()
+	if value == nil || err != nil {
+		return nil, true
+	}
+	return value, false
 }

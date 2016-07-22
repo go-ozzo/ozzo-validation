@@ -21,7 +21,8 @@ type requiredRule struct {
 
 // Validate checks if the given value is valid or not.
 func (v *requiredRule) Validate(value interface{}, context interface{}) error {
-	if IsEmpty(value) {
+	value, isNil := Indirect(value)
+	if isNil || IsEmpty(value) {
 		return errors.New(v.message)
 	}
 	return nil

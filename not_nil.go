@@ -4,10 +4,7 @@
 
 package validation
 
-import (
-	"errors"
-	"reflect"
-)
+import "errors"
 
 // NotNil is a validation rule that checks if a value is not nil.
 // NotNil only handles types including interface, pointer, slice, and map.
@@ -20,13 +17,8 @@ type notNilRule struct {
 
 // Validate checks if the given value is valid or not.
 func (r *notNilRule) Validate(value interface{}, context interface{}) error {
-	v := reflect.ValueOf(value)
-	switch v.Kind() {
-	case reflect.Interface, reflect.Ptr, reflect.Slice, reflect.Map:
-		if v.IsNil() {
-			return errors.New(r.message)
-		}
-	case reflect.Invalid:
+	_, isNil := Indirect(value)
+	if isNil {
 		return errors.New(r.message)
 	}
 	return nil
