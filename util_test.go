@@ -174,7 +174,6 @@ func TestIsEmpty(t *testing.T) {
 func TestIndirect(t *testing.T) {
 	var a int = 100
 	var b *int
-	var c *sql.NullInt64
 
 	tests := []struct {
 		tag    string
@@ -194,7 +193,6 @@ func TestIndirect(t *testing.T) {
 		{"t10", sql.NullInt64{1, true}, int64(1), false},
 		{"t11", &sql.NullInt64{0, true}, int64(0), false},
 		{"t12", &sql.NullInt64{1, true}, int64(1), false},
-		{"t13", c, nil, true},
 	}
 
 	for _, test := range tests {

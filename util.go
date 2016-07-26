@@ -94,31 +94,43 @@ func IsEmpty(value interface{}) bool {
 // If the value is neither an interface nor a pointer, it will be returned back.
 func Indirect(value interface{}) (interface{}, bool) {
 	rv := reflect.ValueOf(value)
-	kind := rv.Kind()
-	switch kind {
-	case reflect.Invalid:
+	if !rv.IsValid() {
 		return nil, true
-	case reflect.Ptr, reflect.Interface:
-		if rv.IsNil() {
-			return nil, true
-		}
-		return Indirect(rv.Elem().Interface())
-	case reflect.Slice, reflect.Map, reflect.Func, reflect.Chan:
-		if rv.IsNil() {
-			return nil, true
-		}
 	}
 
 	if rv.Type().Implements(valuerType) {
-		return indirectValuer(value.(driver.Valuer))
+		var isNil bool
+		value, isNil = indirectValuer(value.(driver.Valuer))
+		if isNil {
+			return nil, true
+		}
+		rv = reflect.ValueOf(value)
+	}
+
+	switch rv.Kind() {
+	case reflect.Interface, reflect.Ptr:
+		if rv.IsNil() {
+			return nil, true
+		}
+		return rv.Elem().Interface(), false
+	case reflect.Slice, reflect.Map:
+		if rv.IsNil() {
+			return nil, true
+		}
+	case reflect.Invalid:
+		return nil, true
 	}
 
 	return value, false
 }
 
 func indirectValuer(valuer driver.Valuer) (interface{}, bool) {
-	if value, err := valuer.Value(); value != nil && err == nil {
-		return Indirect(value)
+	if valuer == nil {
+		return nil, true
 	}
-	return nil, true
+	value, err := valuer.Value()
+	if value == nil || err != nil {
+		return nil, true
+	}
+	return value, false
 }

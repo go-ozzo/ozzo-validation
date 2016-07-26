@@ -22,7 +22,7 @@ type Customer struct {
 	Address Address
 }
 
-func (a Address) Validate() error {
+func (a Address) Validate(attrs ...string) error {
 	return validation.StructRules{}.
 		// Street cannot be empty, and the length must between 5 and 50
 		Add("Street", validation.Required, validation.Length(5, 50)).
@@ -32,10 +32,10 @@ func (a Address) Validate() error {
 		Add("State", validation.Required, validation.Match(regexp.MustCompile("^[A-Z]{2}$"))).
 		// State cannot be empty, and must be a string consisting of five digits
 		Add("Zip", validation.Required, validation.Match(regexp.MustCompile("^[0-9]{5}$"))).
-		Validate(a)
+		Validate(a, attrs...)
 }
 
-func (c Customer) Validate() error {
+func (c Customer) Validate(attrs ...string) error {
 	return validation.StructRules{}.
 		// Name cannot be empty, and the length must be between 5 and 20.
 		Add("Name", validation.Required, validation.Length(5, 20)).
@@ -45,7 +45,7 @@ func (c Customer) Validate() error {
 		Add("Email", validation.Required, is.Email).
 		// Validate Address using its own validation rules
 		Add("Address").
-		Validate(c)
+		Validate(c, attrs...)
 }
 
 func Example() {

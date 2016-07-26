@@ -16,7 +16,9 @@ type (
 	// Validatable is the interface indicating the type implementing it supports data validation.
 	Validatable interface {
 		// Validate validates the data and returns an error if validation fails.
-		Validate() error
+		// When validating a struct, a list of attributes can be specified to
+		// indicate which struct fields should be validated.
+		Validate(attrs ...string) error
 	}
 
 	// Rule represents a validation rule.
@@ -61,9 +63,11 @@ var (
 // If the value is an array, a slice, or a map, and its elements implement Validatable,
 // Validate will call Validate of every element and return the validation errors
 // in terms of Errors.
-func Validate(value interface{}) error {
+//
+// A list of attributes may be specified when validating specific fields of a struct.
+func Validate(value interface{}, attrs ...string) error {
 	if v, ok := value.(Validatable); ok {
-		return v.Validate()
+		return v.Validate(attrs...)
 	}
 
 	rv := reflect.ValueOf(value)
@@ -77,7 +81,7 @@ func Validate(value interface{}) error {
 		errs := Errors{}
 		for _, key := range rv.MapKeys() {
 			if mv := rv.MapIndex(key).Interface(); mv != nil {
-				if err := mv.(Validatable).Validate(); err != nil {
+				if err := mv.(Validatable).Validate(attrs...); err != nil {
 					errs[fmt.Sprintf("%v", key.Interface())] = err
 				}
 			}
@@ -90,7 +94,7 @@ func Validate(value interface{}) error {
 		l := rv.Len()
 		for i := 0; i < l; i++ {
 			if ev := rv.Index(i).Interface(); ev != nil {
-				if err := ev.(Validatable).Validate(); err != nil {
+				if err := ev.(Validatable).Validate(attrs...); err != nil {
 					errs[strconv.Itoa(i)] = err
 				}
 			}
@@ -131,8 +135,9 @@ func (r StructRules) Add(name string, rules ...Rule) StructRules {
 }
 
 // Validate validates a struct or a pointer to a struct.
+// A list of attributes may be provided to specify which fields of the struct should be validated.
 // Nil is returned if there is no validation error.
-func (r StructRules) Validate(object interface{}) error {
+func (r StructRules) Validate(object interface{}, attrs ...string) error {
 	// ensure object is a struct
 	value := reflect.ValueOf(object)
 	if value.Kind() == reflect.Interface || value.Kind() == reflect.Ptr {
@@ -150,7 +155,20 @@ func (r StructRules) Validate(object interface{}) error {
 	errs := Errors{}
 
 	for _, fieldRules := range r {
-		if err := fieldRules.validate(value, object); err != nil {
+		if len(attrs) > 0 {
+			found := false
+			for _, attr := range attrs {
+				if fieldRules.Field == attr {
+					found = true
+					break
+				}
+			}
+			if !found {
+				continue
+			}
+		}
+
+		if err := fieldRules.validate(value, object, attrs); err != nil {
 			ft, _ := value.Type().FieldByName(fieldRules.Field)
 			if tag := ft.Tag.Get(ErrorTag); tag != "" {
 				errs[tag] = err
@@ -171,7 +189,7 @@ func NewFieldRules(name string, rules ...Rule) FieldRules {
 	return FieldRules{name, rules}
 }
 
-func (rules FieldRules) validate(object reflect.Value, context interface{}) error {
+func (rules FieldRules) validate(object reflect.Value, context interface{}, attrs []string) error {
 
 	fname := rules.Field
 
@@ -193,6 +211,10 @@ func (rules FieldRules) validate(object reflect.Value, context interface{}) erro
 	// do not dive in validation if the field is a nil pointer or it has a "Skip" rule
 	if (field.Kind() == reflect.Interface || field.Kind() == reflect.Ptr) && field.IsNil() || rules.Rules.shouldSkip() {
 		return nil
+	}
+
+	if fieldType.Anonymous {
+		return Validate(value, attrs...)
 	}
 
 	return Validate(value)

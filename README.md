@@ -16,6 +16,7 @@ which makes your code more flexible and less error prone. ozzo-validation has th
 * can validate data of different types, e.g., structs, strings, byte slices, slices, maps, arrays.
 * can validate custom data types as long as they implement the `Validatable` interface.
 * support validating data types that implement the `sql.Valuer` interface (e.g. `sql.NullString`).
+* support validating selective struct fields.
 * customizable and well-formatted validation errors.
 * provide a rich set of validation rules right out of box.
 * extremely easy to create and use custom validation rules.
@@ -67,7 +68,7 @@ type Customer struct {
 	Address Address
 }
 
-func (a Address) Validate() error {
+func (a Address) Validate(attrs ...string) error {
 	return validation.StructRules{}.
 		// Street cannot be empty, and the length must between 5 and 50
 		Add("Street", validation.Required, validation.Length(5, 50)).
@@ -78,10 +79,10 @@ func (a Address) Validate() error {
 		// State cannot be empty, and must be a string consisting of five digits
 		Add("Zip", validation.Required, validation.Match(regexp.MustCompile("^[0-9]{5}$"))).
 		// performs validation
-		Validate(a)
+		Validate(a, attrs...)
 }
 
-func (c Customer) Validate() error {
+func (c Customer) Validate(attrs ...string) error {
 	return validation.StructRules{}.
 		// Name cannot be empty, and the length must be between 5 and 20.
 		Add("Name", validation.Required, validation.Length(5, 20)).
@@ -92,7 +93,7 @@ func (c Customer) Validate() error {
 		// Validate Address using its own validation rules
 		Add("Address").
 		// performs validation
-		Validate(c)
+		Validate(c, attrs...)
 }
 
 func main() {
@@ -143,6 +144,16 @@ the field has no associated rules.
 Sometimes, you may want to skip the field's `Validate()`. To do so, you may associate a `validation.Skip` rule
 with the field.
 
+### Validating Selected Fields
+
+By default, `StructRules.Validate()` will validate every field that has rules. You can explicitly specify which
+fields should be validated by passing the field names to the method. Using the previous example, the following code
+will only validate the `Name` and `Email` fields.
+
+```go
+err := validation.Validate(c, "Name", "Email")
+// or equivalently, err := c.Validate("Name", "Email")
+```
 
 ## Validating Simple Values
 
