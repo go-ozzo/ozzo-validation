@@ -134,7 +134,7 @@ func TestFieldRules_validate(t *testing.T) {
 		{"t15", Model2{Model3: Model3{A: "abc"}}, NewFieldRules("Model3"), ""},
 	}
 	for _, test := range tests {
-		err := test.rules.validate(reflect.ValueOf(test.model), test.model, nil)
+		err := test.rules.validate(reflect.ValueOf(test.model), test.model)
 		assertError(t, test.err, err, test.tag)
 	}
 }
@@ -145,21 +145,20 @@ func TestValidate(t *testing.T) {
 	tests := []struct {
 		tag   string
 		value interface{}
-		attrs []string
 		err   string
 	}{
-		{"t1", 123, nil, ""},
-		{"t2", String123("123"), nil, ""},
-		{"t3", String123("abc"), nil, "error 123"},
-		{"t4", []String123{}, nil, ""},
-		{"t5", slice, nil, "0: error 123; 2: error 123."},
-		{"t6", &slice, nil, "0: error 123; 2: error 123."},
-		{"t7", mp, nil, "a: error 123; c: error 123."},
-		{"t8", &mp, nil, "a: error 123; c: error 123."},
-		{"t9", map[string]String123{}, nil, ""},
+		{"t1", 123, ""},
+		{"t2", String123("123"), ""},
+		{"t3", String123("abc"), "error 123"},
+		{"t4", []String123{}, ""},
+		{"t5", slice, "0: error 123; 2: error 123."},
+		{"t6", &slice, "0: error 123; 2: error 123."},
+		{"t7", mp, "a: error 123; c: error 123."},
+		{"t8", &mp, "a: error 123; c: error 123."},
+		{"t9", map[string]String123{}, ""},
 	}
 	for _, test := range tests {
-		err := Validate(test.value, test.attrs...)
+		err := Validate(test.value)
 		assertError(t, test.err, err, test.tag)
 	}
 }
@@ -206,7 +205,7 @@ type Model1 struct {
 
 type String123 string
 
-func (s String123) Validate(attrs ...string) error {
+func (s String123) Validate() error {
 	if !strings.Contains(string(s), "123") {
 		return errors.New("error 123")
 	}
@@ -223,6 +222,6 @@ type Model3 struct {
 	A string
 }
 
-func (m Model3) Validate(attrs ...string) error {
-	return StructRules{}.Add("A", &validateAbc{}).Validate(m, attrs...)
+func (m Model3) Validate() error {
+	return StructRules{}.Add("A", &validateAbc{}).Validate(m)
 }

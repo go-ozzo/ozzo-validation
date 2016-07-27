@@ -68,7 +68,7 @@ type Customer struct {
 	Address Address
 }
 
-func (a Address) Validate(attrs ...string) error {
+func (a Address) Validate() error {
 	return validation.StructRules{}.
 		// Street cannot be empty, and the length must between 5 and 50
 		Add("Street", validation.Required, validation.Length(5, 50)).
@@ -79,10 +79,10 @@ func (a Address) Validate(attrs ...string) error {
 		// State cannot be empty, and must be a string consisting of five digits
 		Add("Zip", validation.Required, validation.Match(regexp.MustCompile("^[0-9]{5}$"))).
 		// performs validation
-		Validate(a, attrs...)
+		Validate(a)
 }
 
-func (c Customer) Validate(attrs ...string) error {
+func (c Customer) Validate() error {
 	return validation.StructRules{}.
 		// Name cannot be empty, and the length must be between 5 and 20.
 		Add("Name", validation.Required, validation.Length(5, 20)).
@@ -93,7 +93,7 @@ func (c Customer) Validate(attrs ...string) error {
 		// Validate Address using its own validation rules
 		Add("Address").
 		// performs validation
-		Validate(c, attrs...)
+		Validate(c)
 }
 
 func main() {
@@ -144,15 +144,24 @@ the field has no associated rules.
 Sometimes, you may want to skip the field's `Validate()`. To do so, you may associate a `validation.Skip` rule
 with the field.
 
-### Validating Selected Fields
+### Validating Selected Fields of a Struct
 
 By default, `StructRules.Validate()` will validate every field that has rules. You can explicitly specify which
-fields should be validated by passing the field names to the method. Using the previous example, the following code
-will only validate the `Name` and `Email` fields.
+fields should be validated by passing the field names to the method. For example, the following code only
+validate the `Name` and `Email` fields even though more fields have associated validation rules:
 
 ```go
-err := validation.Validate(c, "Name", "Email")
-// or equivalently, err := c.Validate("Name", "Email")
+rules := validation.StructRules{}.
+	// Name cannot be empty, and the length must be between 5 and 20.
+	Add("Name", validation.Required, validation.Length(5, 20)).
+	// Gender is optional, and should be either "Female" or "Male".
+	Add("Gender", validation.In("Female", "Male")).
+	// Email cannot be empty and should be in a valid email format.
+	Add("Email", validation.Required, is.Email).
+	// Validate Address using its own validation rules
+	Add("Address")
+
+err := rules.Validate(customer, "Name", "Email")
 ```
 
 ## Validating Simple Values
