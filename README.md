@@ -33,6 +33,12 @@ Run the following command to install the package:
 ```
 go get github.com/go-ozzo/ozzo-validation
 ```
+ 
+You may also get specified release of the package by:
+
+```
+go get gopkg.in/go-ozzo/ozzo-validation.v1
+```
 
 
 ## Validating Structs
