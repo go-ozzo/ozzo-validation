@@ -31,7 +31,7 @@ func TestMatch(t *testing.T) {
 
 	for _, test := range tests {
 		r := Match(regexp.MustCompile(test.re))
-		err := r.Validate(test.value, nil)
+		err := r.Validate(test.value)
 		assertError(t, test.err, err, test.tag)
 	}
 }

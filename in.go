@@ -22,7 +22,7 @@ type inRule struct {
 }
 
 // Validate checks if the given value is valid or not.
-func (r *inRule) Validate(value interface{}, context interface{}) error {
+func (r *inRule) Validate(value interface{}) error {
 	value, isNil := Indirect(value)
 	if isNil || IsEmpty(value) {
 		return nil

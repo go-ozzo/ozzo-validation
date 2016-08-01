@@ -35,7 +35,7 @@ func TestLength(t *testing.T) {
 
 	for _, test := range tests {
 		r := Length(test.min, test.max)
-		err := r.Validate(test.value, nil)
+		err := r.Validate(test.value)
 		assertError(t, test.err, err, test.tag)
 	}
 }

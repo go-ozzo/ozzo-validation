@@ -35,7 +35,7 @@ type lengthRule struct {
 }
 
 // Validate checks if the given value is valid or not.
-func (v *lengthRule) Validate(value interface{}, context interface{}) error {
+func (v *lengthRule) Validate(value interface{}) error {
 	value, isNil := Indirect(value)
 	if isNil || IsEmpty(value) {
 		return nil

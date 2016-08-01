@@ -35,44 +35,44 @@ func TestStringValidator_Validate(t *testing.T) {
 
 	value := "me"
 
-	err := v.Validate(value, nil)
+	err := v.Validate(value)
 	assert.Nil(t, err)
 
-	err = v.Validate(&value, nil)
+	err = v.Validate(&value)
 	assert.Nil(t, err)
 
 	value = ""
 
-	err = v.Validate(value, nil)
+	err = v.Validate(value)
 	assert.Nil(t, err)
 
-	err = v.Validate(&value, nil)
+	err = v.Validate(&value)
 	assert.Nil(t, err)
 
 	nullValue := sql.NullString{"me", true}
-	err = v.Validate(nullValue, nil)
+	err = v.Validate(nullValue)
 	assert.Nil(t, err)
 
 	nullValue = sql.NullString{"", true}
-	err = v.Validate(nullValue, nil)
+	err = v.Validate(nullValue)
 	assert.Nil(t, err)
 
 	var s *string
-	err = v.Validate(s, nil)
+	err = v.Validate(s)
 	assert.Nil(t, err)
 
-	err = v.Validate("not me", nil)
+	err = v.Validate("not me")
 	if assert.NotNil(t, err) {
 		assert.Equal(t, "wrong", err.Error())
 	}
 
-	err = v.Validate(100, nil)
+	err = v.Validate(100)
 	if assert.NotNil(t, err) {
 		assert.NotEqual(t, "wrong", err.Error())
 	}
 
 	v2 := v.Error("Wrong!")
-	err = v2.Validate("not me", nil)
+	err = v2.Validate("not me")
 	if assert.NotNil(t, err) {
 		assert.Equal(t, "Wrong!", err.Error())
 	}

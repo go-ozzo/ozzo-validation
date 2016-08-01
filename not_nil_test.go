@@ -36,7 +36,7 @@ func TestNotNil(t *testing.T) {
 
 	for _, test := range tests {
 		r := NotNil
-		err := r.Validate(test.value, nil)
+		err := r.Validate(test.value)
 		assertError(t, test.err, err, test.tag)
 	}
 }

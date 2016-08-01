@@ -29,7 +29,7 @@ func (v *stringRule) Error(message string) *stringRule {
 }
 
 // Validate checks if the given value is valid or not.
-func (v *stringRule) Validate(value interface{}, context interface{}) error {
+func (v *stringRule) Validate(value interface{}) error {
 	value, isNil := Indirect(value)
 	if isNil || IsEmpty(value) {
 		return nil

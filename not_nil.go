@@ -16,7 +16,7 @@ type notNilRule struct {
 }
 
 // Validate checks if the given value is valid or not.
-func (r *notNilRule) Validate(value interface{}, context interface{}) error {
+func (r *notNilRule) Validate(value interface{}) error {
 	_, isNil := Indirect(value)
 	if isNil {
 		return errors.New(r.message)

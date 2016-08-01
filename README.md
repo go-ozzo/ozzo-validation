@@ -37,7 +37,7 @@ go get github.com/go-ozzo/ozzo-validation
 You may also get specified release of the package by:
 
 ```
-go get gopkg.in/go-ozzo/ozzo-validation.v1
+go get gopkg.in/go-ozzo/ozzo-validation.v2
 ```
 
 
@@ -157,7 +157,7 @@ fields should be validated by passing the field names to the method. For example
 validate the `Name` and `Email` fields even though more fields have associated validation rules:
 
 ```go
-rules := validation.StructRules{}.
+err := validation.StructRules{}.
 	// Name cannot be empty, and the length must be between 5 and 20.
 	Add("Name", validation.Required, validation.Length(5, 20)).
 	// Gender is optional, and should be either "Female" or "Male".
@@ -165,9 +165,9 @@ rules := validation.StructRules{}.
 	// Email cannot be empty and should be in a valid email format.
 	Add("Email", validation.Required, is.Email).
 	// Validate Address using its own validation rules
-	Add("Address")
-
-err := rules.Validate(customer, "Name", "Email")
+	Add("Address").
+	// only validate Name and Email
+	Validate(customer, "Name", "Email")
 ```
 
 ## Validating Simple Values
@@ -183,7 +183,7 @@ rules := validation.Rules{
 }
 
 data := "example"
-err := rules.Validate(data, nil)
+err := rules.Validate(data)
 fmt.Println(err)
 // Output:
 // must be a valid URL
@@ -224,7 +224,7 @@ will report a validation error.
 ## Validating `sql.Valuer`
 
 If a data type implements the `sql.Valuer` interface (e.g. `sql.NullString`), the built-in validation rules will handle
-it properly. In particular, when a rule is validating such data, it will cause the `Value()` method and validate
+it properly. In particular, when a rule is validating such data, it will call the `Value()` method and validate
 the returned value instead.
 
 
@@ -248,8 +248,8 @@ type Address struct {
 
 This could be useful if you are using snake case or camelCase in your JSON responses.
 
-You may even customize the tag name by changing `validation.ErrorTag` so that you can reuse other tags you set
-for struct fields (e.g. `json`) without adding a new tag for every needed field.
+You may customize the tag name by changing `validation.ErrorTag`. For example, you may set `validation.ErrorTag`
+to be `"json"` if you want to reuse the JSON field names as error field names.
 
 
 ## Required vs. Not Nil
@@ -344,7 +344,7 @@ rules := validation.Rules{
 }
 
 data := "2123"
-err := rules.Validate(data, nil)
+err := rules.Validate(data)
 fmt.Println(err)
 // Output:
 // must be a string with five digits
@@ -353,13 +353,11 @@ fmt.Println(err)
 ## Creating Custom Rules
 
 Creating a custom rule is as simple as implementing the `validation.Rule` interface. The interface contains a single
-method
+method as shown below, which should validate the value and return the validation error, if any.
 
 ```go
-// Validate validates a value and returns a value if validation fails.
-// The validation can be performed with an optional context. In the case of validating
-// a struct, the context would be the struct.
-Validate(value interface{}, context interface{}) error
+// Validate validates a value and returns an error if validation fails.
+Validate(value interface{}) error
 ```
 
 ## Credits

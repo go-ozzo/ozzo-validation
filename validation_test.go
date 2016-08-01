@@ -44,33 +44,33 @@ func TestRules_shouldSkip(t *testing.T) {
 
 func TestRules_Validate(t *testing.T) {
 	rules := Rules{}
-	assert.Nil(t, rules.Validate(nil, nil))
-	assert.Nil(t, rules.Validate("abc", nil))
+	assert.Nil(t, rules.Validate(nil))
+	assert.Nil(t, rules.Validate("abc"))
 
 	rules = Rules{
 		&validateAbc{},
 		&validateXyz{},
 	}
-	err := rules.Validate("123", nil)
+	err := rules.Validate("123")
 	if assert.NotNil(t, err) {
 		assert.Equal(t, "error abc", err.Error())
 	}
-	err = rules.Validate("abc", nil)
+	err = rules.Validate("abc")
 	if assert.NotNil(t, err) {
 		assert.Equal(t, "error xyz", err.Error())
 	}
-	assert.Nil(t, rules.Validate("abcxyz", nil))
+	assert.Nil(t, rules.Validate("abcxyz"))
 
 	rules = Rules{
 		&validateAbc{},
 		Skip,
 		&validateXyz{},
 	}
-	err = rules.Validate("123", nil)
+	err = rules.Validate("123")
 	if assert.NotNil(t, err) {
 		assert.Equal(t, "error abc", err.Error())
 	}
-	assert.Nil(t, rules.Validate("abc", nil))
+	assert.Nil(t, rules.Validate("abc"))
 }
 
 func TestStructRules_Validate(t *testing.T) {
@@ -134,7 +134,7 @@ func TestFieldRules_validate(t *testing.T) {
 		{"t15", Model2{Model3: Model3{A: "abc"}}, NewFieldRules("Model3"), ""},
 	}
 	for _, test := range tests {
-		err := test.rules.validate(reflect.ValueOf(test.model), test.model)
+		err := test.rules.validate(reflect.ValueOf(test.model))
 		assertError(t, test.err, err, test.tag)
 	}
 }
@@ -164,7 +164,7 @@ func TestValidate(t *testing.T) {
 }
 
 func Test_skipRule_Validate(t *testing.T) {
-	assert.Nil(t, Skip.Validate(100, nil))
+	assert.Nil(t, Skip.Validate(100))
 }
 
 func assertError(t *testing.T, expected string, err error, tag string) {
@@ -177,7 +177,7 @@ func assertError(t *testing.T, expected string, err error, tag string) {
 
 type validateAbc struct{}
 
-func (v *validateAbc) Validate(obj interface{}, context interface{}) error {
+func (v *validateAbc) Validate(obj interface{}) error {
 	if !strings.Contains(obj.(string), "abc") {
 		return errors.New("error abc")
 	}
@@ -186,7 +186,7 @@ func (v *validateAbc) Validate(obj interface{}, context interface{}) error {
 
 type validateXyz struct{}
 
-func (v *validateXyz) Validate(obj interface{}, context interface{}) error {
+func (v *validateXyz) Validate(obj interface{}) error {
 	if !strings.Contains(obj.(string), "xyz") {
 		return errors.New("error xyz")
 	}

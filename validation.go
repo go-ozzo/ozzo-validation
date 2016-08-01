@@ -22,9 +22,7 @@ type (
 	// Rule represents a validation rule.
 	Rule interface {
 		// Validate validates a value and returns a value if validation fails.
-		// The validation can be performed with an optional context. In the case of validating
-		// a struct, the context would be the struct.
-		Validate(value interface{}, context interface{}) error
+		Validate(value interface{}) error
 	}
 
 	// Rules represents a list of validation rules.
@@ -104,12 +102,12 @@ func Validate(value interface{}) error {
 }
 
 // Validate validates the given value using the validation rules in Rules.
-func (rules Rules) Validate(value interface{}, context interface{}) error {
+func (rules Rules) Validate(value interface{}) error {
 	for _, rule := range rules {
 		if _, ok := rule.(*skipRule); ok {
 			return nil
 		}
-		if err := rule.Validate(value, context); err != nil {
+		if err := rule.Validate(value); err != nil {
 			return err
 		}
 	}
@@ -164,7 +162,7 @@ func (r StructRules) Validate(object interface{}, attrs ...string) error {
 			}
 		}
 
-		if err := fieldRules.validate(value, object); err != nil {
+		if err := fieldRules.validate(value); err != nil {
 			ft, _ := value.Type().FieldByName(fieldRules.Field)
 			if tag := ft.Tag.Get(ErrorTag); tag != "" {
 				errs[tag] = err
@@ -185,7 +183,7 @@ func NewFieldRules(name string, rules ...Rule) FieldRules {
 	return FieldRules{name, rules}
 }
 
-func (rules FieldRules) validate(object reflect.Value, context interface{}) error {
+func (rules FieldRules) validate(object reflect.Value) error {
 
 	fname := rules.Field
 
@@ -200,7 +198,7 @@ func (rules FieldRules) validate(object reflect.Value, context interface{}) erro
 
 	field := object.FieldByName(fname)
 	value := field.Interface()
-	if err := rules.Rules.Validate(value, context); err != nil {
+	if err := rules.Rules.Validate(value); err != nil {
 		return err
 	}
 
@@ -214,6 +212,6 @@ func (rules FieldRules) validate(object reflect.Value, context interface{}) erro
 
 type skipRule struct{}
 
-func (r *skipRule) Validate(interface{}, interface{}) error {
+func (r *skipRule) Validate(interface{}) error {
 	return nil
 }

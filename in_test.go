@@ -31,7 +31,7 @@ func TestIn(t *testing.T) {
 
 	for _, test := range tests {
 		r := In(test.values...)
-		err := r.Validate(test.value, nil)
+		err := r.Validate(test.value)
 		assertError(t, test.err, err, test.tag)
 	}
 }

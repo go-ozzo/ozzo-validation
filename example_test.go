@@ -74,7 +74,7 @@ func Example_second() {
 	}
 
 	data := "example"
-	err := rules.Validate(data, nil)
+	err := rules.Validate(data)
 	fmt.Println(err)
 	// Output:
 	// must be a valid URL
