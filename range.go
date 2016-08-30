@@ -12,7 +12,7 @@ import (
 
 // Range returns a validation rule that checks if a value is within the given range: [min,max].
 // Note that the value being checked and the boundary values must be of the same type.
-func Range(min interface{}, max interface{}) Rule {
+func Range(min interface{}, max interface{}) *rangeRule {
 	return &rangeRule{
 		min:     min,
 		max:     max,
