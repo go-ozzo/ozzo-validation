@@ -55,6 +55,39 @@ func LengthOfValue(value interface{}) (int, error) {
 	return 0, fmt.Errorf("cannot get the length of %v", v.Kind())
 }
 
+// ToInt converts the given value to an int64.
+// An error is returned for all incompatible types.
+func ToInt(value interface{}) (int64, error) {
+	v := reflect.ValueOf(value)
+	switch v.Kind() {
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return v.Int(), nil
+	}
+	return 0, fmt.Errorf("cannot convert %v to int64", v.Kind())
+}
+
+// ToUint converts the given value to an uint64.
+// An error is returned for all incompatible types.
+func ToUint(value interface{}) (uint64, error) {
+	v := reflect.ValueOf(value)
+	switch v.Kind() {
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+		return v.Uint(), nil
+	}
+	return 0, fmt.Errorf("cannot convert %v to uint64", v.Kind())
+}
+
+// ToFloat converts the given value to a float64.
+// An error is returned for all incompatible types.
+func ToFloat(value interface{}) (float64, error) {
+	v := reflect.ValueOf(value)
+	switch v.Kind() {
+	case reflect.Float32, reflect.Float64:
+		return v.Float(), nil
+	}
+	return 0, fmt.Errorf("cannot convert %v to float64", v.Kind())
+}
+
 // IsEmpty checks if a value is empty or not.
 // A value is considered empty if
 // - integer, float: zero

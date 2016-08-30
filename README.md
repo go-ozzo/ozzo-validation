@@ -33,7 +33,7 @@ Run the following command to install the package:
 ```
 go get github.com/go-ozzo/ozzo-validation
 ```
- 
+
 You may also get specified release of the package by:
 
 ```
@@ -270,6 +270,8 @@ The following rules are provided in the `validation` package:
 * `In(...interface{})`: checks if a value can be found in the given list of values.
 * `Length(min, max int)`: checks if the length of a value is within the specified range.
   This rule should only be used for validating strings, slices, maps, and arrays.
+* `Range(min, max int)`: checks if a value is within the specified range.
+  This rule should only be used for validating int, uint and float types.
 * `Match(*regexp.Regexp)`: checks if a value matches the specified regular expression.
   This rule should only be used for strings and byte slices.
 * `Required`: checks if a value is not empty (neither nil nor zero).
