@@ -103,6 +103,94 @@ func TestLengthOfValue(t *testing.T) {
 	}
 }
 
+func TestToInt(t *testing.T) {
+	var a int
+
+	tests := []struct {
+		tag    string
+		value  interface{}
+		result int64
+		err    string
+	}{
+		{"t1", 1, 1, ""},
+		{"t2", int8(1), 1, ""},
+		{"t3", int16(1), 1, ""},
+		{"t4", int32(1), 1, ""},
+		{"t5", int64(1), 1, ""},
+		{"t6", &a, 0, "cannot convert ptr to int64"},
+		{"t7", uint(1), 0, "cannot convert uint to int64"},
+		{"t8", float64(1), 0, "cannot convert float64 to int64"},
+		{"t9", "abc", 0, "cannot convert string to int64"},
+		{"t10", []int{1, 2}, 0, "cannot convert slice to int64"},
+		{"t11", map[string]int{"A": 1}, 0, "cannot convert map to int64"},
+	}
+
+	for _, test := range tests {
+		l, err := ToInt(test.value)
+		assert.Equal(t, test.result, l, test.tag)
+		assertError(t, test.err, err, test.tag)
+	}
+}
+
+func TestToUint(t *testing.T) {
+	var a int
+	var b uint
+
+	tests := []struct {
+		tag    string
+		value  interface{}
+		result uint64
+		err    string
+	}{
+		{"t1", uint(1), 1, ""},
+		{"t2", uint8(1), 1, ""},
+		{"t3", uint16(1), 1, ""},
+		{"t4", uint32(1), 1, ""},
+		{"t5", uint64(1), 1, ""},
+		{"t6", 1, 0, "cannot convert int to uint64"},
+		{"t7", &a, 0, "cannot convert ptr to uint64"},
+		{"t8", &b, 0, "cannot convert ptr to uint64"},
+		{"t9", float64(1), 0, "cannot convert float64 to uint64"},
+		{"t10", "abc", 0, "cannot convert string to uint64"},
+		{"t11", []int{1, 2}, 0, "cannot convert slice to uint64"},
+		{"t12", map[string]int{"A": 1}, 0, "cannot convert map to uint64"},
+	}
+
+	for _, test := range tests {
+		l, err := ToUint(test.value)
+		assert.Equal(t, test.result, l, test.tag)
+		assertError(t, test.err, err, test.tag)
+	}
+}
+
+func TestToFloat(t *testing.T) {
+	var a int
+	var b uint
+
+	tests := []struct {
+		tag    string
+		value  interface{}
+		result float64
+		err    string
+	}{
+		{"t1", float32(1), 1, ""},
+		{"t2", float64(1), 1, ""},
+		{"t3", 1, 0, "cannot convert int to float64"},
+		{"t4", uint(1), 0, "cannot convert uint to float64"},
+		{"t5", &a, 0, "cannot convert ptr to float64"},
+		{"t6", &b, 0, "cannot convert ptr to float64"},
+		{"t7", "abc", 0, "cannot convert string to float64"},
+		{"t8", []int{1, 2}, 0, "cannot convert slice to float64"},
+		{"t9", map[string]int{"A": 1}, 0, "cannot convert map to float64"},
+	}
+
+	for _, test := range tests {
+		l, err := ToFloat(test.value)
+		assert.Equal(t, test.result, l, test.tag)
+		assertError(t, test.err, err, test.tag)
+	}
+}
+
 func TestIsEmpty(t *testing.T) {
 	var s1 string
 	var s2 string = "a"
