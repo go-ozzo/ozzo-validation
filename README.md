@@ -82,7 +82,7 @@ func (a Address) Validate() error {
 		Add("City", validation.Required, validation.Length(5, 50)).
 		// State cannot be empty, and must be a string consisting of two letters in upper case
 		Add("State", validation.Required, validation.Match(regexp.MustCompile("^[A-Z]{2}$"))).
-		// State cannot be empty, and must be a string consisting of five digits
+		// Zip cannot be empty, and must be a string consisting of five digits
 		Add("Zip", validation.Required, validation.Match(regexp.MustCompile("^[0-9]{5}$"))).
 		// performs validation
 		Validate(a)
