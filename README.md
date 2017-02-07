@@ -274,6 +274,8 @@ The following rules are provided in the `validation` package:
   This rule should only be used for validating int, uint and float types.
 * `Match(*regexp.Regexp)`: checks if a value matches the specified regular expression.
   This rule should only be used for strings and byte slices.
+* `Date(layout string)`: checks if a string value is a date whose format is specified by the layout.
+  By calling `Min()` and/or `Max()`, you can check additionally if the date is within the specified range.
 * `Required`: checks if a value is not empty (neither nil nor zero).
 * `NotNil`: checks if a pointer value is not nil. Non-pointer values are considered valid.
 * `Skip`: this is a special rule used to indicate that all rules following it should be skipped (including the nested ones).
