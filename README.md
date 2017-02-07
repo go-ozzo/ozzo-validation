@@ -24,7 +24,7 @@ which makes your code more flexible and less error prone. ozzo-validation has th
 
 ## Requirements
 
-Go 1.5 or above.
+Go 1.6 or above.
 
 ## Installation
 
