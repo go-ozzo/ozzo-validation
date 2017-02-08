@@ -217,7 +217,7 @@ fmt.Println(err)
 When a value being validated is a pointer, most validation rules will validate the actual value pointed to by the pointer.
 If the pointer is nil, these rules will skip the validation.
 
-An exception is the `validation.Required` and `validation.Required` rules. When a pointer is nil, they
+An exception is the `validation.Required` and `validation.NotNil` rules. When a pointer is nil, they
 will report a validation error.
 
 
