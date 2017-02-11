@@ -6,7 +6,6 @@ package validation
 
 import (
 	"testing"
-
 	"database/sql"
 
 	"github.com/stretchr/testify/assert"

@@ -10,7 +10,7 @@ import (
 	"unicode"
 
 	"github.com/go-ozzo/ozzo-validation"
-	"gopkg.in/asaskevich/govalidator.v4"
+	"github.com/asaskevich/govalidator"
 )
 
 var (

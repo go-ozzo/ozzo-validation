@@ -8,15 +8,12 @@
 ## Description
 
 ozzo-validation is a Go package that provides configurable and extensible data validation capabilities.
-It uses programming constructs to specify how data should be validated rather than relying on error-prone struct tags,
-which makes your code more flexible and less error prone. ozzo-validation has the following features:
+It has the following features:
 
-* rule-based data validation that allows validating a data value with multiple rules.
-* validation rules are declared via normal programming constructs instead of error-prone struct tags.
+* use normal programming constructs rather than error-prone struct tags to specify how data should be validated.
 * can validate data of different types, e.g., structs, strings, byte slices, slices, maps, arrays.
 * can validate custom data types as long as they implement the `Validatable` interface.
-* support validating data types that implement the `sql.Valuer` interface (e.g. `sql.NullString`).
-* support validating selective struct fields.
+* can validate data types that implement the `sql.Valuer` interface (e.g. `sql.NullString`).
 * customizable and well-formatted validation errors.
 * provide a rich set of validation rules right out of box.
 * extremely easy to create and use custom validation rules.
@@ -24,30 +21,64 @@ which makes your code more flexible and less error prone. ozzo-validation has th
 
 ## Requirements
 
-Go 1.5 or above.
+Go 1.6 or above.
 
-## Installation
+
+## Getting Started
+
+The ozzo-validation package mainly includes a set of validation rules and two validation methods. You use 
+validation rules to describe how a value should be considered valid, and you call either `validation.Validate()`
+or `validation.ValidateStruct()` to validate the value.
+
+
+### Installation
 
 Run the following command to install the package:
 
 ```
 go get github.com/go-ozzo/ozzo-validation
+go get github.com/go-ozzo/ozzo-validation/is
 ```
 
-You may also get specified release of the package by:
+### Validating a Simple Value
 
+For a simple value, such as a string or an integer, you may use `validation.Validate()` to validate it. For example, 
+
+```go
+package main
+
+import (
+	"fmt"
+
+	"github.com/go-ozzo/ozzo-validation"
+	"github.com/go-ozzo/ozzo-validation/is"
+)
+
+func main() {
+	data := "example"
+	err := validation.Validate(data,
+		validation.Required,       // not empty
+		validation.Length(5, 100), // length between 5 and 100
+		is.URL,                    // is a valid URL
+	)
+	fmt.Println(err)
+	// Output:
+	// must be a valid URL
+}
 ```
-go get gopkg.in/go-ozzo/ozzo-validation.v2
-```
+
+The method `validation.Validate()` will run through the rules in the order that they are listed. If a rule fails
+the validation, the method will return the corresponding error and skip the rest of the rules. The method will
+return nil if the value passes all validation rules.
 
 
-## Validating Structs
+### Validating a Struct Value
 
-Struct validation is perhaps the most common use case for data validation. Typically, validation is needed
-after a struct is populated with the client-side data. You can use `validation.StructRules` to specify how
-struct fields should be validated, and then call `StructRules.Validate()` to perform the validation.
-
-For example,
+For a struct value, you usually want to check if its fields are valid. For example, in a RESTful application, you
+may unmarshal the request payload into a struct and then validate the struct fields. If one or multiple fields
+are invalid, you may want to get an error describing which fields are invalid. You can use `validation.ValidateStruct()`
+to achieve this purpose. A single struct can have rules for multiple fields, and a field can be associated with multiple 
+rules. For example,
 
 ```go
 package main
@@ -67,6 +98,87 @@ type Address struct {
 	Zip    string
 }
 
+func (a Address) Validate() error {
+	return validation.ValidateStruct(&a,
+		// Street cannot be empty, and the length must between 5 and 50
+		validation.Field(&a.Street, validation.Required, validation.Length(5, 50)),
+		// City cannot be empty, and the length must between 5 and 50
+		validation.Field(&a.City, validation.Required, validation.Length(5, 50)),
+		// State cannot be empty, and must be a string consisting of two letters in upper case
+		validation.Field(&a.State, validation.Required, validation.Match(regexp.MustCompile("^[A-Z]{2}$"))),
+		// State cannot be empty, and must be a string consisting of five digits
+		validation.Field(&a.Zip, validation.Required, validation.Match(regexp.MustCompile("^[0-9]{5}$"))),
+	)
+}
+
+func main() {
+	a := Address{
+		Street: "123",
+		City:   "Unknown",
+		State:  "Virginia",
+		Zip:    "12345",
+	}
+
+	err := a.Validate()
+	fmt.Println(err)
+	// Output:
+	// Street: the length must be between 5 and 50; State: must be in a valid format.
+}
+```
+
+Note that when calling `validation.ValidateStruct` to validate a struct, you should pass to the method a pointer 
+to the struct instead of the struct itself. Similarly, when calling `validation.Field` to specify the rules
+for a struct field, you should use a pointer to the struct field. 
+
+When the struct validation is performed, the fields are validated in the order they are specified in `ValidateStruct`. 
+And when each field is validated, its rules are also evaluated in the order they are associated with the field.
+If a rule fails, an error is recorded for that field, and the validation will continue with the next field.
+
+
+#### Validation Errors
+
+The `validation.ValidateStruct` method returns validation errors found in struct fields in terms of `validation.Errors` 
+which is a map of fields and their corresponding errors. Nil is returned if validation passes.
+
+By default, `validation.Errors` uses the struct tags named `json` to determine what names should be used to 
+represent the invalid fields. The type also implements the `json.Marshaler` interface so that it can be marshaled 
+into a proper JSON object. For example,
+
+```go
+type Address struct {
+	Street string `json:"street"`
+	City   string `json:"city"`
+	State  string `json:"state"`
+	Zip    string `json:"zip"`
+}
+
+// ...perform validation here...
+
+err := a.Validate()
+b, _ := json.Marshal(err)
+fmt.Println(string(b))
+// Output:
+// {"street":"the length must be between 5 and 50","state":"must be in a valid format"}
+```
+
+You may modify `validation.ErrorTag` to use a different struct tag name.
+
+
+## Validatable Types
+
+A type is validatable if it implements the `validation.Validatable` interface. 
+
+When `validation.Validate` is used to validate a validatable value, if it does not find any error with the 
+given validation rules, it will further call the value's `Validate()` method. 
+
+Similarly, when `validation.ValidateStruct` is validating a struct field whose type is validatable, it will call 
+the field's `Validate` method after it passes the listed rules. 
+
+In the following example, the `Address` field of `Customer` is validatable because `Address` implements 
+`validation.Validatable`. Therefore, when validating a `Customer` struct with `validation.ValidateStruct`,
+validation will "dive" into the `Address` field.
+
+```go
 type Customer struct {
 	Name    string
 	Gender  string
@@ -74,130 +186,45 @@ type Customer struct {
 	Address Address
 }
 
-func (a Address) Validate() error {
-	return validation.StructRules{}.
-		// Street cannot be empty, and the length must between 5 and 50
-		Add("Street", validation.Required, validation.Length(5, 50)).
-		// City cannot be empty, and the length must between 5 and 50
-		Add("City", validation.Required, validation.Length(5, 50)).
-		// State cannot be empty, and must be a string consisting of two letters in upper case
-		Add("State", validation.Required, validation.Match(regexp.MustCompile("^[A-Z]{2}$"))).
-		// Zip cannot be empty, and must be a string consisting of five digits
-		Add("Zip", validation.Required, validation.Match(regexp.MustCompile("^[0-9]{5}$"))).
-		// performs validation
-		Validate(a)
-}
-
 func (c Customer) Validate() error {
-	return validation.StructRules{}.
+	return validation.ValidateStruct(&c,
 		// Name cannot be empty, and the length must be between 5 and 20.
-		Add("Name", validation.Required, validation.Length(5, 20)).
+		validation.Field(&c.Name, validation.Required, validation.Length(5, 20)),
 		// Gender is optional, and should be either "Female" or "Male".
-		Add("Gender", validation.In("Female", "Male")).
+		validation.Field(&c.Gender, validation.In("Female", "Male")),
 		// Email cannot be empty and should be in a valid email format.
-		Add("Email", validation.Required, is.Email).
+		validation.Field(&c.Email, validation.Required, is.Email),
 		// Validate Address using its own validation rules
-		Add("Address").
-		// performs validation
-		Validate(c)
+		validation.Field(&c.Address),
+	)
 }
 
-func main() {
-	c := Customer{
-		Name:  "Qiang Xue",
-		Email: "q",
-		Address: Address{
-			Street: "123 Main Street",
-			City:   "Unknown",
-			State:  "Virginia",
-			Zip:    "12345",
-		},
-	}
-
-	err := validation.Validate(c) // or alternatively, err := c.Validate()
-	fmt.Println(err)
-	// Output:
-	// Address: (State: must be in a valid format.); Email: must be a valid email address.
-}
-```
-
-The method `StructRules.Add()` is used to specify the rules for validating a particular struct field.
-A single field can be associated with multiple rules, and a single struct can have rules for multiple fields.
-
-When the validation is performed, the fields are validated in the order they are added to `StructRules`. Similarly, for
-each field being validated, the rules are also executed in the order they are associated with the field.
-If a rule fails, an error is recorded for that field, and the validation will continue with the next field.
-
-The method `StructRules.Validate()` returns validation errors as `validation.Errors` which is a map of fields
-and their corresponding errors. Nil is returned if validation passes.
-
-Only public struct fields can be validated. A validation error will be reported if trying to validate a private
-or non-existing struct field.
-
-### Nested Validation
-
-If a struct field implements the `validation.Validatable` interface, besides running through the validation
-rules associated with the field, the field's `Validate()` method will also be called when validating the whole struct.
-In the above example, `Address` is such a field because the `Address` type implements `validation.Validatable`.
-
-If a struct field is a map, slice, or array, and its elements implement the `validation.Validatable` interface,
-the validation will also be carried for each element while validating the field. See "Validating Maps, Slices, and Arrays"
-for more details.
-
-Note that in order for a field's `Validate()` to be called, the field must be listed in `StructRules` even if
-the field has no associated rules.
-
-Sometimes, you may want to skip the field's `Validate()`. To do so, you may associate a `validation.Skip` rule
-with the field.
-
-### Validating Selected Fields of a Struct
-
-By default, `StructRules.Validate()` will validate every field that has rules. You can explicitly specify which
-fields should be validated by passing the field names to the method. For example, the following code only
-validate the `Name` and `Email` fields even though more fields have associated validation rules:
-
-```go
-err := validation.StructRules{}.
-	// Name cannot be empty, and the length must be between 5 and 20.
-	Add("Name", validation.Required, validation.Length(5, 20)).
-	// Gender is optional, and should be either "Female" or "Male".
-	Add("Gender", validation.In("Female", "Male")).
-	// Email cannot be empty and should be in a valid email format.
-	Add("Email", validation.Required, is.Email).
-	// Validate Address using its own validation rules
-	Add("Address").
-	// only validate Name and Email
-	Validate(customer, "Name", "Email")
-```
-
-## Validating Simple Values
-
-A simple data value (e.g. strings, integers) can be validated by building `validation.Rules`
-which represents a list of validation rules and calling `Rules.Validate()`. For example,
-
-```go
-rules := validation.Rules{
-	validation.Required,          // not empty
-	validation.Length(5, 100),    // length between 5 and 100
-	is.URL,                       // is a valid URL
+c := Customer{
+	Name:  "Qiang Xue",
+	Email: "q",
+	Address: Address{
+		Street: "123 Main Street",
+		City:   "Unknown",
+		State:  "Virginia",
+		Zip:    "12345",
+	},
 }
 
-data := "example"
-err := rules.Validate(data)
+err := c.Validate()
 fmt.Println(err)
 // Output:
-// must be a valid URL
+// Address: (State: must be in a valid format.); Email: must be a valid email address.
 ```
 
-The method `Rules.Validate()` will run through the rules in the order that they are declared. If a rule returns an error,
-it will return the error and skip the rest of the rules.
+Sometimes, you may want to skip the invocation of a type's `Validate` method. To do so, simply associate
+a `validation.Skip` rule with the value being validated.
 
 
-## Validating Maps, Slices, and Arrays
+### Maps/Slices/Arrays of Validatables
 
-When the elements of a map, a slice, or an array implement the `validation.Validatable` interface, calling
-`validation.Validate()` on the map, slice, or array will automatically call the `Validate()` method of each non-nil
-element. The validation errors of the elements will be returned as `validation.Errors` which maps the keys of the
+When validating a map, slice, or array, whose element type implements the `validation.Validatable` interface,
+the `validation.Validate` method will call the `Validate` method of every non-nil element.
+The validation errors of the elements will be returned as `validation.Errors` which maps the keys of the
 invalid elements to their corresponding validation errors. For example,
 
 ```go
@@ -212,47 +239,27 @@ fmt.Println(err)
 // 0: (City: cannot be blank; Street: cannot be blank.); 2: (Street: cannot be blank; Zip: must be in a valid format.).
 ```
 
-## Validating Pointers
+When using `validation.ValidateStruct` to validate a struct, the above validation procedure also applies to struct 
+fields which are map/slices/arrays of validatables. 
+
+
+### Pointers
 
 When a value being validated is a pointer, most validation rules will validate the actual value pointed to by the pointer.
 If the pointer is nil, these rules will skip the validation.
 
-An exception is the `validation.Required` and `validation.Required` rules. When a pointer is nil, they
+An exception is the `validation.Required` and `validation.NotNil` rules. When a pointer is nil, they
 will report a validation error.
 
 
-## Validating `sql.Valuer`
+### Types Implementing `sql.Valuer`
 
 If a data type implements the `sql.Valuer` interface (e.g. `sql.NullString`), the built-in validation rules will handle
 it properly. In particular, when a rule is validating such data, it will call the `Value()` method and validate
 the returned value instead.
 
 
-## Processing Validation Errors
-
-All validation methods return an `error` when validation fails. The `error` may be typecast into a `validation.Errors`
-if the value being validated is a struct, a map/slice/array of validatables. `validation.Errors` implements both
-`error` and `json.Marshaler` interfaces and can return a well-formatted text or JSON string.
-
-By default, `validation.Errors` uses struct field names as its keys when the validation errors come from a struct.
-You can customize the key names using struct tags named `validation`. For example,
-
-```go
-type Address struct {
-	Street string `validation:"street"`
-	City   string `validation:"city"`
-	State  string `validation:"state"`
-	Zip    string `validation:"zip"`
-}
-```
-
-This could be useful if you are using snake case or camelCase in your JSON responses.
-
-You may customize the tag name by changing `validation.ErrorTag`. For example, you may set `validation.ErrorTag`
-to be `"json"` if you want to reuse the JSON field names as error field names.
-
-
-## Required vs. Not Nil
+### Required vs. Not Nil
 
 When validating input values, there are two different scenarios about checking if input values are provided or not.
 
@@ -262,6 +269,7 @@ In the first scenario, an input value is considered missing if it is not entered
 In the second scenario, an input value is considered missing only if it is not entered. A pointer field is usually
 used in this case so that you can detect if a value is entered or not by checking if the pointer is nil or not.
 You can use the `validation.NotNil` rule to ensure a value is entered (even if it is a zero value).
+
 
 ## Built-in Validation Rules
 
@@ -274,6 +282,8 @@ The following rules are provided in the `validation` package:
   This rule should only be used for validating int, uint and float types.
 * `Match(*regexp.Regexp)`: checks if a value matches the specified regular expression.
   This rule should only be used for strings and byte slices.
+* `Date(layout string)`: checks if a string value is a date whose format is specified by the layout.
+  By calling `Min()` and/or `Max()`, you can check additionally if the date is within the specified range.
 * `Required`: checks if a value is not empty (neither nil nor zero).
 * `NotNil`: checks if a pointer value is not nil. Non-pointer values are considered valid.
 * `Skip`: this is a special rule used to indicate that all rules following it should be skipped (including the nested ones).
@@ -336,17 +346,15 @@ Below is the whole list of the rules provided by the `is` package:
 
 ### Customizing Error Messages
 
-All the built-in validation rules allow you to customize error messages. To do so, simply call the `Error()` method
-of the rules, e.g.,
+All built-in validation rules allow you to customize error messages. To do so, simply call the `Error()` method
+of the rules. For example,
 
 ```go
-rules := validation.Rules{
+data := "2123"
+err := validation.Validate(data,
 	validation.Required.Error("is required"),
 	validation.Match(regexp.MustCompile("^[0-9]{5}$")).Error("must be a string with five digits"),
-}
-
-data := "2123"
-err := rules.Validate(data)
+)
 fmt.Println(err)
 // Output:
 // must be a string with five digits
