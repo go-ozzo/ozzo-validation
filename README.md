@@ -360,6 +360,7 @@ fmt.Println(err)
 // must be a string with five digits
 ```
 
+
 ## Creating Custom Rules
 
 Creating a custom rule is as simple as implementing the `validation.Rule` interface. The interface contains a single
@@ -369,6 +370,35 @@ method as shown below, which should validate the value and return the validation
 // Validate validates a value and returns an error if validation fails.
 Validate(value interface{}) error
 ```
+
+
+### Rule Groups
+
+When a combination of several rules are used in multiple places, you may use the following trick to create a 
+rule group so that your code is more maintainable.
+
+```go
+var NameRule = []validation.Rule{
+	validation.Required,
+	validation.Length(5, 20),
+}
+
+type User struct {
+	FirstName string
+	LastName  string
+}
+
+func (u User) Validate() error {
+	return validation.ValidateStruct(&u,
+		validation.Field(&u.FirstName, NameRule...),
+		validation.Field(&u.LastName, NameRule...),
+	)
+}
+```
+
+In the above example, we create a rule group `NameRule` which consists of two validation rules. We then use this rule
+group to validate both `FirstName` and `LastName`.
+
 
 ## Credits
 
