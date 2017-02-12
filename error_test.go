@@ -28,7 +28,7 @@ func TestErrors_Error(t *testing.T) {
 	assert.Equal(t, "", errs.Error())
 }
 
-func TestError_MarshalMessage(t *testing.T) {
+func TestErrors_MarshalMessage(t *testing.T) {
 	errs := Errors{
 		"A": errors.New("A1"),
 		"B": Errors{
@@ -38,4 +38,26 @@ func TestError_MarshalMessage(t *testing.T) {
 	errsJSON, err := errs.MarshalJSON()
 	assert.Nil(t, err)
 	assert.Equal(t, "{\"A\":\"A1\",\"B\":{\"2\":\"B1\"}}", string(errsJSON))
+}
+
+func TestErrors_Filter(t *testing.T) {
+	errs := Errors{
+		"B": errors.New("B1"),
+		"C": nil,
+		"A": errors.New("A1"),
+	}
+	err := errs.Filter()
+	assert.Equal(t, 2, len(errs))
+	if assert.NotNil(t, err) {
+		assert.Equal(t, "A: A1; B: B1.", err.Error())
+	}
+
+	errs = Errors{}
+	assert.Nil(t, errs.Filter())
+
+	errs = Errors{
+		"B": nil,
+		"C": nil,
+	}
+	assert.Nil(t, errs.Filter())
 }

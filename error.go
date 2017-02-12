@@ -53,3 +53,17 @@ func (es Errors) MarshalJSON() ([]byte, error) {
 	}
 	return json.Marshal(errs)
 }
+
+// Filter removes all nils from Errors and returns back the updated Errors as an error.
+// If the length of Errors becomes 0, it will return nil.
+func (es Errors) Filter() error {
+	for key, value := range es {
+		if value == nil {
+			delete(es, key)
+		}
+	}
+	if len(es) == 0 {
+		return nil
+	}
+	return es
+}

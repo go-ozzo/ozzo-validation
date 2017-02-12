@@ -135,7 +135,7 @@ And when each field is validated, its rules are also evaluated in the order they
 If a rule fails, an error is recorded for that field, and the validation will continue with the next field.
 
 
-#### Validation Errors
+### Validation Errors
 
 The `validation.ValidateStruct` method returns validation errors found in struct fields in terms of `validation.Errors` 
 which is a map of fields and their corresponding errors. Nil is returned if validation passes.
@@ -162,6 +162,37 @@ fmt.Println(string(b))
 ```
 
 You may modify `validation.ErrorTag` to use a different struct tag name.
+
+If you do not like the magic that `ValidateStruct` determines error keys based on struct field names or corresponding
+tag values, you may use the following alternative approach:
+
+```go
+c := Customer{
+	Name:  "Qiang Xue",
+	Email: "q",
+	Address: Address{
+		State:  "Virginia",
+	},
+}
+
+err := validation.Errors{
+	"name": validation.Validate(c.Name, validation.Required, validation.Length(5, 20)),
+	"email": validation.Validate(c.Name, validation.Required, is.Email),
+	"zip": validation.Validate(c.Address.Zip, validation.Required, validation.Match(regexp.MustCompile("^[0-9]{5}$"))),
+}.Filter()
+fmt.Println(err)
+// Output:
+// email: must be a valid email address; zip: cannot be blank.
+```
+
+In the above example, we build a `validation.Errors` by a list of names and the corresponding validation results. 
+At the end we call `Errors.Filter()` to remove from `Errors` all nils which correspond to those successful validation 
+results. The method will return nil if `Errors` is empty.
+
+The above approach is very flexible as it allows you to freely build up your validation error structure. You can use
+it to validate both struct and non-struct values. Compared to using `ValidateStruct` to validate a struct, 
+it has the drawback that you have to redundantly specify the error keys while `ValidateStruct` can automatically 
+find them out.
 
 
 ## Validatable Types
@@ -239,7 +270,7 @@ fmt.Println(err)
 // 0: (City: cannot be blank; Street: cannot be blank.); 2: (Street: cannot be blank; Zip: must be in a valid format.).
 ```
 
-When using `validation.ValidateStruct` to validate a struct, the above validation procedure also applies to struct 
+When using `validation.ValidateStruct` to validate a struct, the above validation procedure also applies to those struct 
 fields which are map/slices/arrays of validatables. 
 
 

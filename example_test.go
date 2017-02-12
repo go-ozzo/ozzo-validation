@@ -60,7 +60,7 @@ func Example() {
 		},
 	}
 
-	err := c.Validate() // or alternatively, err := validation.Validate(c)
+	err := c.Validate()
 	fmt.Println(err)
 	// Output:
 	// Address: (State: must be in a valid format.); Email: must be a valid email address.
@@ -88,4 +88,23 @@ func Example_third() {
 	fmt.Println(err)
 	// Output:
 	// 0: (City: cannot be blank; Street: cannot be blank.); 2: (Street: cannot be blank; Zip: must be in a valid format.).
+}
+
+func Example_four() {
+	c := Customer{
+		Name:  "Qiang Xue",
+		Email: "q",
+		Address: Address{
+			State:  "Virginia",
+		},
+	}
+
+	err := validation.Errors{
+		"name": validation.Validate(c.Name, validation.Required, validation.Length(5, 20)),
+		"email": validation.Validate(c.Name, validation.Required, is.Email),
+		"zip": validation.Validate(c.Address.Zip, validation.Required, validation.Match(regexp.MustCompile("^[0-9]{5}$"))),
+	}.Filter()
+	fmt.Println(err)
+	// Output:
+	// email: must be a valid email address; zip: cannot be blank.
 }
