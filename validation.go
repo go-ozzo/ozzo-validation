@@ -23,6 +23,10 @@ type (
 		// Validate validates a value and returns a value if validation fails.
 		Validate(value interface{}) error
 	}
+
+	// RuleFunc represents a validator function.
+	// You may wrap it as a Rule by calling By().
+	RuleFunc func(value interface{}) error
 )
 
 var (
@@ -107,4 +111,17 @@ type skipRule struct{}
 
 func (r *skipRule) Validate(interface{}) error {
 	return nil
+}
+
+type inlineRule struct {
+	f RuleFunc
+}
+
+func (r *inlineRule) Validate(value interface{}) error {
+	return r.f(value)
+}
+
+// By wraps a RuleFunc into a Rule.
+func By(f RuleFunc) Rule {
+	return &inlineRule{f}
 }

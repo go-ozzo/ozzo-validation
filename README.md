@@ -309,8 +309,8 @@ The following rules are provided in the `validation` package:
 * `In(...interface{})`: checks if a value can be found in the given list of values.
 * `Length(min, max int)`: checks if the length of a value is within the specified range.
   This rule should only be used for validating strings, slices, maps, and arrays.
-* `Range(min, max int)`: checks if a value is within the specified range.
-  This rule should only be used for validating int, uint and float types.
+* `Min(min interface{})` and `Max(max interface{})`: checks if a value is within the specified range.
+  These two rules should only be used for validating int, uint, float and time.Time types.
 * `Match(*regexp.Regexp)`: checks if a value matches the specified regular expression.
   This rule should only be used for strings and byte slices.
 * `Date(layout string)`: checks if a string value is a date whose format is specified by the layout.
@@ -395,11 +395,28 @@ fmt.Println(err)
 ## Creating Custom Rules
 
 Creating a custom rule is as simple as implementing the `validation.Rule` interface. The interface contains a single
-method as shown below, which should validate the value and return the validation error, if any.
+method as shown below, which should validate the value and return the validation error, if any:
 
 ```go
 // Validate validates a value and returns an error if validation fails.
 Validate(value interface{}) error
+```
+
+If you already have a function with the same signature as shown above, you can call `validation.By()` to turn
+it into a validation rule. For example,
+
+```go
+func checkAbc(value interface{}) error {
+	s, _ := value.(string)
+	if s != "abc" {
+		return errors.New("must be abc")
+	}
+	return nil
+})
+
+err := validation.Validate("xyz", validation.By(checkAbc))
+fmt.Println(err)
+// Output: must be abc
 ```
 
 

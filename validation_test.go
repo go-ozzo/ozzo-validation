@@ -55,6 +55,21 @@ func TestValidate(t *testing.T) {
 	assert.Nil(t, err)
 }
 
+func TestBy(t *testing.T) {
+	abcRule := By(func(value interface{}) error {
+		s, _ := value.(string)
+		if s != "abc" {
+			return errors.New("must be abc")
+		}
+		return nil
+	})
+	assert.Nil(t, Validate("abc", abcRule))
+	err := Validate("xyz", abcRule)
+	if assert.NotNil(t, err) {
+		assert.Equal(t, "must be abc", err.Error())
+	}
+}
+
 func Test_skipRule_Validate(t *testing.T) {
 	assert.Nil(t, Skip.Validate(100))
 }
