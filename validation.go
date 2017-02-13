@@ -63,6 +63,11 @@ func Validate(value interface{}, rules ...Rule) error {
 	if rv.Kind() == reflect.Ptr || rv.Kind() == reflect.Interface {
 		rv = rv.Elem()
 	}
+
+	if !rv.IsValid() {
+		// Skip zero values after rule validations.
+		return nil
+	}
 	rt, rk := rv.Type(), rv.Kind()
 
 	if rk == reflect.Map && rt.Elem().Implements(validatableType) {
