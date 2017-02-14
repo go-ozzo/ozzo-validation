@@ -66,7 +66,8 @@ func TestValidateStruct(t *testing.T) {
 		{"t2.1", &m1, []*FieldRules{Field(&m1.A, &validateAbc{}), Field(&m1.B, &validateXyz{})}, ""},
 		{"t2.2", &m1, []*FieldRules{Field(&m1.A, &validateXyz{}), Field(&m1.B, &validateAbc{})}, "A: error xyz; B: error abc."},
 		{"t2.3", &m1, []*FieldRules{Field(&m1.A, &validateXyz{}), Field(&m1.c, &validateXyz{})}, "A: error xyz; c: error xyz."},
-		{"t3.4", &m1, []*FieldRules{Field(&m1.H, Length(0, 5))}, ""},
+		{"t2.4", &m1, []*FieldRules{Field(&m1.D, Length(0, 5))}, ""},
+		{"t2.5", &m1, []*FieldRules{Field(&m1.F, Length(0, 5))}, ""},
 		// non-struct pointer
 		{"t3.1", m1, []*FieldRules{}, StructPointerError.Error()},
 		{"t3.2", nil, []*FieldRules{}, StructPointerError.Error()},

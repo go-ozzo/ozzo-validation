@@ -5,7 +5,6 @@
 package validation
 
 import (
-	"encoding/json"
 	"errors"
 	"strings"
 	"testing"
@@ -109,7 +108,6 @@ type Model1 struct {
 	E String123
 	F *String123
 	G string `json:"g"`
-	H *json.RawMessage
 }
 
 type String123 string
