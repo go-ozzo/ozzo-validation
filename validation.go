@@ -64,22 +64,19 @@ func Validate(value interface{}, rules ...Rule) error {
 		return v.Validate()
 	}
 
-	if rv.Kind() == reflect.Ptr || rv.Kind() == reflect.Interface {
-		rv = rv.Elem()
+	switch rv.Kind() {
+	case reflect.Map:
+		if rv.Type().Elem().Implements(validatableType) {
+			return validateMap(rv)
+		}
+	case reflect.Slice, reflect.Array:
+		if rv.Type().Elem().Implements(validatableType) {
+			return validateSlice(rv)
+		}
+	case reflect.Ptr, reflect.Interface:
+		return Validate(rv.Elem().Interface())
 	}
 
-	//if !rv.IsValid() {
-	//	// Skip zero values after rule validations.
-	//	return nil
-	//}
-	rt, rk := rv.Type(), rv.Kind()
-
-	if rk == reflect.Map && rt.Elem().Implements(validatableType) {
-		return validateMap(rv)
-	}
-	if (rk == reflect.Slice || rk == reflect.Array) && rt.Elem().Implements(validatableType) {
-		return validateSlice(rv)
-	}
 	return nil
 }
 
