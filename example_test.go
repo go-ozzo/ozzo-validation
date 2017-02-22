@@ -71,7 +71,7 @@ func Example_second() {
 	err := validation.Validate(data,
 		validation.Required,       // not empty
 		validation.Length(5, 100), // length between 5 and 100
-		is.URL, // is a valid URL
+		is.URL,                    // is a valid URL
 	)
 	fmt.Println(err)
 	// Output:
@@ -95,14 +95,14 @@ func Example_four() {
 		Name:  "Qiang Xue",
 		Email: "q",
 		Address: Address{
-			State:  "Virginia",
+			State: "Virginia",
 		},
 	}
 
 	err := validation.Errors{
-		"name": validation.Validate(c.Name, validation.Required, validation.Length(5, 20)),
+		"name":  validation.Validate(c.Name, validation.Required, validation.Length(5, 20)),
 		"email": validation.Validate(c.Name, validation.Required, is.Email),
-		"zip": validation.Validate(c.Address.Zip, validation.Required, validation.Match(regexp.MustCompile("^[0-9]{5}$"))),
+		"zip":   validation.Validate(c.Address.Zip, validation.Required, validation.Match(regexp.MustCompile("^[0-9]{5}$"))),
 	}.Filter()
 	fmt.Println(err)
 	// Output:

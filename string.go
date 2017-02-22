@@ -8,6 +8,7 @@ import "errors"
 
 type stringValidator func(string) bool
 
+// StringRule is a rule that checks a string variable using a specified stringValidator.
 type StringRule struct {
 	validate stringValidator
 	message  string

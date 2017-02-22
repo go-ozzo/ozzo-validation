@@ -22,6 +22,7 @@ type (
 	// FieldNotFoundError is the error that a field cannot be found in the struct.
 	FieldNotFoundError int
 
+	// FieldRules represents a rule set associated with a struct field.
 	FieldRules struct {
 		fieldPtr interface{}
 		rules    []Rule

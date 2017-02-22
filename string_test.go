@@ -48,11 +48,11 @@ func TestStringValidator_Validate(t *testing.T) {
 	err = v.Validate(&value)
 	assert.Nil(t, err)
 
-	nullValue := sql.NullString{"me", true}
+	nullValue := sql.NullString{String: "me", Valid: true}
 	err = v.Validate(nullValue)
 	assert.Nil(t, err)
 
-	nullValue = sql.NullString{"", true}
+	nullValue = sql.NullString{String: "", Valid: true}
 	err = v.Validate(nullValue)
 	assert.Nil(t, err)
 
