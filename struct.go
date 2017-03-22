@@ -82,6 +82,15 @@ func ValidateStruct(structPtr interface{}, fields ...*FieldRules) error {
 			return FieldNotFoundError(i)
 		}
 		if err := Validate(fv.Elem().Interface(), fr.rules...); err != nil {
+			if ft.Anonymous {
+				// merge errors from anonymous struct field
+				if es, ok := err.(Errors); ok {
+					for name, value := range es {
+						errs[name] = value
+					}
+					continue
+				}
+			}
 			errs[getErrorFieldName(ft)] = err
 		}
 	}
@@ -107,12 +116,24 @@ func Field(fieldPtr interface{}, rules ...Rule) *FieldRules {
 func findStructField(structValue reflect.Value, fieldValue reflect.Value) *reflect.StructField {
 	ptr := fieldValue.Pointer()
 	for i := structValue.NumField() - 1; i >= 0; i-- {
+		sf := structValue.Type().Field(i)
 		if ptr == structValue.Field(i).UnsafeAddr() {
-			f := structValue.Type().Field(i)
 			// do additional type comparison because it's possible that the address of
 			// an embedded struct is the same as the first field of the embedded struct
-			if f.Type == fieldValue.Elem().Type() {
-				return &f
+			if sf.Type == fieldValue.Elem().Type() {
+				return &sf
+			}
+		}
+		if sf.Anonymous {
+			// delve into anonymous struct to look for the field
+			fi := structValue.Field(i)
+			if sf.Type.Kind() == reflect.Ptr {
+				fi = fi.Elem()
+			}
+			if fi.Kind() == reflect.Struct {
+				if f := findStructField(fi, fieldValue); f != nil {
+					return f
+				}
 			}
 		}
 	}

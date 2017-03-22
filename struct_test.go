@@ -37,10 +37,12 @@ func TestFindStructField(t *testing.T) {
 	assert.NotNil(t, findStructField(v1, reflect.ValueOf(&s1.Field3)))
 	assert.NotNil(t, findStructField(v1, reflect.ValueOf(&s1.Field4)))
 	assert.NotNil(t, findStructField(v1, reflect.ValueOf(&s1.field5)))
+	assert.NotNil(t, findStructField(v1, reflect.ValueOf(&s1.Struct2)))
 	assert.Nil(t, findStructField(v1, reflect.ValueOf(s1.S1)))
 	assert.NotNil(t, findStructField(v1, reflect.ValueOf(&s1.S1)))
-	assert.Nil(t, findStructField(v1, reflect.ValueOf(&s1.Field21)))
-	assert.Nil(t, findStructField(v1, reflect.ValueOf(&s1.Field22)))
+	assert.NotNil(t, findStructField(v1, reflect.ValueOf(&s1.Field21)))
+	assert.NotNil(t, findStructField(v1, reflect.ValueOf(&s1.Field22)))
+	assert.NotNil(t, findStructField(v1, reflect.ValueOf(&s1.Struct2.Field22)))
 	s2 := reflect.ValueOf(&s1.Struct2).Elem()
 	assert.NotNil(t, findStructField(s2, reflect.ValueOf(&s1.Field21)))
 	assert.NotNil(t, findStructField(s2, reflect.ValueOf(&s1.Struct2.Field21)))
@@ -90,21 +92,28 @@ func TestValidateStruct(t *testing.T) {
 		{"t8.1", &m3, []*FieldRules{Field(&m3.M3, Skip)}, ""},
 		{"t8.2", &m3, []*FieldRules{Field(&m3.M3)}, "M3: (A: error abc.)."},
 		{"t8.3", &m3, []*FieldRules{Field(&m3.Model3, Skip)}, ""},
-		{"t8.4", &m3, []*FieldRules{Field(&m3.Model3)}, "Model3: (A: error abc.)."},
+		{"t8.4", &m3, []*FieldRules{Field(&m3.Model3)}, "A: error abc."},
 		{"t8.5", &m4, []*FieldRules{Field(&m4.M3)}, ""},
 		{"t8.6", &m4, []*FieldRules{Field(&m4.Model3)}, ""},
-		{"t8.7", &m3, []*FieldRules{Field(&m3.A, Required)}, "field #0 cannot be found in the struct"},
+		{"t8.7", &m3, []*FieldRules{Field(&m3.A, Required), Field(&m3.B, Required)}, "A: cannot be blank; B: cannot be blank."},
+		{"t8.8", &m3, []*FieldRules{Field(&m4.A, Required)}, "field #0 cannot be found in the struct"},
 	}
 	for _, test := range tests {
 		err := ValidateStruct(test.model, test.rules...)
 		assertError(t, test.err, err, test.tag)
 	}
 
+	// embedded struct
+	err := Validate(&m3)
+	if assert.NotNil(t, err) {
+		assert.Equal(t, "A: error abc.", err.Error())
+	}
+
 	a := struct {
 		Name  string
 		Value string
 	}{"name", "demo"}
-	err := ValidateStruct(&a,
+	err = ValidateStruct(&a,
 		Field(&a.Name, Required),
 		Field(&a.Value, Required, Length(5, 10)),
 	)
