@@ -27,6 +27,11 @@ type Struct2 struct {
 	Field22 string
 }
 
+type Struct3 struct {
+	*Struct2
+	S1 string
+}
+
 func TestFindStructField(t *testing.T) {
 	var s1 Struct1
 	v1 := reflect.ValueOf(&s1).Elem()
@@ -47,6 +52,12 @@ func TestFindStructField(t *testing.T) {
 	assert.NotNil(t, findStructField(s2, reflect.ValueOf(&s1.Field21)))
 	assert.NotNil(t, findStructField(s2, reflect.ValueOf(&s1.Struct2.Field21)))
 	assert.NotNil(t, findStructField(s2, reflect.ValueOf(&s1.Struct2.Field22)))
+	s3 := Struct3{
+		Struct2: &Struct2{},
+	}
+	v3 := reflect.ValueOf(&s3).Elem()
+	assert.NotNil(t, findStructField(v3, reflect.ValueOf(&s3.Struct2)))
+	assert.NotNil(t, findStructField(v3, reflect.ValueOf(&s3.Field21)))
 }
 
 func TestValidateStruct(t *testing.T) {
