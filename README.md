@@ -72,7 +72,7 @@ the validation, the method will return the corresponding error and skip the rest
 return nil if the value passes all validation rules.
 
 
-### Validating a Struct Value
+### Validating a Struct
 
 For a struct value, you usually want to check if its fields are valid. For example, in a RESTful application, you
 may unmarshal the request payload into a struct and then validate the struct fields. If one or multiple fields
@@ -300,6 +300,57 @@ In the first scenario, an input value is considered missing if it is not entered
 In the second scenario, an input value is considered missing only if it is not entered. A pointer field is usually
 used in this case so that you can detect if a value is entered or not by checking if the pointer is nil or not.
 You can use the `validation.NotNil` rule to ensure a value is entered (even if it is a zero value).
+
+
+### Embedded Structs
+
+The `validation.ValidateStruct` method will properly validate a struct that contains embedded structs. In particular,
+the fields of an embedded struct are treated as if they belong directly to the containing struct. For example,
+
+```go
+type Employee struct {
+	Name string
+}
+
+func ()
+
+type Manager struct {
+	Employee
+	Level int
+}
+
+m := Manager{}
+err := validation.ValidateStruct(&m,
+	validation.Field(&m.Name, validation.Required),
+	validation.Field(&m.Level, validation.Required),
+)
+fmt.Println(err)
+// Output:
+// Level: cannot be blank; Name: cannot be blank.
+```
+
+In the above code, we use `&m.Name` to specify the validation of the `Name` field of the embedded struct `Employee`.
+And the validation error uses `Name` as the key for the error associated with the `Name` field as if `Name` a field
+directly belonging to `Manager`.
+
+If `Employee` implements the `validation.Validatable` interface, we can also use the following code to validate
+`Manager`, which generates the same validation result:
+
+```go
+func (e Employee) Validate() error {
+	return validation.ValidateStruct(&e,
+		validation.Field(&e.Name, validation.Required),
+	)
+}
+
+err := validation.ValidateStruct(&m,
+	validation.Field(&m.Employee),
+	validation.Field(&m.Level, validation.Required),
+)
+fmt.Println(err)
+// Output:
+// Level: cannot be blank; Name: cannot be blank.
+```
 
 
 ## Built-in Validation Rules

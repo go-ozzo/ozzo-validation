@@ -108,3 +108,23 @@ func Example_four() {
 	// Output:
 	// email: must be a valid email address; zip: cannot be blank.
 }
+
+func Example_five() {
+	type Employee struct {
+		Name string
+	}
+
+	type Manager struct {
+		Employee
+		Level int
+	}
+
+	m := Manager{}
+	err := validation.ValidateStruct(&m,
+		validation.Field(&m.Name, validation.Required),
+		validation.Field(&m.Level, validation.Required),
+	)
+	fmt.Println(err)
+	// Output:
+	// Level: cannot be blank; Name: cannot be blank.
+}
