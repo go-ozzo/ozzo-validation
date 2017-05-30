@@ -33,7 +33,7 @@ func Min(min interface{}) *thresholdRule {
 	return &thresholdRule{
 		threshold: min,
 		operator:  greaterEqualThan,
-		message:   fmt.Sprintf("must be greater than %v", min),
+		message:   fmt.Sprintf("must be equal or greater than %v", min),
 	}
 }
 
