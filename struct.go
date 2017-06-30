@@ -82,6 +82,9 @@ func ValidateStruct(structPtr interface{}, fields ...*FieldRules) error {
 			return FieldNotFoundError(i)
 		}
 		if err := Validate(fv.Elem().Interface(), fr.rules...); err != nil {
+			if bErr, ok := err.(BreakableErr); ok && bErr.StopValidation() {
+				return err
+			}
 			if ft.Anonymous {
 				// merge errors from anonymous struct field
 				if es, ok := err.(Errors); ok {
