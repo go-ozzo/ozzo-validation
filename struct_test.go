@@ -132,3 +132,63 @@ func TestValidateStruct(t *testing.T) {
 		assert.Equal(t, "Value: the length must be between 5 and 10.", err.Error())
 	}
 }
+
+func TestBreakableStop(t *testing.T) {
+	st := Struct2{
+		Field21: "stop",
+		Field22: "not fail",
+	}
+
+	validator := &breakableValidator{}
+	err := ValidateStruct(&st,
+		Field(&st.Field21, validator),
+		Field(&st.Field22, validator),
+	)
+	if assert.NotNil(t, err) {
+		assert.Equal(t, "breakableErr", err.Error())
+	}
+	assert.Equal(t, validator.called, 1, "validator should be called only once")
+}
+
+func TestBreakableNoStop(t *testing.T) {
+	st := Struct2{
+		Field21: "error",
+		Field22: "not fail",
+	}
+
+	validator := &breakableValidator{}
+	err := ValidateStruct(&st,
+		Field(&st.Field21, validator),
+		Field(&st.Field22, validator),
+	)
+	if assert.NotNil(t, err) {
+		assert.Equal(t, "Field21: breakableErr.", err.Error())
+	}
+	assert.Equal(t, validator.called, 2)
+}
+
+type breakableValidator struct {
+	called int
+}
+
+func (v *breakableValidator) Validate(value interface{}) error {
+	v.called++
+	if value.(string) == "stop" {
+		return &breakableErr{stop: true}
+	}
+	if value.(string) == "error" {
+		return &breakableErr{stop: false}
+	}
+	return nil
+}
+
+type breakableErr struct {
+	stop bool
+}
+
+func (e *breakableErr) Error() string {
+	return "breakableErr"
+}
+func (e *breakableErr) StopValidation() bool {
+	return e.stop
+}

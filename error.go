@@ -13,6 +13,12 @@ import (
 type (
 	// Errors represents the validation errors that are indexed by struct field names, map or slice keys.
 	Errors map[string]error
+
+	// BreakableErr interface allows to stop validation process
+	// it's useful for validators which can have internal errors
+	BreakableErr interface {
+		StopValidation() bool
+	}
 )
 
 // Error returns the error string of Errors.
