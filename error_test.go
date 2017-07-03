@@ -11,6 +11,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestNewInternalError(t *testing.T) {
+	err := NewInternalError(errors.New("abc"))
+	if assert.NotNil(t, err.InternalError()) {
+		assert.Equal(t, "abc", err.InternalError().Error())
+	}
+}
+
 func TestErrors_Error(t *testing.T) {
 	errs := Errors{
 		"B": errors.New("B1"),

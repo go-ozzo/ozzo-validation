@@ -13,7 +13,27 @@ import (
 type (
 	// Errors represents the validation errors that are indexed by struct field names, map or slice keys.
 	Errors map[string]error
+
+	// InternalError represents an error that should NOT be treated as a validation error.
+	InternalError interface {
+		error
+		InternalError() error
+	}
+
+	internalError struct {
+		error
+	}
 )
+
+// NewInternalError wraps a given error into an InternalError.
+func NewInternalError(err error) InternalError {
+	return &internalError{error: err}
+}
+
+// InternalError returns the actual error that it wraps around.
+func (e *internalError) InternalError() error {
+	return e.error
+}
 
 // Error returns the error string of Errors.
 func (es Errors) Error() string {

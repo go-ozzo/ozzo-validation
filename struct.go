@@ -62,7 +62,7 @@ func ValidateStruct(structPtr interface{}, fields ...*FieldRules) error {
 	value := reflect.ValueOf(structPtr)
 	if value.Kind() != reflect.Ptr || !value.IsNil() && value.Elem().Kind() != reflect.Struct {
 		// must be a pointer to a struct
-		return StructPointerError
+		return NewInternalError(StructPointerError)
 	}
 	if value.IsNil() {
 		// treat a nil struct pointer as valid
@@ -75,13 +75,16 @@ func ValidateStruct(structPtr interface{}, fields ...*FieldRules) error {
 	for i, fr := range fields {
 		fv := reflect.ValueOf(fr.fieldPtr)
 		if fv.Kind() != reflect.Ptr {
-			return FieldPointerError(i)
+			return NewInternalError(FieldPointerError(i))
 		}
 		ft := findStructField(value, fv)
 		if ft == nil {
-			return FieldNotFoundError(i)
+			return NewInternalError(FieldNotFoundError(i))
 		}
 		if err := Validate(fv.Elem().Interface(), fr.rules...); err != nil {
+			if ie, ok := err.(InternalError); ok && ie.InternalError() != nil{
+				return err
+			}
 			if ft.Anonymous {
 				// merge errors from anonymous struct field
 				if es, ok := err.(Errors); ok {

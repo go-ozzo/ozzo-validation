@@ -33,7 +33,7 @@ func Min(min interface{}) *thresholdRule {
 	return &thresholdRule{
 		threshold: min,
 		operator:  greaterEqualThan,
-		message:   fmt.Sprintf("must be greater than %v", min),
+		message:   fmt.Sprintf("must be no less than %v", min),
 	}
 }
 
@@ -46,7 +46,7 @@ func Max(max interface{}) *thresholdRule {
 	return &thresholdRule{
 		threshold: max,
 		operator:  lessEqualThan,
-		message:   fmt.Sprintf("must be smaller than %v", max),
+		message:   fmt.Sprintf("must be no greater than %v", max),
 	}
 }
 
@@ -54,8 +54,10 @@ func Max(max interface{}) *thresholdRule {
 func (r *thresholdRule) Exclusive() *thresholdRule {
 	if r.operator == greaterEqualThan {
 		r.operator = greaterThan
+		r.message = fmt.Sprintf("must be greater than %v", r.threshold)
 	} else if r.operator == lessEqualThan {
 		r.operator = lessThan
+		r.message = fmt.Sprintf("must be less than %v", r.threshold)
 	}
 	return r
 }

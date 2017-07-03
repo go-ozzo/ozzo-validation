@@ -195,6 +195,28 @@ it has the drawback that you have to redundantly specify the error keys while `V
 find them out.
 
 
+### Internal Errors
+
+Internal errors are different from validation errors in that internal errors are caused by malfunctioning code (e.g.
+a validator making a remote call to validate some data when the remote service is down) rather
+than the data being validated. When an internal error happens during data validation, you may allow the user to resubmit
+the same data to perform validation again, hoping the program resumes functioning. On the other hand, if data validation
+fails due to data error, the user should generally not resubmit the same data again.
+
+To differentiate internal errors from validation errors, when an internal error occurs in a validator, wrap it
+into `validation.InternalError` by calling `validation.NewInternalError()`. The user of the validator can then check
+if a returned error is an internal error or not. For example,
+
+```go
+if err := a.Validate(); err != nil {
+	if e, ok := err.(validation.InternalError); ok {
+		// an internal error happened
+		fmt.Println(e.InternalError())
+	}
+}
+```
+
+
 ## Validatable Types
 
 A type is validatable if it implements the `validation.Validatable` interface. 

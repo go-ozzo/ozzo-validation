@@ -100,6 +100,15 @@ func (v *validateXyz) Validate(obj interface{}) error {
 	return nil
 }
 
+type validateInternalError struct{}
+
+func (v *validateInternalError) Validate(obj interface{}) error {
+	if strings.Contains(obj.(string), "internal") {
+		return NewInternalError(errors.New("error internal"))
+	}
+	return nil
+}
+
 type Model1 struct {
 	A string
 	B string
