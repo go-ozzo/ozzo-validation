@@ -485,7 +485,7 @@ func checkAbc(value interface{}) error {
 		return errors.New("must be abc")
 	}
 	return nil
-})
+}
 
 err := validation.Validate("xyz", validation.By(checkAbc))
 fmt.Println(err)
