@@ -390,6 +390,7 @@ The following rules are provided in the `validation` package:
   By calling `Min()` and/or `Max()`, you can check additionally if the date is within the specified range.
 * `Required`: checks if a value is not empty (neither nil nor zero).
 * `NotNil`: checks if a pointer value is not nil. Non-pointer values are considered valid.
+* `NilOrNotEmpty`: checks if a value is a nil pointer or a non-empty value. This differs from `Required` in that it treats a nil pointer as valid.
 * `Skip`: this is a special rule used to indicate that all rules following it should be skipped (including the nested ones).
 
 The `is` sub-package provides a list of commonly used string validation rules that can be used to check if the format
