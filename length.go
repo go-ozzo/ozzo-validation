@@ -7,6 +7,7 @@ package validation
 import (
 	"errors"
 	"fmt"
+	"unicode/utf8"
 )
 
 // Length returns a validation rule that checks if a value's length is within the specified range.
@@ -29,9 +30,21 @@ func Length(min, max int) *lengthRule {
 	}
 }
 
+// RuneLength returns a validation rule that checks if a string's rune length is within the specified range.
+// If max is 0, it means there is no upper bound for the length.
+// This rule should only be used for validating strings, slices, maps, and arrays.
+// An empty value is considered valid. Use the Required rule to make sure a value is not empty.
+// If the value being validated is not a string, the rule works the same as Length.
+func RuneLength(min, max int) *lengthRule {
+	r := Length(min, max)
+	r.rune = true
+	return r
+}
+
 type lengthRule struct {
 	min, max int
 	message  string
+	rune     bool
 }
 
 // Validate checks if the given value is valid or not.
@@ -41,8 +54,13 @@ func (v *lengthRule) Validate(value interface{}) error {
 		return nil
 	}
 
-	l, err := LengthOfValue(value)
-	if err != nil {
+	var (
+		l   int
+		err error
+	)
+	if s, ok := value.(string); ok && v.rune {
+		l = utf8.RuneCountInString(s)
+	} else if l, err = LengthOfValue(value); err != nil {
 		return err
 	}
 
