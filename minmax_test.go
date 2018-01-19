@@ -6,9 +6,9 @@ package validation
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
-	"time"
 )
 
 func TestMin(t *testing.T) {

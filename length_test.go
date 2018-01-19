@@ -75,7 +75,7 @@ func TestRuneLength(t *testing.T) {
 	}
 }
 
-func Test_lengthRule_Error(t *testing.T) {
+func Test_LengthRule_Error(t *testing.T) {
 	r := Length(10, 20)
 	assert.Equal(t, "the length must be between 10 and 20", r.message)
 

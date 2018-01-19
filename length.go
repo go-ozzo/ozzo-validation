@@ -14,7 +14,7 @@ import (
 // If max is 0, it means there is no upper bound for the length.
 // This rule should only be used for validating strings, slices, maps, and arrays.
 // An empty value is considered valid. Use the Required rule to make sure a value is not empty.
-func Length(min, max int) *lengthRule {
+func Length(min, max int) *LengthRule {
 	message := "the value must be empty"
 	if min == 0 && max > 0 {
 		message = fmt.Sprintf("the length must be no more than %v", max)
@@ -23,7 +23,7 @@ func Length(min, max int) *lengthRule {
 	} else if min > 0 && max > 0 {
 		message = fmt.Sprintf("the length must be between %v and %v", min, max)
 	}
-	return &lengthRule{
+	return &LengthRule{
 		min:     min,
 		max:     max,
 		message: message,
@@ -35,20 +35,20 @@ func Length(min, max int) *lengthRule {
 // This rule should only be used for validating strings, slices, maps, and arrays.
 // An empty value is considered valid. Use the Required rule to make sure a value is not empty.
 // If the value being validated is not a string, the rule works the same as Length.
-func RuneLength(min, max int) *lengthRule {
+func RuneLength(min, max int) *LengthRule {
 	r := Length(min, max)
 	r.rune = true
 	return r
 }
 
-type lengthRule struct {
+type LengthRule struct {
 	min, max int
 	message  string
 	rune     bool
 }
 
 // Validate checks if the given value is valid or not.
-func (v *lengthRule) Validate(value interface{}) error {
+func (v *LengthRule) Validate(value interface{}) error {
 	value, isNil := Indirect(value)
 	if isNil || IsEmpty(value) {
 		return nil
@@ -71,7 +71,7 @@ func (v *lengthRule) Validate(value interface{}) error {
 }
 
 // Error sets the error message for the rule.
-func (v *lengthRule) Error(message string) *lengthRule {
+func (v *LengthRule) Error(message string) *LengthRule {
 	v.message = message
 	return v
 }

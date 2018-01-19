@@ -83,13 +83,13 @@ func TestValidateStruct(t *testing.T) {
 		{"t2.4", &m1, []*FieldRules{Field(&m1.D, Length(0, 5))}, ""},
 		{"t2.5", &m1, []*FieldRules{Field(&m1.F, Length(0, 5))}, ""},
 		// non-struct pointer
-		{"t3.1", m1, []*FieldRules{}, StructPointerError.Error()},
-		{"t3.2", nil, []*FieldRules{}, StructPointerError.Error()},
+		{"t3.1", m1, []*FieldRules{}, ErrStructPointer.Error()},
+		{"t3.2", nil, []*FieldRules{}, ErrStructPointer.Error()},
 		{"t3.3", m0, []*FieldRules{}, ""},
-		{"t3.4", &m0, []*FieldRules{}, StructPointerError.Error()},
+		{"t3.4", &m0, []*FieldRules{}, ErrStructPointer.Error()},
 		// invalid field spec
-		{"t4.1", &m1, []*FieldRules{Field(m1)}, FieldPointerError(0).Error()},
-		{"t4.2", &m1, []*FieldRules{Field(&m1)}, FieldNotFoundError(0).Error()},
+		{"t4.1", &m1, []*FieldRules{Field(m1)}, ErrFieldPointer(0).Error()},
+		{"t4.2", &m1, []*FieldRules{Field(&m1)}, ErrFieldNotFound(0).Error()},
 		// struct tag
 		{"t5.1", &m1, []*FieldRules{Field(&m1.G, &validateAbc{})}, "g: error abc."},
 		// validatable field

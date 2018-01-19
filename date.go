@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-type dateRule struct {
+type DateRule struct {
 	layout       string
 	min, max     time.Time
 	message      string
@@ -27,8 +27,8 @@ type dateRule struct {
 // the specified date range.
 //
 // An empty value is considered valid. Use the Required rule to make sure a value is not empty.
-func Date(layout string) *dateRule {
-	return &dateRule{
+func Date(layout string) *DateRule {
+	return &DateRule{
 		layout:       layout,
 		message:      "must be a valid date",
 		rangeMessage: "the data is out of range",
@@ -36,31 +36,31 @@ func Date(layout string) *dateRule {
 }
 
 // Error sets the error message that is used when the value being validated is not a valid date.
-func (r *dateRule) Error(message string) *dateRule {
+func (r *DateRule) Error(message string) *DateRule {
 	r.message = message
 	return r
 }
 
 // RangeError sets the error message that is used when the value being validated is out of the specified Min/Max date range.
-func (r *dateRule) RangeError(message string) *dateRule {
+func (r *DateRule) RangeError(message string) *DateRule {
 	r.rangeMessage = message
 	return r
 }
 
 // Min sets the minimum date range. A zero value means skipping the minimum range validation.
-func (r *dateRule) Min(min time.Time) *dateRule {
+func (r *DateRule) Min(min time.Time) *DateRule {
 	r.min = min
 	return r
 }
 
 // Max sets the maximum date range. A zero value means skipping the maximum range validation.
-func (r *dateRule) Max(max time.Time) *dateRule {
+func (r *DateRule) Max(max time.Time) *DateRule {
 	r.max = max
 	return r
 }
 
 // Validate checks if the given value is a valid date.
-func (r *dateRule) Validate(value interface{}) error {
+func (r *DateRule) Validate(value interface{}) error {
 	value, isNil := Indirect(value)
 	if isNil || IsEmpty(value) {
 		return nil
