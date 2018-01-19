@@ -12,16 +12,16 @@ import (
 )
 
 var (
-	// StructPointerError is the error that a struct being validated is not specified as a pointer.
-	StructPointerError = errors.New("only a pointer to a struct can be validated")
+	// ErrStructPointer is the error that a struct being validated is not specified as a pointer.
+	ErrStructPointer = errors.New("only a pointer to a struct can be validated")
 )
 
 type (
-	// FieldPointerError is the error that a field is not specified as a pointer.
-	FieldPointerError int
+	// ErrFieldPointer is the error that a field is not specified as a pointer.
+	ErrFieldPointer int
 
-	// FieldNotFoundError is the error that a field cannot be found in the struct.
-	FieldNotFoundError int
+	// ErrFieldNotFound is the error that a field cannot be found in the struct.
+	ErrFieldNotFound int
 
 	// FieldRules represents a rule set associated with a struct field.
 	FieldRules struct {
@@ -30,13 +30,13 @@ type (
 	}
 )
 
-// Error returns the error string of FieldPointerError.
-func (e FieldPointerError) Error() string {
+// Error returns the error string of ErrFieldPointer.
+func (e ErrFieldPointer) Error() string {
 	return fmt.Sprintf("field #%v must be specified as a pointer", int(e))
 }
 
-// Error returns the error string of FieldNotFoundError.
-func (e FieldNotFoundError) Error() string {
+// Error returns the error string of ErrFieldNotFound.
+func (e ErrFieldNotFound) Error() string {
 	return fmt.Sprintf("field #%v cannot be found in the struct", int(e))
 }
 
@@ -62,7 +62,7 @@ func ValidateStruct(structPtr interface{}, fields ...*FieldRules) error {
 	value := reflect.ValueOf(structPtr)
 	if value.Kind() != reflect.Ptr || !value.IsNil() && value.Elem().Kind() != reflect.Struct {
 		// must be a pointer to a struct
-		return NewInternalError(StructPointerError)
+		return NewInternalError(ErrStructPointer)
 	}
 	if value.IsNil() {
 		// treat a nil struct pointer as valid
@@ -75,14 +75,14 @@ func ValidateStruct(structPtr interface{}, fields ...*FieldRules) error {
 	for i, fr := range fields {
 		fv := reflect.ValueOf(fr.fieldPtr)
 		if fv.Kind() != reflect.Ptr {
-			return NewInternalError(FieldPointerError(i))
+			return NewInternalError(ErrFieldPointer(i))
 		}
 		ft := findStructField(value, fv)
 		if ft == nil {
-			return NewInternalError(FieldNotFoundError(i))
+			return NewInternalError(ErrFieldNotFound(i))
 		}
 		if err := Validate(fv.Elem().Interface(), fr.rules...); err != nil {
-			if ie, ok := err.(InternalError); ok && ie.InternalError() != nil{
+			if ie, ok := err.(InternalError); ok && ie.InternalError() != nil {
 				return err
 			}
 			if ft.Anonymous {

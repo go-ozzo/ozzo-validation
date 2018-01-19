@@ -11,7 +11,7 @@ import (
 )
 
 func TestIn(t *testing.T) {
-	var v int = 1
+	var v = 1
 	var v2 *int
 	tests := []struct {
 		tag    string
@@ -36,7 +36,7 @@ func TestIn(t *testing.T) {
 	}
 }
 
-func Test_inRule_Error(t *testing.T) {
+func Test_InRule_Error(t *testing.T) {
 	r := In(1, 2, 3)
 	assert.Equal(t, "must be a valid value", r.message)
 	r.Error("123")

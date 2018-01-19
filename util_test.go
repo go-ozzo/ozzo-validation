@@ -193,7 +193,7 @@ func TestToFloat(t *testing.T) {
 
 func TestIsEmpty(t *testing.T) {
 	var s1 string
-	var s2 string = "a"
+	var s2 = "a"
 	var s3 *string
 	s4 := struct{}{}
 	tests := []struct {
@@ -260,7 +260,7 @@ func TestIsEmpty(t *testing.T) {
 }
 
 func TestIndirect(t *testing.T) {
-	var a int = 100
+	var a = 100
 	var b *int
 	var c *sql.NullInt64
 
