@@ -35,6 +35,7 @@ func TestAll(t *testing.T) {
 		{"IPv4", IPv4, "74.125.19.99", "2001:4860:0:2001::68", "must be a valid IPv4 address"},
 		{"IPv6", IPv6, "2001:4860:0:2001::68", "74.125.19.99", "must be a valid IPv6 address"},
 		{"MAC", MAC, "0123.4567.89ab", "74.125.19.99", "must be a valid MAC address"},
+		{"Subdomain", Subdomain, "example-subdomain", "example.com", "must be a valid subdomain"},
 		{"DNSName", DNSName, "example.com", "abc%", "must be a valid DNS name"},
 		{"Host", Host, "example.com", "abc%", "must be a valid IP address or DNS name"},
 		{"Port", Port, "123", "99999", "must be a valid port number"},
