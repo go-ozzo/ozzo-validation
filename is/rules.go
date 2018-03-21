@@ -100,6 +100,8 @@ var (
 	IPv6 = validation.NewStringRule(govalidator.IsIPv6, "must be a valid IPv6 address")
 	// Subdomain validates if a string is valid subdomain
 	Subdomain = validation.NewStringRule(isSubdomain, "must be a valid subdomain")
+	// Domain validates if a string is valid domain
+	Domain = validation.NewStringRule(isDomain, "must be a valid domain")
 	// DNSName validates if a string is valid DNS name
 	DNSName = validation.NewStringRule(govalidator.IsDNSName, "must be a valid DNS name")
 	// Host validates if a string is a valid IP (both v4 and v6) or a valid DNS name
@@ -120,8 +122,6 @@ var (
 
 var (
 	reDigit = regexp.MustCompile("^[0-9]+$")
-	// Subdomain regex source: https://stackoverflow.com/a/7933253
-	reSubdomain = regexp.MustCompile(`^[A-Za-z0-9](?:[A-Za-z0-9\-]{0,61}[A-Za-z0-9])?$`)
 )
 
 func isISBN(value string) bool {
@@ -133,7 +133,22 @@ func isDigit(value string) bool {
 }
 
 func isSubdomain(value string) bool {
+	// Subdomain regex source: https://stackoverflow.com/a/7933253
+	reSubdomain := regexp.MustCompile(`^[A-Za-z0-9](?:[A-Za-z0-9\-]{0,61}[A-Za-z0-9])?$`)
 	return reSubdomain.MatchString(value)
+}
+
+func isDomain(value string) bool {
+	if len(value) > 255 {
+		return false
+	}
+
+	// Domain regex source: https://stackoverflow.com/a/7933253
+	// Slightly modified: Removed 255 max length validation since Go regex does not
+	// support lookarounds. More info: https://stackoverflow.com/a/38935027
+	reDomain := regexp.MustCompile(`^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+(?:[a-z]{1,63}| xn--[a-z0-9]{1,59})$`)
+
+	return reDomain.MatchString(value)
 }
 
 func isUTFNumeric(value string) bool {

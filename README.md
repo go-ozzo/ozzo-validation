@@ -443,6 +443,8 @@ Below is the whole list of the rules provided by the `is` package:
 * `IP`: validates if a string is a valid IP address (either version 4 or 6)
 * `IPv4`: validates if a string is a valid version 4 IP address
 * `IPv6`: validates if a string is a valid version 6 IP address
+* `Subdomain`: validates if a string is valid subdomain
+* `Domain`: validates if a string is valid domain
 * `DNSName`: validates if a string is valid DNS name
 * `Host`: validates if a string is a valid IP (both v4 and v6) or a valid DNS name
 * `Port`: validates if a string is a valid port number
