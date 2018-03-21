@@ -122,6 +122,8 @@ var (
 
 var (
 	reDigit = regexp.MustCompile("^[0-9]+$")
+	// Subdomain regex source: https://stackoverflow.com/a/7933253
+	reSubdomain = regexp.MustCompile(`^[A-Za-z0-9](?:[A-Za-z0-9\-]{0,61}[A-Za-z0-9])?$`)
 )
 
 func isISBN(value string) bool {
