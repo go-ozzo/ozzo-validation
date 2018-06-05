@@ -6,6 +6,7 @@ package validation
 
 import (
 	"testing"
+	"time"
 
 	"database/sql"
 
@@ -196,6 +197,8 @@ func TestIsEmpty(t *testing.T) {
 	var s2 = "a"
 	var s3 *string
 	s4 := struct{}{}
+	time1 := time.Now()
+	var time2 time.Time
 	tests := []struct {
 		tag   string
 		value interface{}
@@ -251,6 +254,11 @@ func TestIsEmpty(t *testing.T) {
 		// struct
 		{"t9.1", s4, false},
 		{"t9.2", &s4, false},
+		// time.Time
+		{"t10.1", time1, false},
+		{"t10.2", &time1, false},
+		{"t10.3", time2, true},
+		{"t10.4", &time2, true},
 	}
 
 	for _, test := range tests {
