@@ -84,6 +84,8 @@ var (
 	Base64 = validation.NewStringRule(govalidator.IsBase64, "must be encoded in Base64")
 	// DataURI validates if a string is a valid base64-encoded data URI
 	DataURI = validation.NewStringRule(govalidator.IsDataURI, "must be a Base64-encoded data URI")
+	// E164 validates if a string is a valid ISO3166 Alpha 2 country code
+	E164 = validation.NewStringRule(isE164Number, "must be a valid E164 number")
 	// CountryCode2 validates if a string is a valid ISO3166 Alpha 2 country code
 	CountryCode2 = validation.NewStringRule(govalidator.IsISO3166Alpha2, "must be a valid two-letter country code")
 	// CountryCode3 validates if a string is a valid ISO3166 Alpha 3 country code
@@ -132,6 +134,12 @@ func isISBN(value string) bool {
 
 func isDigit(value string) bool {
 	return reDigit.MatchString(value)
+}
+
+func isE164Number(value string) bool {
+	// E164 regex source: https://stackoverflow.com/a/23299989
+	reE164 := regexp.MustCompile(`^\+?[1-9]\d{1,14}$`)
+	return reE164.MatchString(value)
 }
 
 func isSubdomain(value string) bool {
