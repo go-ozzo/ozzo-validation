@@ -6,6 +6,7 @@ package validation
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -13,6 +14,7 @@ import (
 func TestRequired(t *testing.T) {
 	s1 := "123"
 	s2 := ""
+	var time1 time.Time
 	tests := []struct {
 		tag   string
 		value interface{}
@@ -23,6 +25,7 @@ func TestRequired(t *testing.T) {
 		{"t3", &s1, ""},
 		{"t4", &s2, "cannot be blank"},
 		{"t5", nil, "cannot be blank"},
+		{"t6", time1, "cannot be blank"},
 	}
 
 	for _, test := range tests {

@@ -54,6 +54,7 @@ func TestMin(t *testing.T) {
 		{"t4.5", date20000601, true, date20000601, "must be greater than 2000-06-01 00:00:00 +0000 UTC"},
 		{"t4.6", date20000601, true, 1, "cannot convert int to time.Time"},
 		{"t4.7", struct{}{}, false, 1, "type not supported: struct {}"},
+		{"t4.8", date0, false, date20000601, ""},
 	}
 
 	for _, test := range tests {
