@@ -12,12 +12,12 @@ import (
 
 func TestMultipleof(t *testing.T) {
 	r := MultipleOf(int(10))
-	assert.Equal(t, "must be multiple of 10", r.Validate(11).Error())
-	assert.Equal(t, nil, r.Validate(20))
+	assert.Equal(t, "must be multiple of 10", r.Validate(int(11)).Error())
+	assert.Equal(t, nil, r.Validate(int(20)))
 
 	r3 := MultipleOf(uint(10))
-	assert.Equal(t, "must be multiple of 10", r3.Validate(11).Error())
-	assert.Equal(t, nil, r3.Validate(20))
+	assert.Equal(t, "must be multiple of 10", r3.Validate(uint(11)).Error())
+	assert.Equal(t, nil, r3.Validate(uint(20)))
 
 	r2 := MultipleOf("some string ....")
 	assert.Equal(t, "type not supported: string", r2.Validate(10).Error())
