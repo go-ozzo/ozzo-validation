@@ -395,6 +395,7 @@ The following rules are provided in the `validation` package:
 * `NotNil`: checks if a pointer value is not nil. Non-pointer values are considered valid.
 * `NilOrNotEmpty`: checks if a value is a nil pointer or a non-empty value. This differs from `Required` in that it treats a nil pointer as valid.
 * `Skip`: this is a special rule used to indicate that all rules following it should be skipped (including the nested ones).
+* `MultipleOf`: checks if the value is a multiple of the specified range.
 
 The `is` sub-package provides a list of commonly used string validation rules that can be used to check if the format
 of a value satisfies certain requirements. Note that these rules only handle strings and byte slices and if a string
