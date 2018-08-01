@@ -528,6 +528,12 @@ func (u User) Validate() error {
 In the above example, we create a rule group `NameRule` which consists of two validation rules. We then use this rule
 group to validate both `FirstName` and `LastName`.
 
+## Fuzzing
+
+[dvyukov/go-fuzz](https://github.com/dvyukov/go-fuzz) is used for fuzzing.
+
+1. `go-fuzz-build github.com/go-ozzo/ozzo-validation`
+2. `go-fuzz -bin=validation-fuzz.zip -workdir=workdir`
 
 ## Credits
 
