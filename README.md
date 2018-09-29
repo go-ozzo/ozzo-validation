@@ -21,7 +21,7 @@ It has the following features:
 
 ## Requirements
 
-Go 1.6 or above.
+Go 1.8 or above.
 
 
 ## Getting Started
