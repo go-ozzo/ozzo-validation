@@ -21,7 +21,11 @@ func Length(min, max int) *LengthRule {
 	} else if min > 0 && max == 0 {
 		message = fmt.Sprintf("the length must be no less than %v", min)
 	} else if min > 0 && max > 0 {
-		message = fmt.Sprintf("the length must be between %v and %v", min, max)
+		if min == max {
+			message = fmt.Sprintf("the length must be exactly %v", min)
+		} else {
+			message = fmt.Sprintf("the length must be between %v and %v", min, max)
+		}
 	}
 	return &LengthRule{
 		min:     min,
