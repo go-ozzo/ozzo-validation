@@ -88,3 +88,45 @@ func Test_LengthRule_Error(t *testing.T) {
 	r.Error("123")
 	assert.Equal(t, "123", r.message)
 }
+
+func TestExactLength(t *testing.T) {
+	var v *string
+	tests := []struct {
+		tag   string
+		len   int
+		value interface{}
+		err   string
+	}{
+		{"t1", 3, "abc", ""},
+		{"t2", 2, "", ""},
+		{"t3", 2, "abcdf", "the length must be exactly 2"},
+		{"t4", 4, "ab", "the length must be exactly 4"},
+		{"t5", 2, "a", "the length must be exactly 2"},
+		{"t6", 1, v, ""},
+		{"t7", 2, 123, "cannot get the length of int"},
+		{"t8", 3, sql.NullString{String: "abc", Valid: true}, ""},
+		{"t9", 0, sql.NullString{String: "", Valid: true}, ""},
+		{"t10", 2, sql.NullString{String: "", Valid: true}, ""},
+	}
+
+	for _, test := range tests {
+		r := ExactLength(test.len)
+		err := r.Validate(test.value)
+		assertError(t, test.err, err, test.tag)
+	}
+}
+
+func Test_ExactLengthRule_Error(t *testing.T) {
+	r := ExactLength(0)
+	s := Length(0, 0)
+	assert.Equal(t, r.message, s.message)
+
+	r = ExactLength(20)
+	assert.Equal(t, "the length must be exactly 20", r.message)
+
+	r = ExactLength(10)
+	assert.Equal(t, "the length must be exactly 10", r.message)
+
+	r.Error("123")
+	assert.Equal(t, "123", r.message)
+}

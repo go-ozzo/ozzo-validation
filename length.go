@@ -45,6 +45,19 @@ func RuneLength(min, max int) *LengthRule {
 	return r
 }
 
+// ExactLength returns a validation rule that checks if a value's length is exact to the specified number.
+// If len is 0 it is passed as min and max to the Length function, to get default message for empty value.
+func ExactLength(len int) *LengthRule {
+	if len == 0 {
+		return Length(len, len)
+	}
+	return &LengthRule{
+		min:     len,
+		max:     len,
+		message: fmt.Sprintf("the length must be exactly %v", len),
+	}
+}
+
 type LengthRule struct {
 	min, max int
 	message  string
