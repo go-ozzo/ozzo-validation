@@ -7,6 +7,7 @@ package validation
 import (
 	"errors"
 	"fmt"
+	"golang.org/x/net/context"
 	"reflect"
 	"strings"
 )
@@ -27,6 +28,12 @@ type (
 	FieldRules struct {
 		fieldPtr interface{}
 		rules    []Rule
+	}
+
+	// FieldRulesWithContext represents a rule set associated with a struct field.
+	FieldRulesWithContext struct {
+		fieldPtr interface{}
+		rules    []RuleWithContext
 	}
 )
 
@@ -82,6 +89,70 @@ func ValidateStruct(structPtr interface{}, fields ...*FieldRules) error {
 			return NewInternalError(ErrFieldNotFound(i))
 		}
 		if err := Validate(fv.Elem().Interface(), fr.rules...); err != nil {
+			if ie, ok := err.(InternalError); ok && ie.InternalError() != nil {
+				return err
+			}
+			if ft.Anonymous {
+				// merge errors from anonymous struct field
+				if es, ok := err.(Errors); ok {
+					for name, value := range es {
+						errs[name] = value
+					}
+					continue
+				}
+			}
+			errs[getErrorFieldName(ft)] = err
+		}
+	}
+
+	if len(errs) > 0 {
+		return errs
+	}
+	return nil
+}
+
+// ValidateStructWithContext validates a struct by checking the specified struct fields against the corresponding validation rules.
+// Note that the struct being validated must be specified as a pointer to it. If the pointer is nil, it is considered valid.
+// Use Field() to specify struct fields that need to be validated. Each Field() call specifies a single field which
+// should be specified as a pointer to the field. A field can be associated with multiple rules.
+// For example,
+//
+//    value := struct {
+//        Name  string
+//        Value string
+//    }{"name", "demo"}
+//    err := validation.ValidateStruct(&value,
+//         validation.Field(&a.Name, validation.Required),
+//         validation.Field(&a.Value, validation.Required, validation.Length(5, 10)),
+//    )
+//    fmt.Println(err)
+//    // Value: the length must be between 5 and 10.
+//
+// An error will be returned if validation fails.
+func ValidateStructWithContext(ctx context.Context, structPtr interface{}, fields ...*FieldRulesWithContext) error {
+	value := reflect.ValueOf(structPtr)
+	if value.Kind() != reflect.Ptr || !value.IsNil() && value.Elem().Kind() != reflect.Struct {
+		// must be a pointer to a struct
+		return NewInternalError(ErrStructPointer)
+	}
+	if value.IsNil() {
+		// treat a nil struct pointer as valid
+		return nil
+	}
+	value = value.Elem()
+
+	errs := Errors{}
+
+	for i, fr := range fields {
+		fv := reflect.ValueOf(fr.fieldPtr)
+		if fv.Kind() != reflect.Ptr {
+			return NewInternalError(ErrFieldPointer(i))
+		}
+		ft := findStructField(value, fv)
+		if ft == nil {
+			return NewInternalError(ErrFieldNotFound(i))
+		}
+		if err := ValidateWithContext(ctx, fv.Elem().Interface(), fr.rules...); err != nil {
 			if ie, ok := err.(InternalError); ok && ie.InternalError() != nil {
 				return err
 			}
