@@ -4,7 +4,10 @@
 
 package validation
 
-import "errors"
+import (
+	"context"
+	"errors"
+)
 
 // Required is a validation rule that checks if a value is not empty.
 // A value is considered not empty if
@@ -31,6 +34,11 @@ func (v *requiredRule) Validate(value interface{}) error {
 		return errors.New(v.message)
 	}
 	return nil
+}
+
+// Validate checks if the given value is valid or not.
+func (v *requiredRule) ValidateWithContext(ctx context.Context, value interface{}) error {
+	return v.Validate(value)
 }
 
 // Error sets the error message for the rule.

@@ -5,9 +5,9 @@
 package validation
 
 import (
+	"context"
 	"errors"
 	"fmt"
-	"golang.org/x/net/context"
 	"reflect"
 	"strings"
 )
@@ -24,16 +24,14 @@ type (
 	// ErrFieldNotFound is the error that a field cannot be found in the struct.
 	ErrFieldNotFound int
 
+	// ErrFieldHasMultipleRuleSets is the error that a field has both standard and context based rules.
+	ErrFieldHasMultipleRuleSets int
+
 	// FieldRules represents a rule set associated with a struct field.
 	FieldRules struct {
-		fieldPtr interface{}
-		rules    []Rule
-	}
-
-	// FieldRulesWithContext represents a rule set associated with a struct field.
-	FieldRulesWithContext struct {
-		fieldPtr interface{}
-		rules    []RuleWithContext
+		fieldPtr         interface{}
+		rules            []Rule
+		rulesWithContext []RuleWithContext
 	}
 )
 
@@ -45,6 +43,11 @@ func (e ErrFieldPointer) Error() string {
 // Error returns the error string of ErrFieldNotFound.
 func (e ErrFieldNotFound) Error() string {
 	return fmt.Sprintf("field #%v cannot be found in the struct", int(e))
+}
+
+// Error returns the error string of ErrFieldHasMultipleRuleSets.
+func (e ErrFieldHasMultipleRuleSets) Error() string {
+	return fmt.Sprintf("field #%v has both standard and context based rules defined", int(e))
 }
 
 // ValidateStruct validates a struct by checking the specified struct fields against the corresponding validation rules.
@@ -129,7 +132,7 @@ func ValidateStruct(structPtr interface{}, fields ...*FieldRules) error {
 //    // Value: the length must be between 5 and 10.
 //
 // An error will be returned if validation fails.
-func ValidateStructWithContext(ctx context.Context, structPtr interface{}, fields ...*FieldRulesWithContext) error {
+func ValidateStructWithContext(ctx context.Context, structPtr interface{}, fields ...*FieldRules) error {
 	value := reflect.ValueOf(structPtr)
 	if value.Kind() != reflect.Ptr || !value.IsNil() && value.Elem().Kind() != reflect.Struct {
 		// must be a pointer to a struct
@@ -152,7 +155,19 @@ func ValidateStructWithContext(ctx context.Context, structPtr interface{}, field
 		if ft == nil {
 			return NewInternalError(ErrFieldNotFound(i))
 		}
-		if err := ValidateWithContext(ctx, fv.Elem().Interface(), fr.rules...); err != nil {
+
+		// does this field have context rules or not?
+		// a field can have rules OR context rules.
+		var err error
+		if fr.rulesWithContext != nil && fr.rules != nil {
+			return NewInternalError(ErrFieldHasMultipleRuleSets(i))
+		}
+		if fr.rulesWithContext != nil {
+			err = ValidateWithContext(ctx, fv.Elem().Interface(), fr.rulesWithContext...)
+		} else {
+			err = Validate(fv.Elem().Interface(), fr.rules...)
+		}
+		if err != nil {
 			if ie, ok := err.(InternalError); ok && ie.InternalError() != nil {
 				return err
 			}
@@ -168,7 +183,6 @@ func ValidateStructWithContext(ctx context.Context, structPtr interface{}, field
 			errs[getErrorFieldName(ft)] = err
 		}
 	}
-
 	if len(errs) > 0 {
 		return errs
 	}
@@ -181,6 +195,15 @@ func Field(fieldPtr interface{}, rules ...Rule) *FieldRules {
 	return &FieldRules{
 		fieldPtr: fieldPtr,
 		rules:    rules,
+	}
+}
+
+// FieldWithContext specifies a struct field and the corresponding context aware validation rules.
+// The struct field must be specified as a pointer to it.
+func FieldWithContext(fieldPtr interface{}, rules ...RuleWithContext) *FieldRules {
+	return &FieldRules{
+		fieldPtr:         fieldPtr,
+		rulesWithContext: rules,
 	}
 }
 

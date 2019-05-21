@@ -5,6 +5,7 @@
 package validation
 
 import (
+	"context"
 	"errors"
 	"strings"
 	"testing"
@@ -32,6 +33,8 @@ func TestValidate(t *testing.T) {
 	}
 	for _, test := range tests {
 		err := Validate(test.value)
+		assertError(t, test.err, err, test.tag)
+		err = ValidateWithContext(context.Background(), test.value)
 		assertError(t, test.err, err, test.tag)
 	}
 
@@ -91,6 +94,15 @@ func (v *validateAbc) Validate(obj interface{}) error {
 	return nil
 }
 
+type validateContextAbc struct{}
+
+func (v *validateContextAbc) ValidateWithContext(ctx context.Context, obj interface{}) error {
+	if !strings.Contains(obj.(string), "abc") {
+		return errors.New("error abc")
+	}
+	return nil
+}
+
 type validateXyz struct{}
 
 func (v *validateXyz) Validate(obj interface{}) error {
@@ -100,9 +112,27 @@ func (v *validateXyz) Validate(obj interface{}) error {
 	return nil
 }
 
+type validateContextXyz struct{}
+
+func (v *validateContextXyz) ValidateWithContext(ctx context.Context, obj interface{}) error {
+	if !strings.Contains(obj.(string), "xyz") {
+		return errors.New("error xyz")
+	}
+	return nil
+}
+
 type validateInternalError struct{}
 
 func (v *validateInternalError) Validate(obj interface{}) error {
+	if strings.Contains(obj.(string), "internal") {
+		return NewInternalError(errors.New("error internal"))
+	}
+	return nil
+}
+
+type validateContextInternalError struct{}
+
+func (v *validateContextInternalError) ValidateWithContext(ctx context.Context, obj interface{}) error {
 	if strings.Contains(obj.(string), "internal") {
 		return NewInternalError(errors.New("error internal"))
 	}
@@ -142,4 +172,20 @@ func (m Model3) Validate() error {
 	return ValidateStruct(&m,
 		Field(&m.A, &validateAbc{}),
 	)
+}
+
+type Model4 struct {
+	A string
+}
+
+func (m Model4) ValidateWithContext(ctx context.Context) error {
+	return ValidateStructWithContext(ctx, &m,
+		FieldWithContext(&m.A, &validateContextAbc{}),
+	)
+}
+
+type Model5 struct {
+	Model4
+	M4 Model4
+	B  string
 }

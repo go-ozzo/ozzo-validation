@@ -39,6 +39,10 @@ type (
 	// RuleFunc represents a validator function.
 	// You may wrap it as a Rule by calling By().
 	RuleFunc func(value interface{}) error
+
+	// RuleFunc represents a validator function.
+	// You may wrap it as a Rule by calling By().
+	RuleFuncWithContext func(ctx context.Context, value interface{}) error
 )
 
 var (
@@ -81,11 +85,11 @@ func Validate(value interface{}, rules ...Rule) error {
 	switch rv.Kind() {
 	case reflect.Map:
 		if rv.Type().Elem().Implements(validatableType) {
-			return validateMap(rv)
+			return validateMap(nil, rv)
 		}
 	case reflect.Slice, reflect.Array:
 		if rv.Type().Elem().Implements(validatableType) {
-			return validateSlice(rv)
+			return validateSlice(nil, rv)
 		}
 	case reflect.Ptr, reflect.Interface:
 		return Validate(rv.Elem().Interface())
@@ -117,18 +121,22 @@ func ValidateWithContext(ctx context.Context, value interface{}, rules ...RuleWi
 		return nil
 	}
 
+	if v, ok := value.(Validatable); ok {
+		return v.Validate()
+	}
+
 	if v, ok := value.(ValidatableWithContext); ok {
 		return v.ValidateWithContext(ctx)
 	}
 
 	switch rv.Kind() {
 	case reflect.Map:
-		if rv.Type().Elem().Implements(validatableWithContextType) {
-			return validateMapWithContext(ctx, rv)
+		if rv.Type().Elem().Implements(validatableType) || rv.Type().Elem().Implements(validatableWithContextType) {
+			return validateMap(ctx, rv)
 		}
 	case reflect.Slice, reflect.Array:
-		if rv.Type().Elem().Implements(validatableWithContextType) {
-			return validateSliceWithContext(ctx, rv)
+		if rv.Type().Elem().Implements(validatableType) || rv.Type().Elem().Implements(validatableWithContextType) {
+			return validateSlice(ctx, rv)
 		}
 	case reflect.Ptr, reflect.Interface:
 		return ValidateWithContext(ctx, rv.Elem().Interface())
@@ -138,26 +146,11 @@ func ValidateWithContext(ctx context.Context, value interface{}, rules ...RuleWi
 }
 
 // validateMap validates a map of validatable elements
-func validateMap(rv reflect.Value) error {
+func validateMap(ctx context.Context, rv reflect.Value) error {
 	errs := Errors{}
 	for _, key := range rv.MapKeys() {
 		if mv := rv.MapIndex(key).Interface(); mv != nil {
-			if err := mv.(Validatable).Validate(); err != nil {
-				errs[fmt.Sprintf("%v", key.Interface())] = err
-			}
-		}
-	}
-	if len(errs) > 0 {
-		return errs
-	}
-	return nil
-}
-
-func validateMapWithContext(ctx context.Context, rv reflect.Value) error {
-	errs := Errors{}
-	for _, key := range rv.MapKeys() {
-		if mv := rv.MapIndex(key).Interface(); mv != nil {
-			if err := mv.(ValidatableWithContext).ValidateWithContext(ctx); err != nil {
+			if err := validateElementWithContext(ctx, mv); err != nil {
 				errs[fmt.Sprintf("%v", key.Interface())] = err
 			}
 		}
@@ -169,12 +162,12 @@ func validateMapWithContext(ctx context.Context, rv reflect.Value) error {
 }
 
 // validateMap validates a slice/array of validatable elements
-func validateSlice(rv reflect.Value) error {
+func validateSlice(ctx context.Context, rv reflect.Value) error {
 	errs := Errors{}
 	l := rv.Len()
 	for i := 0; i < l; i++ {
 		if ev := rv.Index(i).Interface(); ev != nil {
-			if err := ev.(Validatable).Validate(); err != nil {
+			if err := validateElementWithContext(ctx, ev); err != nil {
 				errs[strconv.Itoa(i)] = err
 			}
 		}
@@ -185,18 +178,17 @@ func validateSlice(rv reflect.Value) error {
 	return nil
 }
 
-func validateSliceWithContext(ctx context.Context, rv reflect.Value) error {
-	errs := Errors{}
-	l := rv.Len()
-	for i := 0; i < l; i++ {
-		if ev := rv.Index(i).Interface(); ev != nil {
-			if err := ev.(ValidatableWithContext).ValidateWithContext(ctx); err != nil {
-				errs[strconv.Itoa(i)] = err
+func validateElementWithContext(ctx context.Context, ev interface{}) error {
+	if evv, ok := ev.(Validatable); !ok {
+		if evvc, ok := ev.(ValidatableWithContext); !ok {
+			if err := evvc.ValidateWithContext(ctx); err != nil {
+				return err
 			}
 		}
-	}
-	if len(errs) > 0 {
-		return errs
+	} else {
+		if err := evv.Validate(); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -213,13 +205,22 @@ func (r *skipRule) ValidateWithContext(context.Context, interface{}) error {
 
 type inlineRule struct {
 	f RuleFunc
+	g RuleFuncWithContext
 }
 
 func (r *inlineRule) Validate(value interface{}) error {
 	return r.f(value)
 }
 
+func (r *inlineRule) ValidateWithContext(ctx context.Context, value interface{}) error {
+	return r.g(ctx, value)
+}
+
 // By wraps a RuleFunc into a Rule.
 func By(f RuleFunc) Rule {
-	return &inlineRule{f}
+	return &inlineRule{f: f}
+}
+
+func ByWithContext(g RuleFuncWithContext) RuleWithContext {
+	return &inlineRule{g: g}
 }
