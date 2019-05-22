@@ -73,6 +73,21 @@ func TestBy(t *testing.T) {
 	}
 }
 
+func TestByWithContext(t *testing.T) {
+	abcRule := ByWithContext(func(ctx context.Context, value interface{}) error {
+		s, _ := value.(string)
+		if s != "abc" {
+			return errors.New("must be abc")
+		}
+		return nil
+	})
+	assert.Nil(t, ValidateWithContext(context.Background(), "abc", abcRule))
+	err := ValidateWithContext(context.Background(), "xyz", abcRule)
+	if assert.NotNil(t, err) {
+		assert.Equal(t, "must be abc", err.Error())
+	}
+}
+
 func Test_skipRule_Validate(t *testing.T) {
 	assert.Nil(t, Skip.Validate(100))
 }
