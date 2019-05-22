@@ -19,9 +19,9 @@ type (
 		Validate() error
 	}
 
-	// Validatable is the interface indicating the type implementing it supports data validation.
+	// ValidatableWithContext is the interface indicating the type implementing it supports context aware data validation.
 	ValidatableWithContext interface {
-		// Validate validates the data and returns an error if validation fails.
+		// ValidateWithContext validates the data and returns an error if validation fails.
 		ValidateWithContext(ctx context.Context) error
 	}
 
@@ -31,8 +31,9 @@ type (
 		Validate(value interface{}) error
 	}
 
+	// RuleWithContext represents a context aware validation rule.
 	RuleWithContext interface {
-		// Validate validates a value and returns a value if validation fails.
+		// ValidateWithContext validates a value and returns a value if validation fails.
 		ValidateWithContext(ctx context.Context, value interface{}) error
 	}
 
@@ -40,8 +41,8 @@ type (
 	// You may wrap it as a Rule by calling By().
 	RuleFunc func(value interface{}) error
 
-	// RuleFunc represents a validator function.
-	// You may wrap it as a Rule by calling By().
+	// RuleFuncWithContext represents a context aware validator function.
+	// You may wrap it as a RuleWithContext by calling ByWithContext().
 	RuleFuncWithContext func(ctx context.Context, value interface{}) error
 )
 
@@ -100,9 +101,11 @@ func Validate(value interface{}, rules ...Rule) error {
 
 // ValidateWithContext validates the given value and returns the validation error, if any.
 //
-// Validate performs validation using the following steps:
+// ValidateWithContext performs validation using the following steps:
 // - validate the value against the rules passed in as parameters
+// - if the value is a map and the map values implement `ValidatableWithContext`, call `ValidateWithContext` of every map value
 // - if the value is a map and the map values implement `Validatable`, call `Validate` of every map value
+// - if the value is a slice or array whose values implement `ValidatableWithContext`, call `ValidateWithContext` of every element
 // - if the value is a slice or array whose values implement `Validatable`, call `Validate` of every element
 func ValidateWithContext(ctx context.Context, value interface{}, rules ...RuleWithContext) error {
 	for _, rule := range rules {
@@ -150,7 +153,7 @@ func validateMap(ctx context.Context, rv reflect.Value) error {
 	errs := Errors{}
 	for _, key := range rv.MapKeys() {
 		if mv := rv.MapIndex(key).Interface(); mv != nil {
-			if err := validateElementWithContext(ctx, mv); err != nil {
+			if err := validateValueWithContext(ctx, mv); err != nil {
 				errs[fmt.Sprintf("%v", key.Interface())] = err
 			}
 		}
@@ -167,7 +170,7 @@ func validateSlice(ctx context.Context, rv reflect.Value) error {
 	l := rv.Len()
 	for i := 0; i < l; i++ {
 		if ev := rv.Index(i).Interface(); ev != nil {
-			if err := validateElementWithContext(ctx, ev); err != nil {
+			if err := validateValueWithContext(ctx, ev); err != nil {
 				errs[strconv.Itoa(i)] = err
 			}
 		}
@@ -178,14 +181,14 @@ func validateSlice(ctx context.Context, rv reflect.Value) error {
 	return nil
 }
 
-func validateElementWithContext(ctx context.Context, e interface{}) error {
-	if v, ok := e.(Validatable); !ok {
-		if vc, ok := e.(ValidatableWithContext); !ok {
-			if err := vc.ValidateWithContext(ctx); err != nil {
-				return err
-			}
+// validateValueWithContext performs context aware validation on a value if supported.
+func validateValueWithContext(ctx context.Context, value interface{}) error {
+	if vc, ok := value.(ValidatableWithContext); ok {
+		if err := vc.ValidateWithContext(ctx); err != nil {
+			return err
 		}
-	} else {
+	}
+	if v, ok := value.(Validatable); ok {
 		if err := v.Validate(); err != nil {
 			return err
 		}
@@ -221,6 +224,7 @@ func By(f RuleFunc) Rule {
 	return &inlineRule{f: f}
 }
 
+// ByWithContext wraps a RuleFuncWithContext into a RuleWithContext.
 func ByWithContext(g RuleFuncWithContext) RuleWithContext {
 	return &inlineRule{g: g}
 }

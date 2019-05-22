@@ -74,17 +74,18 @@ func ValidateStruct(structPtr interface{}, fields ...*FieldRules) error {
 
 // ValidateStructWithContext validates a struct by checking the specified struct fields against the corresponding validation rules.
 // Note that the struct being validated must be specified as a pointer to it. If the pointer is nil, it is considered valid.
-// Use Field() to specify struct fields that need to be validated. Each Field() call specifies a single field which
-// should be specified as a pointer to the field. A field can be associated with multiple rules.
+// Use FieldWithContext() to specify struct fields that need to be validated. Each FieldWithContext() call specifies a single field which
+// should be specified as a pointer to the field. A field can be associated with multiple rules.  ValidateStructWithContext
+// can also be used with ByWithContext() to perform context aware validation.
 // For example,
 //
 //    value := struct {
 //        Name  string
 //        Value string
 //    }{"name", "demo"}
-//    err := validation.ValidateStruct(&value,
-//         validation.Field(&a.Name, validation.Required),
-//         validation.Field(&a.Value, validation.Required, validation.Length(5, 10)),
+//    err := validation.ValidateStructWithContext(&value,
+//         validation.FieldWithContext(&a.Name, validation.Required),
+//         validation.FieldWithContext(&a.Value, validation.Required, validation.Length(5, 10)),
 //    )
 //    fmt.Println(err)
 //    // Value: the length must be between 5 and 10.
