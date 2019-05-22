@@ -69,49 +69,7 @@ func (e ErrFieldHasMultipleRuleSets) Error() string {
 //
 // An error will be returned if validation fails.
 func ValidateStruct(structPtr interface{}, fields ...*FieldRules) error {
-	value := reflect.ValueOf(structPtr)
-	if value.Kind() != reflect.Ptr || !value.IsNil() && value.Elem().Kind() != reflect.Struct {
-		// must be a pointer to a struct
-		return NewInternalError(ErrStructPointer)
-	}
-	if value.IsNil() {
-		// treat a nil struct pointer as valid
-		return nil
-	}
-	value = value.Elem()
-
-	errs := Errors{}
-
-	for i, fr := range fields {
-		fv := reflect.ValueOf(fr.fieldPtr)
-		if fv.Kind() != reflect.Ptr {
-			return NewInternalError(ErrFieldPointer(i))
-		}
-		ft := findStructField(value, fv)
-		if ft == nil {
-			return NewInternalError(ErrFieldNotFound(i))
-		}
-		if err := Validate(fv.Elem().Interface(), fr.rules...); err != nil {
-			if ie, ok := err.(InternalError); ok && ie.InternalError() != nil {
-				return err
-			}
-			if ft.Anonymous {
-				// merge errors from anonymous struct field
-				if es, ok := err.(Errors); ok {
-					for name, value := range es {
-						errs[name] = value
-					}
-					continue
-				}
-			}
-			errs[getErrorFieldName(ft)] = err
-		}
-	}
-
-	if len(errs) > 0 {
-		return errs
-	}
-	return nil
+	return ValidateStructWithContext(context.Background(), structPtr, fields...)
 }
 
 // ValidateStructWithContext validates a struct by checking the specified struct fields against the corresponding validation rules.
