@@ -5,7 +5,6 @@
 package validation
 
 import (
-	"errors"
 	"testing"
 	"time"
 
@@ -63,32 +62,6 @@ func TestNilOrNotEmpty(t *testing.T) {
 		// assert context aware validation returns same result
 		err = r.ValidateWithContext(nil, test.value)
 		assertError(t, test.err, err, test.tag)
-	}
-}
-
-func TestNil(t *testing.T) {
-	s1 := "123"
-	s2 := ""
-	tests := []struct {
-		tag   string
-		value interface{}
-		err   error
-	}{
-		{"t1", 123, errors.New("must be empty")},
-		{"t2", "", errors.New("must be empty")},
-		{"t3", &s1, errors.New("must be empty")},
-		{"t4", &s2, errors.New("must be empty")},
-		{"t5", nil, nil},
-	}
-
-	for _, test := range tests {
-		r := Nil
-		err := r.Validate(test.value)
-		assert.Equal(t, err, test.err, test.tag)
-
-		// assert context aware validation returns same result
-		err = r.ValidateWithContext(nil, test.value)
-		assert.Equal(t, err, test.err, test.tag)
 	}
 }
 
