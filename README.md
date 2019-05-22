@@ -530,7 +530,8 @@ fmt.Println(err)
 
 ```
 
-There are also similar methods available for validating fields of a struct:
+There are also similar context aware methods for validating fields of a struct... `validation.ValidateStructWithContext()`, 
+`validation.FieldWithContext()` and `validation.ByWithContext()`:
 
 ```go
 
