@@ -85,11 +85,11 @@ func Validate(value interface{}, rules ...Rule) error {
 	switch rv.Kind() {
 	case reflect.Map:
 		if rv.Type().Elem().Implements(validatableType) {
-			return validateMap(nil, rv)
+			return validateMap(context.Background(), rv)
 		}
 	case reflect.Slice, reflect.Array:
 		if rv.Type().Elem().Implements(validatableType) {
-			return validateSlice(nil, rv)
+			return validateSlice(context.Background(), rv)
 		}
 	case reflect.Ptr, reflect.Interface:
 		return Validate(rv.Elem().Interface())
@@ -121,12 +121,12 @@ func ValidateWithContext(ctx context.Context, value interface{}, rules ...RuleWi
 		return nil
 	}
 
-	if v, ok := value.(Validatable); ok {
-		return v.Validate()
-	}
-
 	if v, ok := value.(ValidatableWithContext); ok {
 		return v.ValidateWithContext(ctx)
+	}
+
+	if v, ok := value.(Validatable); ok {
+		return v.Validate()
 	}
 
 	switch rv.Kind() {
@@ -178,15 +178,15 @@ func validateSlice(ctx context.Context, rv reflect.Value) error {
 	return nil
 }
 
-func validateElementWithContext(ctx context.Context, ev interface{}) error {
-	if evv, ok := ev.(Validatable); !ok {
-		if evvc, ok := ev.(ValidatableWithContext); !ok {
-			if err := evvc.ValidateWithContext(ctx); err != nil {
+func validateElementWithContext(ctx context.Context, e interface{}) error {
+	if v, ok := e.(Validatable); !ok {
+		if vc, ok := e.(ValidatableWithContext); !ok {
+			if err := vc.ValidateWithContext(ctx); err != nil {
 				return err
 			}
 		}
 	} else {
-		if err := evv.Validate(); err != nil {
+		if err := v.Validate(); err != nil {
 			return err
 		}
 	}
