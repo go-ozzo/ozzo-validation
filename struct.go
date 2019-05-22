@@ -115,18 +115,11 @@ func ValidateStructWithContext(ctx context.Context, structPtr interface{}, field
 			return NewInternalError(ErrFieldNotFound(i))
 		}
 
-		// does this field have context rules or not?
 		// a field can have rules OR context rules.
-		var err error
 		if fr.rulesWithContext != nil && fr.rules != nil {
 			return NewInternalError(ErrFieldHasMultipleRuleSets(i))
 		}
-		if fr.rulesWithContext != nil {
-			err = ValidateWithContext(ctx, fv.Elem().Interface(), fr.rulesWithContext...)
-		} else {
-			err = Validate(fv.Elem().Interface(), fr.rules...)
-		}
-		if err != nil {
+		if err := validate(ctx, fv, fr); err != nil {
 			if ie, ok := err.(InternalError); ok && ie.InternalError() != nil {
 				return err
 			}
@@ -205,3 +198,12 @@ func getErrorFieldName(f *reflect.StructField) string {
 	}
 	return f.Name
 }
+
+// validates with context if context rules are present
+func validate(ctx context.Context, fv reflect.Value, fr *FieldRules) error {
+	if fr.rulesWithContext != nil {
+		return ValidateWithContext(ctx, fv.Elem().Interface(), fr.rulesWithContext...)
+	}
+	return Validate(fv.Elem().Interface(), fr.rules...)
+}
+
