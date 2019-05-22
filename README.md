@@ -12,7 +12,7 @@ It has the following features:
 
 * use normal programming constructs rather than error-prone struct tags to specify how data should be validated.
 * can validate data of different types, e.g., structs, strings, byte slices, slices, maps, arrays.
-* can validate custom data types as long as they implement the `Validatable` interface.
+* can validate custom data types as long as they implement the `Validatable` or `ValidatableWithContext` interface.
 * can validate data types that implement the `sql.Valuer` interface (e.g. `sql.NullString`).
 * customizable and well-formatted validation errors.
 * provide a rich set of validation rules right out of box.
@@ -499,6 +499,104 @@ err := validation.Validate("xyz", validation.By(checkAbc))
 fmt.Println(err)
 // Output: must be abc
 ```
+
+
+### Context Aware Validation
+
+Sometimes, it is useful to write custom rules that rely on context distinct from the object being validated.  To this
+end there are additional methods available for injecting context.  The following is an example custom rule, similar to
+the one above, which has access to the supplied context:
+
+```go
+func checkAbc(ctx context.Context, value interface{}) error {
+	s, _ := value.(string)
+	if ctx.Value("KEY") == "VALUE" {
+	    return nil
+	}
+	if s != "abc" {
+		return errors.New("must be abc")
+	}
+	return nil
+}
+
+parentContext := context.Background()
+ctx := context.WithValue(parentContext, "KEY", "VALUE")
+err := validation.ValidateWithContext(ctx, "xyz", validation.ByWithContext(checkAbc))
+fmt.Println(err)
+// Output: must be abc
+
+```
+
+There are also similar methods available for validating fields of a struct:
+
+```go
+
+package main
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"regexp"
+
+	"github.com/go-ozzo/ozzo-validation"
+	"github.com/go-ozzo/ozzo-validation/is"
+)
+
+type Address struct {
+	Street string
+	City   string
+	State  string
+	Zip    string
+}
+
+func (a Address) ValidateWithContext(ctx context.Context) error {
+	return validation.ValidateStructWithContext(ctx, &a,
+		// Street cannot be empty, and the length must between 5 and 50
+		validation.Field(&a.Street, validation.Required, validation.Length(5, 50)),
+		// City cannot be empty, and the length must between 5 and 50
+		validation.FieldWithContext(&a.City, validation.Required, validation.Length(5, 50), validation.ByWithContext(checkAbc)),
+	)
+}
+
+func checkAbc(ctx context.Context, value interface{}) error {
+	s, _ := value.(string)
+	if ctx.Value("KEY") == "VALUE" {
+	    return nil
+	}
+	if s != "abc" {
+		return errors.New("must be abc")
+	}
+	return nil
+}
+
+func main() {
+	a := Address{
+		Street: "123",
+		City:   "Unknown",
+		State:  "Virginia",
+		Zip:    "12345",
+	}
+	
+	parentContext := context.Background()
+	ctx := context.WithValue(parentContext, "KEY", "VALUE")
+	err := a.ValidateWithContext(ctx)
+	fmt.Println(err)
+	// Output:
+	// Street: the length must be between 5 and 50; State: must be in a valid format.
+}
+
+```
+
+
+ValidateWithContext(context.Background(), test.value)
+FieldWithContext
+ByWithContext
+
+ValidatableWithContext
+
+```
+
 
 
 ### Rule Groups
