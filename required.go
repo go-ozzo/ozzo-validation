@@ -36,7 +36,7 @@ func (v *requiredRule) Validate(value interface{}) error {
 	return nil
 }
 
-// Validate checks if the given value is valid or not.
+// ValidateWithContext checks if the given value is valid or not.
 func (v *requiredRule) ValidateWithContext(ctx context.Context, value interface{}) error {
 	return v.Validate(value)
 }
