@@ -504,8 +504,11 @@ fmt.Println(err)
 ### Context Aware Validation
 
 Sometimes, it is useful to write custom rules that rely on context distinct from the object being validated.  To this
-end there are additional methods available for injecting context.  The following is an example custom rule, similar to
-the one above, which has access to the supplied context:
+end there are additional methods available for injecting context.  The `validation.ValidatableWithContext` interface is similar to
+the `validation.Validatable` interface, but with a `ValidateWithContext()` method that additionally receives a context in its
+first parameter. 
+  
+The following is an example custom rule, similar to the one above, which has access to the supplied context:
 
 ```go
 func checkAbc(ctx context.Context, value interface{}) error {
@@ -585,19 +588,7 @@ func main() {
 	// Output:
 	// Street: the length must be between 5 and 50; State: must be in a valid format.
 }
-
 ```
-
-
-ValidateWithContext(context.Background(), test.value)
-FieldWithContext
-ByWithContext
-
-ValidatableWithContext
-
-```
-
-
 
 ### Rule Groups
 
