@@ -62,8 +62,8 @@ var (
 //
 // Validate performs validation using the following steps:
 // - validate the value against the rules passed in as parameters
-// - if the value is a map and the map values implement `Validatable`, call `Validate` of every map value
-// - if the value is a slice or array whose values implement `Validatable`, call `Validate` of every element
+// - if the value is a map, call `Validate` on every map value that implements `Validatable`.
+// - if the value is a slice or array, call `Validate` on every element that implements `Validatable`.
 func Validate(value interface{}, rules ...Rule) error {
 	for _, rule := range rules {
 		if _, ok := rule.(*skipRule); ok {
@@ -86,11 +86,11 @@ func Validate(value interface{}, rules ...Rule) error {
 	switch rv.Kind() {
 	case reflect.Map:
 		if rv.Type().Elem().Implements(validatableType) {
-			return validateMap(context.Background(), rv)
+			return validateMap(rv)
 		}
 	case reflect.Slice, reflect.Array:
 		if rv.Type().Elem().Implements(validatableType) {
-			return validateSlice(context.Background(), rv)
+			return validateSlice(rv)
 		}
 	case reflect.Ptr, reflect.Interface:
 		return Validate(rv.Elem().Interface())
@@ -103,10 +103,8 @@ func Validate(value interface{}, rules ...Rule) error {
 //
 // ValidateWithContext performs validation using the following steps:
 // - validate the value against the rules passed in as parameters
-// - if the value is a map and the map values implement `ValidatableWithContext`, call `ValidateWithContext` of every map value
-// - if the value is a map and the map values implement `Validatable`, call `Validate` of every map value
-// - if the value is a slice or array whose values implement `ValidatableWithContext`, call `ValidateWithContext` of every element
-// - if the value is a slice or array whose values implement `Validatable`, call `Validate` of every element
+// - if the value is a map, call either `ValidateWithContext` or `Validate` on the map value if the map value implements `ValidatableWithContext` or `Validatable`.  Prefer `ValidateableWithContext` if both are implemented.
+// - if the value is a slice or array, call either `ValidateWithContext` or `Validate` for each slice value if the slice value implements `ValidatableWithContext` or `Validatable`. Prefer `ValidateableWithContext` if both are implemented.
 func ValidateWithContext(ctx context.Context, value interface{}, rules ...RuleWithContext) error {
 	for _, rule := range rules {
 		if _, ok := rule.(*skipRule); ok {
@@ -135,11 +133,11 @@ func ValidateWithContext(ctx context.Context, value interface{}, rules ...RuleWi
 	switch rv.Kind() {
 	case reflect.Map:
 		if rv.Type().Elem().Implements(validatableType) || rv.Type().Elem().Implements(validatableWithContextType) {
-			return validateMap(ctx, rv)
+			return validateMapWithContext(ctx, rv)
 		}
 	case reflect.Slice, reflect.Array:
 		if rv.Type().Elem().Implements(validatableType) || rv.Type().Elem().Implements(validatableWithContextType) {
-			return validateSlice(ctx, rv)
+			return validateSliceWithContext(ctx, rv)
 		}
 	case reflect.Ptr, reflect.Interface:
 		return ValidateWithContext(ctx, rv.Elem().Interface())
@@ -148,8 +146,8 @@ func ValidateWithContext(ctx context.Context, value interface{}, rules ...RuleWi
 	return nil
 }
 
-// validateMap validates a map of validatable elements
-func validateMap(ctx context.Context, rv reflect.Value) error {
+// validateMap validates a map of ValidatableWithContext or Validatable elements
+func validateMapWithContext(ctx context.Context, rv reflect.Value) error {
 	errs := Errors{}
 	for _, key := range rv.MapKeys() {
 		if mv := rv.MapIndex(key).Interface(); mv != nil {
@@ -164,13 +162,46 @@ func validateMap(ctx context.Context, rv reflect.Value) error {
 	return nil
 }
 
-// validateMap validates a slice/array of validatable elements
-func validateSlice(ctx context.Context, rv reflect.Value) error {
+// validateMap validates a map of Validatable elements
+func validateMap(rv reflect.Value) error {
+	errs := Errors{}
+	for _, key := range rv.MapKeys() {
+		if mv := rv.MapIndex(key).Interface(); mv != nil {
+			if err := validateValue(mv); err != nil {
+				errs[fmt.Sprintf("%v", key.Interface())] = err
+			}
+		}
+	}
+	if len(errs) > 0 {
+		return errs
+	}
+	return nil
+}
+
+// validateSliceWithContext validates a slice/array of ValidatableWithContext elements
+func validateSliceWithContext(ctx context.Context, rv reflect.Value) error {
 	errs := Errors{}
 	l := rv.Len()
 	for i := 0; i < l; i++ {
 		if ev := rv.Index(i).Interface(); ev != nil {
 			if err := validateValueWithContext(ctx, ev); err != nil {
+				errs[strconv.Itoa(i)] = err
+			}
+		}
+	}
+	if len(errs) > 0 {
+		return errs
+	}
+	return nil
+}
+
+// validateSlice validates a slice/array of Validatable elements
+func validateSlice(rv reflect.Value) error {
+	errs := Errors{}
+	l := rv.Len()
+	for i := 0; i < l; i++ {
+		if ev := rv.Index(i).Interface(); ev != nil {
+			if err := validateValue(ev); err != nil {
 				errs[strconv.Itoa(i)] = err
 			}
 		}
@@ -188,6 +219,11 @@ func validateValueWithContext(ctx context.Context, value interface{}) error {
 			return err
 		}
 	}
+	return validateValue(value)
+}
+
+// validateValue performs validation on a value if supported.
+func validateValue(value interface{}) error {
 	if v, ok := value.(Validatable); ok {
 		if err := v.Validate(); err != nil {
 			return err

@@ -17,7 +17,12 @@ func TestValidate(t *testing.T) {
 	slice := []String123{String123("abc"), String123("123"), String123("xyz")}
 	ctxSlice := []Model4{{A: "abc"}, {A: "def"}}
 	mp := map[string]String123{"c": String123("abc"), "b": String123("123"), "a": String123("xyz")}
-	var ptr *string
+	var (
+		ptr     *string
+		noCtx   StringValidate        = "abc"
+		withCtx StringValidateContext = "abc"
+		bothCtx StringValidateBoth    = "abc"
+	)
 	tests := []struct {
 		tag            string
 		value          interface{}
@@ -35,6 +40,9 @@ func TestValidate(t *testing.T) {
 		{"t9", &mp, "a: error 123; c: error 123.", "a: error 123; c: error 123."},
 		{"t10", map[string]String123{}, "", ""},
 		{"t11", ptr, "", ""},
+		{"t12", noCtx, "called validate", "called validate"},
+		{"t13", withCtx, "", "called validatewithcontext"},
+		{"t14", bothCtx, "called validate", "called validatewithcontext"},
 	}
 	for _, test := range tests {
 		err := Validate(test.value)
@@ -212,4 +220,26 @@ type Model5 struct {
 	Model4
 	M4 Model4
 	B  string
+}
+
+type StringValidate string
+
+func (s StringValidate) Validate() error {
+	return errors.New("called validate")
+}
+
+type StringValidateContext string
+
+func (s StringValidateContext) ValidateWithContext(ctx context.Context) error {
+	return errors.New("called validatewithcontext")
+}
+
+type StringValidateBoth string
+
+func (s StringValidateBoth) Validate() error {
+	return errors.New("called validate")
+}
+
+func (s StringValidateBoth) ValidateWithContext(ctx context.Context) error {
+	return errors.New("called validatewithcontext")
 }
