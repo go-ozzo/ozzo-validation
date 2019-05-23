@@ -151,12 +151,17 @@ func TestValidateStructWithContext(t *testing.T) {
 		err   string
 	}{
 		// normal rules
-		{"t2.1", &m1, []*FieldRules{FieldWithContext(&m1.A, &validateContextAbc{}), FieldWithContext(&m1.B, &validateContextXyz{})}, ""},
-		{"t2.2", &m1, []*FieldRules{FieldWithContext(&m1.A, &validateContextXyz{}), FieldWithContext(&m1.B, &validateContextAbc{})}, "A: error xyz; B: error abc."},
-		{"t2.3", &m1, []*FieldRules{FieldWithContext(&m1.A, &validateContextXyz{}), FieldWithContext(&m1.c, &validateContextXyz{})}, "A: error xyz; c: error xyz."},
-		{"t5.1", &m1, []*FieldRules{FieldWithContext(&m1.G, &validateContextAbc{})}, "g: error abc."},
+		{"t1.1", &m1, []*FieldRules{FieldWithContext(&m1.A, &validateContextAbc{}), FieldWithContext(&m1.B, &validateContextXyz{})}, ""},
+		{"t1.2", &m1, []*FieldRules{FieldWithContext(&m1.A, &validateContextXyz{}), FieldWithContext(&m1.B, &validateContextAbc{})}, "A: error xyz; B: error abc."},
+		{"t1.3", &m1, []*FieldRules{FieldWithContext(&m1.A, &validateContextXyz{}), FieldWithContext(&m1.c, &validateContextXyz{})}, "A: error xyz; c: error xyz."},
+		{"t1.4", &m1, []*FieldRules{FieldWithContext(&m1.G, &validateContextAbc{})}, "g: error abc."},
+		// skip rule
+		{"t2.1", &m1, []*FieldRules{FieldWithContext(&m1.G, Skip, &validateContextAbc{})}, ""},
+		{"t2.2", &m1, []*FieldRules{FieldWithContext(&m1.G, &validateContextAbc{}, Skip)}, "g: error abc."},
 		// internal error
-		{"t9.1", &m2, []*FieldRules{FieldWithContext(&m2.A, &validateContextAbc{}), Field(&m2.B, Required), FieldWithContext(&m2.A, &validateContextInternalError{})}, "error internal"},
+		{"t3.1", &m2, []*FieldRules{FieldWithContext(&m2.A, &validateContextAbc{}), Field(&m2.B, Required), FieldWithContext(&m2.A, &validateContextInternalError{})}, "error internal"},
+		{"t3.2", &m2, []*FieldRules{{fieldPtr: &m2.A, rules: []Rule{&validateAbc{}}, rulesWithContext: []RuleWithContext{&validateContextAbc{}}}}, "field #0 has both standard and context based rules defined"},
+
 	}
 	for _, test := range tests {
 		err := ValidateStructWithContext(context.Background(), test.model, test.rules...)

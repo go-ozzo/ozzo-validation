@@ -15,27 +15,32 @@ import (
 
 func TestValidate(t *testing.T) {
 	slice := []String123{String123("abc"), String123("123"), String123("xyz")}
+	ctxSlice := []Model4{{A: "abc"}, {A: "def"}}
 	mp := map[string]String123{"c": String123("abc"), "b": String123("123"), "a": String123("xyz")}
+	var ptr *string
 	tests := []struct {
 		tag   string
 		value interface{}
 		err   string
+		errWithContext   string
 	}{
-		{"t1", 123, ""},
-		{"t2", String123("123"), ""},
-		{"t3", String123("abc"), "error 123"},
-		{"t4", []String123{}, ""},
-		{"t5", slice, "0: error 123; 2: error 123."},
-		{"t6", &slice, "0: error 123; 2: error 123."},
-		{"t7", mp, "a: error 123; c: error 123."},
-		{"t8", &mp, "a: error 123; c: error 123."},
-		{"t9", map[string]String123{}, ""},
+		{"t1", 123, "", ""},
+		{"t2", String123("123"), "", ""},
+		{"t3", String123("abc"), "error 123", "error 123"},
+		{"t4", []String123{}, "", ""},
+		{"t5", slice, "0: error 123; 2: error 123.", "0: error 123; 2: error 123."},
+		{"t6", &slice, "0: error 123; 2: error 123.", "0: error 123; 2: error 123."},
+		{"t7", ctxSlice, "", "1: (A: error abc.)."},
+		{"t8", mp, "a: error 123; c: error 123.", "a: error 123; c: error 123."},
+		{"t9", &mp, "a: error 123; c: error 123.", "a: error 123; c: error 123."},
+		{"t10", map[string]String123{}, "", ""},
+		{"t11", ptr, "", ""},
 	}
 	for _, test := range tests {
 		err := Validate(test.value)
 		assertError(t, test.err, err, test.tag)
 		err = ValidateWithContext(context.Background(), test.value)
-		assertError(t, test.err, err, test.tag)
+		assertError(t, test.errWithContext, err, test.tag)
 	}
 
 	// with rules
@@ -90,6 +95,10 @@ func TestByWithContext(t *testing.T) {
 
 func Test_skipRule_Validate(t *testing.T) {
 	assert.Nil(t, Skip.Validate(100))
+}
+
+func Test_skipRule_ValidateWithContext(t *testing.T) {
+	assert.Nil(t, Skip.ValidateWithContext(context.Background(), 100))
 }
 
 func assertError(t *testing.T, expected string, err error, tag string) {
