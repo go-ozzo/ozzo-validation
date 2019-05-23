@@ -4,7 +4,10 @@
 
 package validation
 
-import "errors"
+import (
+	"context"
+	"errors"
+)
 
 // NotNil is a validation rule that checks if a value is not nil.
 // NotNil only handles types including interface, pointer, slice, and map.
@@ -22,6 +25,11 @@ func (r *notNilRule) Validate(value interface{}) error {
 		return errors.New(r.message)
 	}
 	return nil
+}
+
+// ValidateWithContext checks if the given value is valid or not.
+func (r *notNilRule) ValidateWithContext(ctx context.Context, value interface{}) error {
+	return r.Validate(value)
 }
 
 // Error sets the error message for the rule.

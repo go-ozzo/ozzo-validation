@@ -5,6 +5,7 @@
 package validation
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -37,6 +38,10 @@ func TestNotNil(t *testing.T) {
 	for _, test := range tests {
 		r := NotNil
 		err := r.Validate(test.value)
+		assertError(t, test.err, err, test.tag)
+
+		// assert context aware validation returns the same result
+		err = r.ValidateWithContext(context.Background(), test.value)
 		assertError(t, test.err, err, test.tag)
 	}
 }
