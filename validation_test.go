@@ -19,10 +19,10 @@ func TestValidate(t *testing.T) {
 	mp := map[string]String123{"c": String123("abc"), "b": String123("123"), "a": String123("xyz")}
 	var ptr *string
 	tests := []struct {
-		tag   string
-		value interface{}
-		err   string
-		errWithContext   string
+		tag            string
+		value          interface{}
+		err            string
+		errWithContext string
 	}{
 		{"t1", 123, "", ""},
 		{"t2", String123("123"), "", ""},

@@ -161,7 +161,6 @@ func TestValidateStructWithContext(t *testing.T) {
 		// internal error
 		{"t3.1", &m2, []*FieldRules{FieldWithContext(&m2.A, &validateContextAbc{}), Field(&m2.B, Required), FieldWithContext(&m2.A, &validateContextInternalError{})}, "error internal"},
 		{"t3.2", &m2, []*FieldRules{{fieldPtr: &m2.A, rules: []Rule{&validateAbc{}}, rulesWithContext: []RuleWithContext{&validateContextAbc{}}}}, "field #0 has both standard and context based rules defined"},
-
 	}
 	for _, test := range tests {
 		err := ValidateStructWithContext(context.Background(), test.model, test.rules...)

@@ -79,16 +79,19 @@ func ValidateStruct(structPtr interface{}, fields ...*FieldRules) error {
 // can also be used with ByWithContext() to perform context aware validation.
 // For example,
 //
+//
+//    parentContext := context.Background()
+//    ctx := context.WithValue(parentContext, "KEY", "VALUE")
 //    value := struct {
 //        Name  string
 //        Value string
 //    }{"name", "demo"}
-//    err := validation.ValidateStructWithContext(&value,
-//         validation.FieldWithContext(&a.Name, validation.Required),
-//         validation.FieldWithContext(&a.Value, validation.Required, validation.Length(5, 10)),
+//    err := validation.ValidateStructWithContext(ctx, &value,
+//         validation.Field(&a.Name, validation.Required),
+//         validation.FieldWithContext(&a.Value, validation.Required, validation.ByWithContext(CustomValidationFunction)),
 //    )
 //    fmt.Println(err)
-//    // Value: the length must be between 5 and 10.
+//    // Value: custom rule error message.
 //
 // An error will be returned if validation fails.
 func ValidateStructWithContext(ctx context.Context, structPtr interface{}, fields ...*FieldRules) error {
@@ -206,4 +209,3 @@ func validate(ctx context.Context, fv reflect.Value, fr *FieldRules) error {
 	}
 	return Validate(fv.Elem().Interface(), fr.rules...)
 }
-
