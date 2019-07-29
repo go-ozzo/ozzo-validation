@@ -30,11 +30,10 @@ func (r *EachRule) Validate(value interface{}) error {
 	v := reflect.ValueOf(value)
 	switch v.Kind() {
 	case reflect.Map:
-		it := v.MapRange()
-		for it.Next() {
-			val := r.getInterface(it.Value())
+		for _, k := range v.MapKeys() {
+			val := r.getInterface(v.MapIndex(k))
 			if err := Validate(val, r.rules...); err != nil {
-				errs[r.getString(it.Key())] = err
+				errs[r.getString(k)] = err
 			}
 		}
 	case reflect.Slice, reflect.Array:
