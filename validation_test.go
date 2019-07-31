@@ -117,6 +117,8 @@ type Model1 struct {
 	E String123
 	F *String123
 	G string `json:"g"`
+	H []string
+	I map[string]string
 }
 
 type String123 string

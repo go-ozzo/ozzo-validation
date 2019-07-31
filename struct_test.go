@@ -62,7 +62,7 @@ func TestFindStructField(t *testing.T) {
 
 func TestValidateStruct(t *testing.T) {
 	var m0 *Model1
-	m1 := Model1{A: "abc", B: "xyz", c: "abc", G: "xyz"}
+	m1 := Model1{A: "abc", B: "xyz", c: "abc", G: "xyz", H: []string{"abc", "abc"}, I: map[string]string{"foo": "abc"}}
 	m2 := Model1{E: String123("xyz")}
 	m3 := Model2{}
 	m4 := Model2{M3: Model3{A: "abc"}, Model3: Model3{A: "abc"}}
@@ -82,6 +82,8 @@ func TestValidateStruct(t *testing.T) {
 		{"t2.3", &m1, []*FieldRules{Field(&m1.A, &validateXyz{}), Field(&m1.c, &validateXyz{})}, "A: error xyz; c: error xyz."},
 		{"t2.4", &m1, []*FieldRules{Field(&m1.D, Length(0, 5))}, ""},
 		{"t2.5", &m1, []*FieldRules{Field(&m1.F, Length(0, 5))}, ""},
+		{"t2.6", &m1, []*FieldRules{Field(&m1.H, Each(&validateAbc{})), Field(&m1.I, Each(&validateAbc{}))}, ""},
+		{"t2.6", &m1, []*FieldRules{Field(&m1.H, Each(&validateXyz{})), Field(&m1.I, Each(&validateXyz{}))}, "H: (0: error xyz; 1: error xyz.); I: (foo: error xyz.)."},
 		// non-struct pointer
 		{"t3.1", m1, []*FieldRules{}, ErrStructPointer.Error()},
 		{"t3.2", nil, []*FieldRules{}, ErrStructPointer.Error()},
