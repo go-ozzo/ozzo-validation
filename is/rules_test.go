@@ -59,6 +59,7 @@ func TestAll(t *testing.T) {
 		{"E164", E164, "+19251232233", "+00124222333", "must be a valid E164 number"},
 		{"CountryCode2", CountryCode2, "US", "XY", "must be a valid two-letter country code"},
 		{"CountryCode3", CountryCode3, "USA", "XYZ", "must be a valid three-letter country code"},
+		{"CurrencyCode", CurrencyCode, "USD", "USS", "must be valid ISO 4217 currency code"},
 		{"DialString", DialString, "localhost.local:1", "localhost.loc:100000", "must be a valid dial string"},
 		{"DataURI", DataURI, "data:image/png;base64,TG9yZW0gaXBzdW0gZG9sb3Igc2l0IGFtZXQsIGNvbnNlY3RldHVyIGFkaXBpc2NpbmcgZWxpdC4=", "image/gif;base64,U3VzcGVuZGlzc2UgbGVjdHVzIGxlbw==", "must be a Base64-encoded data URI"},
 		{"Base64", Base64, "TG9yZW0gaXBzdW0gZG9sb3Igc2l0IGFtZXQsIGNvbnNlY3RldHVyIGFkaXBpc2NpbmcgZWxpdC4=", "image", "must be encoded in Base64"},

@@ -90,6 +90,8 @@ var (
 	CountryCode2 = validation.NewStringRule(govalidator.IsISO3166Alpha2, "must be a valid two-letter country code")
 	// CountryCode3 validates if a string is a valid ISO3166 Alpha 3 country code
 	CountryCode3 = validation.NewStringRule(govalidator.IsISO3166Alpha3, "must be a valid three-letter country code")
+	// CurrencyCode validates if a string is a valid IsISO4217 currency code.
+	CurrencyCode = validation.NewStringRule(govalidator.IsISO4217, "must be valid ISO 4217 currency code")
 	// DialString validates if a string is a valid dial string that can be passed to Dial()
 	DialString = validation.NewStringRule(govalidator.IsDialString, "must be a valid dial string")
 	// MAC validates if a string is a MAC address
