@@ -55,6 +55,16 @@ func TestValidate(t *testing.T) {
 	assert.Nil(t, err)
 }
 
+func stringEqual(str string) RuleFunc {
+	return func(value interface{}) error {
+		s, _ := value.(string)
+		if s != str {
+			return errors.New("unexpected string")
+		}
+		return nil
+	}
+}
+
 func TestBy(t *testing.T) {
 	abcRule := By(func(value interface{}) error {
 		s, _ := value.(string)
@@ -68,6 +78,10 @@ func TestBy(t *testing.T) {
 	if assert.NotNil(t, err) {
 		assert.Equal(t, "must be abc", err.Error())
 	}
+
+	xyzRule := By(stringEqual("xyz"))
+	assert.Nil(t, Validate("xyz", xyzRule))
+	assert.NotNil(t, Validate("abc", xyzRule))
 }
 
 func Test_skipRule_Validate(t *testing.T) {

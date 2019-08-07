@@ -533,6 +533,24 @@ fmt.Println(err)
 // Output: must be abc
 ```
 
+If your validation function takes additional parameters, you can use the following closure trick:
+
+```go
+func stringEquals(str string) validation.RuleFunc {
+	return func(value interface{}) error {
+		s, _ := value.(string)
+        if s != str {
+            return errors.New("unexpected string")
+        }
+        return nil
+    }
+}
+
+err := validation.Validate("xyz", validation.By(stringEquals("abc")))
+fmt.Println(err)
+// Output: unexpected string
+```
+
 
 ### Rule Groups
 
