@@ -533,6 +533,29 @@ fmt.Println(err)
 // Output: must be abc
 ```
 
+You can also create custom rules that take arguments: 
+
+For example:
+
+```go
+func buildCheckAbc(args ...interface{}) func(interface{}) error {
+	return func(value interface{}) error {
+		s, _ := value.(string)
+		abc, _ := arg[0].(string)
+		
+		if s != abc {
+			return errors.New("must be " + abc)
+		}
+		
+		return nil
+	}
+}
+
+error := validation.Validate("xyz", validation.By(buildCheckAbc("abc")))
+fmt.Println(err)
+// Output: must be abc
+```
+
 
 ### Rule Groups
 
