@@ -31,6 +31,7 @@ func TestLength(t *testing.T) {
 		{"t10", 2, 4, sql.NullString{String: "abc", Valid: true}, ""},
 		{"t11", 2, 4, sql.NullString{String: "", Valid: true}, ""},
 		{"t12", 2, 4, &sql.NullString{String: "abc", Valid: true}, ""},
+		{"t13", 1, 0, "", "the length must be no less than 1"},
 	}
 
 	for _, test := range tests {

@@ -68,7 +68,7 @@ func (v *LengthRule) Validate(value interface{}) error {
 		return err
 	}
 
-	if v.min > 0 && l < v.min || v.max > 0 && l > v.max {
+	if (v.min > 0 && l < v.min) || (v.max > 0 && l > v.max) {
 		return errors.New(v.message)
 	}
 	return nil
