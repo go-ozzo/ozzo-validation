@@ -1,6 +1,8 @@
 package validation_test
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"regexp"
 
@@ -127,4 +129,26 @@ func Example_five() {
 	fmt.Println(err)
 	// Output:
 	// Level: cannot be blank; Name: cannot be blank.
+}
+
+func Example_six() {
+	key := "test"
+	rule := validation.WithContext(func(ctx context.Context, value interface{}) error {
+		s, _ := value.(string)
+		if ctx.Value(key) == s {
+			return nil
+		}
+		return errors.New("unexpected value")
+	})
+	ctx := context.WithValue(context.Background(), key, "good sample")
+
+	err1 := validation.ValidateWithContext(ctx, "bad sample", rule)
+	fmt.Println(err1)
+
+	err2 := validation.ValidateWithContext(ctx, "good sample", rule)
+	fmt.Println(err2)
+
+	// Output:
+	// unexpected value
+	// <nil>
 }

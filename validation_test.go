@@ -5,6 +5,7 @@
 package validation
 
 import (
+	"context"
 	"errors"
 	"strings"
 	"testing"
@@ -14,25 +15,39 @@ import (
 
 func TestValidate(t *testing.T) {
 	slice := []String123{String123("abc"), String123("123"), String123("xyz")}
+	ctxSlice := []Model4{{A: "abc"}, {A: "def"}}
 	mp := map[string]String123{"c": String123("abc"), "b": String123("123"), "a": String123("xyz")}
+	var (
+		ptr     *string
+		noCtx   StringValidate        = "abc"
+		withCtx StringValidateContext = "abc"
+	)
 	tests := []struct {
 		tag   string
 		value interface{}
 		err   string
+		errWithContext string
 	}{
-		{"t1", 123, ""},
-		{"t2", String123("123"), ""},
-		{"t3", String123("abc"), "error 123"},
-		{"t4", []String123{}, ""},
-		{"t5", slice, "0: error 123; 2: error 123."},
-		{"t6", &slice, "0: error 123; 2: error 123."},
-		{"t7", mp, "a: error 123; c: error 123."},
-		{"t8", &mp, "a: error 123; c: error 123."},
-		{"t9", map[string]String123{}, ""},
+		{"t1", 123, "", ""},
+		{"t2", String123("123"), "", ""},
+		{"t3", String123("abc"), "error 123", "error 123"},
+		{"t4", []String123{}, "", ""},
+		{"t5", slice, "0: error 123; 2: error 123.", "0: error 123; 2: error 123."},
+		{"t6", &slice, "0: error 123; 2: error 123.", "0: error 123; 2: error 123."},
+		{"t7", ctxSlice, "", "1: (A: error abc.)."},
+		{"t8", mp, "a: error 123; c: error 123.", "a: error 123; c: error 123."},
+		{"t9", &mp, "a: error 123; c: error 123.", "a: error 123; c: error 123."},
+		{"t10", map[string]String123{}, "", ""},
+		{"t11", ptr, "", ""},
+		{"t12", noCtx, "called validate", "called validate"},
+		{"t13", withCtx, "called validatewithcontext", "called validatewithcontext"},
 	}
 	for _, test := range tests {
 		err := Validate(test.value)
 		assertError(t, test.err, err, test.tag)
+		// rules that are not context-aware should still be applied in context-aware validation
+		err = ValidateWithContext(context.Background(), test.value)
+		assertError(t, test.errWithContext, err, test.tag)
 	}
 
 	// with rules
@@ -84,6 +99,21 @@ func TestBy(t *testing.T) {
 	assert.NotNil(t, Validate("abc", xyzRule))
 }
 
+func TestByWithContext(t *testing.T) {
+	abcRule := WithContext(func(ctx context.Context, value interface{}) error {
+		s, _ := value.(string)
+		if s != "abc" {
+			return errors.New("must be abc")
+		}
+		return nil
+	})
+	assert.Nil(t, ValidateWithContext(context.Background(), "abc", abcRule))
+	err := ValidateWithContext(context.Background(), "xyz", abcRule)
+	if assert.NotNil(t, err) {
+		assert.Equal(t, "must be abc", err.Error())
+	}
+}
+
 func Test_skipRule_Validate(t *testing.T) {
 	assert.Nil(t, Skip.Validate(100))
 }
@@ -105,9 +135,35 @@ func (v *validateAbc) Validate(obj interface{}) error {
 	return nil
 }
 
+type validateContextAbc struct{}
+
+func (v *validateContextAbc) Validate(obj interface{}) error {
+	return v.ValidateWithContext(context.Background(), obj)
+}
+
+func (v *validateContextAbc) ValidateWithContext(ctx context.Context, obj interface{}) error {
+	if !strings.Contains(obj.(string), "abc") {
+		return errors.New("error abc")
+	}
+	return nil
+}
+
 type validateXyz struct{}
 
 func (v *validateXyz) Validate(obj interface{}) error {
+	if !strings.Contains(obj.(string), "xyz") {
+		return errors.New("error xyz")
+	}
+	return nil
+}
+
+type validateContextXyz struct{}
+
+func (v *validateContextXyz) Validate(obj interface{}) error {
+	return v.ValidateWithContext(context.Background(), obj)
+}
+
+func (v *validateContextXyz) ValidateWithContext(ctx context.Context, obj interface{}) error {
 	if !strings.Contains(obj.(string), "xyz") {
 		return errors.New("error xyz")
 	}
@@ -158,4 +214,36 @@ func (m Model3) Validate() error {
 	return ValidateStruct(&m,
 		Field(&m.A, &validateAbc{}),
 	)
+}
+
+type Model4 struct {
+	A string
+}
+
+func (m Model4) ValidateWithContext(ctx context.Context) error {
+	return ValidateStructWithContext(ctx, &m,
+		Field(&m.A, &validateContextAbc{}),
+	)
+}
+
+type Model5 struct {
+	Model4
+	M4 Model4
+	B  string
+}
+
+type StringValidate string
+
+func (s StringValidate) Validate() error {
+	return errors.New("called validate")
+}
+
+type StringValidateContext string
+
+func (s StringValidateContext) Validate() error {
+	return s.ValidateWithContext(context.Background())
+}
+
+func (s StringValidateContext) ValidateWithContext(ctx context.Context) error {
+	return errors.New("called validatewithcontext")
 }
