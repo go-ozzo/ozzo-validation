@@ -17,10 +17,11 @@ func TestValidate(t *testing.T) {
 	slice := []String123{String123("abc"), String123("123"), String123("xyz")}
 	ctxSlice := []Model4{{A: "abc"}, {A: "def"}}
 	mp := map[string]String123{"c": String123("abc"), "b": String123("123"), "a": String123("xyz")}
+	mpCtx := map[string]StringValidateContext{"c": StringValidateContext("abc"), "b": StringValidateContext("123"), "a": StringValidateContext("xyz")}
 	var (
 		ptr     *string
 		noCtx   StringValidate        = "abc"
-		withCtx StringValidateContext = "abc"
+		withCtx StringValidateContext = "xyz"
 	)
 	tests := []struct {
 		tag   string
@@ -32,15 +33,18 @@ func TestValidate(t *testing.T) {
 		{"t2", String123("123"), "", ""},
 		{"t3", String123("abc"), "error 123", "error 123"},
 		{"t4", []String123{}, "", ""},
+		{"t4.1", []StringValidateContext{}, "", ""},
+		{"t4.2", map[string]StringValidateContext{}, "", ""},
 		{"t5", slice, "0: error 123; 2: error 123.", "0: error 123; 2: error 123."},
 		{"t6", &slice, "0: error 123; 2: error 123.", "0: error 123; 2: error 123."},
 		{"t7", ctxSlice, "", "1: (A: error abc.)."},
 		{"t8", mp, "a: error 123; c: error 123.", "a: error 123; c: error 123."},
+		{"t8.1", mpCtx, "a: must be abc; b: must be abc.", "a: must be abc with context; b: must be abc with context."},
 		{"t9", &mp, "a: error 123; c: error 123.", "a: error 123; c: error 123."},
 		{"t10", map[string]String123{}, "", ""},
 		{"t11", ptr, "", ""},
 		{"t12", noCtx, "called validate", "called validate"},
-		{"t13", withCtx, "called validatewithcontext", "called validatewithcontext"},
+		{"t13", withCtx, "must be abc", "must be abc with context"},
 	}
 	for _, test := range tests {
 		err := Validate(test.value)
@@ -97,21 +101,25 @@ func TestBy(t *testing.T) {
 	xyzRule := By(stringEqual("xyz"))
 	assert.Nil(t, Validate("xyz", xyzRule))
 	assert.NotNil(t, Validate("abc", xyzRule))
+	assert.Nil(t, ValidateWithContext(context.Background(), "xyz", xyzRule))
+	assert.NotNil(t, ValidateWithContext(context.Background(),"abc", xyzRule))
 }
 
 func TestByWithContext(t *testing.T) {
 	abcRule := WithContext(func(ctx context.Context, value interface{}) error {
-		s, _ := value.(string)
-		if s != "abc" {
+		if ctx.Value("key") != value.(string) {
 			return errors.New("must be abc")
 		}
 		return nil
 	})
-	assert.Nil(t, ValidateWithContext(context.Background(), "abc", abcRule))
-	err := ValidateWithContext(context.Background(), "xyz", abcRule)
+	ctx := context.WithValue(context.Background(), "key", "abc")
+	assert.Nil(t, ValidateWithContext(ctx, "abc", abcRule))
+	err := ValidateWithContext(ctx, "xyz", abcRule)
 	if assert.NotNil(t, err) {
 		assert.Equal(t, "must be abc", err.Error())
 	}
+
+	assert.NotNil(t, Validate("abc", abcRule))
 }
 
 func Test_skipRule_Validate(t *testing.T) {
@@ -241,9 +249,15 @@ func (s StringValidate) Validate() error {
 type StringValidateContext string
 
 func (s StringValidateContext) Validate() error {
-	return s.ValidateWithContext(context.Background())
+	if string(s) != "abc" {
+		return errors.New("must be abc")
+	}
+	return nil
 }
 
 func (s StringValidateContext) ValidateWithContext(ctx context.Context) error {
-	return errors.New("called validatewithcontext")
+	if string(s) != "abc" {
+		return errors.New("must be abc with context")
+	}
+	return nil
 }

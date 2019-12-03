@@ -68,7 +68,7 @@ func ValidateStruct(structPtr interface{}, fields ...*FieldRules) error {
 // validate struct fields with the provided context.
 // Please refer to ValidateStruct for the detailed instructions on how to use this function.
 func ValidateStructWithContext(ctx context.Context, structPtr interface{}, fields ...*FieldRules) error {
-	return validateStruct(nil, structPtr, fields...)
+	return validateStruct(ctx, structPtr, fields...)
 }
 
 func validateStruct(ctx context.Context, structPtr interface{}, fields ...*FieldRules) error {
