@@ -2,15 +2,16 @@ dist: bionic
 
 language: go
 
+# Force-enable Go modules. Also force go to use the code in vendor/
+# These will both be unnecessary when Go 1.14 lands.
+env: GO111MODULE=on GOFLAGS='-mod vendor'
+
 go:
   - 1.13.x
-  - tip
 
 install:
   - go get golang.org/x/tools/cmd/cover
   - go get github.com/mattn/goveralls
-  - go list -f '{{range .Imports}}{{.}} {{end}}' ./... | xargs go get -v
-  - go list -f '{{range .TestImports}}{{.}} {{end}}' ./... | xargs go get -v
 
 script:
   - go test -v -covermode=count -coverprofile=coverage.out
