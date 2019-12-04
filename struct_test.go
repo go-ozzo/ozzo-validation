@@ -5,6 +5,7 @@
 package validation
 
 import (
+	"context"
 	"reflect"
 	"testing"
 
@@ -115,8 +116,10 @@ func TestValidateStruct(t *testing.T) {
 		{"t9.1", &m5, []*FieldRules{Field(&m5.A, &validateAbc{}), Field(&m5.B, Required), Field(&m5.A, &validateInternalError{})}, "error internal"},
 	}
 	for _, test := range tests {
-		err := ValidateStruct(test.model, test.rules...)
-		assertError(t, test.err, err, test.tag)
+		err1 := ValidateStruct(test.model, test.rules...)
+		err2 := ValidateStructWithContext(context.Background(), test.model, test.rules...)
+		assertError(t, test.err, err1, test.tag)
+		assertError(t, test.err, err2, test.tag)
 	}
 
 	// embedded struct
@@ -130,6 +133,51 @@ func TestValidateStruct(t *testing.T) {
 		Value string
 	}{"name", "demo"}
 	err = ValidateStruct(&a,
+		Field(&a.Name, Required),
+		Field(&a.Value, Required, Length(5, 10)),
+	)
+	if assert.NotNil(t, err) {
+		assert.Equal(t, "Value: the length must be between 5 and 10.", err.Error())
+	}
+}
+
+func TestValidateStructWithContext(t *testing.T) {
+	m1 := Model1{A: "abc", B: "xyz", c: "abc", G: "xyz"}
+	m2 := Model2{Model3: Model3{A: "internal"}}
+	m3 := Model5{}
+	tests := []struct {
+		tag   string
+		model interface{}
+		rules []*FieldRules
+		err   string
+	}{
+		// normal rules
+		{"t1.1", &m1, []*FieldRules{Field(&m1.A, &validateContextAbc{}), Field(&m1.B, &validateContextXyz{})}, ""},
+		{"t1.2", &m1, []*FieldRules{Field(&m1.A, &validateContextXyz{}), Field(&m1.B, &validateContextAbc{})}, "A: error xyz; B: error abc."},
+		{"t1.3", &m1, []*FieldRules{Field(&m1.A, &validateContextXyz{}), Field(&m1.c, &validateContextXyz{})}, "A: error xyz; c: error xyz."},
+		{"t1.4", &m1, []*FieldRules{Field(&m1.G, &validateContextAbc{})}, "g: error abc."},
+		// skip rule
+		{"t2.1", &m1, []*FieldRules{Field(&m1.G, Skip, &validateContextAbc{})}, ""},
+		{"t2.2", &m1, []*FieldRules{Field(&m1.G, &validateContextAbc{}, Skip)}, "g: error abc."},
+		// internal error
+		{"t3.1", &m2, []*FieldRules{Field(&m2.A, &validateContextAbc{}), Field(&m2.B, Required), Field(&m2.A, &validateInternalError{})}, "error internal"},
+	}
+	for _, test := range tests {
+		err := ValidateStructWithContext(context.Background(), test.model, test.rules...)
+		assertError(t, test.err, err, test.tag)
+	}
+
+	//embedded struct
+	err := ValidateWithContext(context.Background(), &m3)
+	if assert.NotNil(t, err) {
+		assert.Equal(t, "A: error abc.", err.Error())
+	}
+
+	a := struct {
+		Name  string
+		Value string
+	}{"name", "demo"}
+	err = ValidateStructWithContext(context.Background(), &a,
 		Field(&a.Name, Required),
 		Field(&a.Value, Required, Length(5, 10)),
 	)
