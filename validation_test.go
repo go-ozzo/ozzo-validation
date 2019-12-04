@@ -105,14 +105,17 @@ func TestBy(t *testing.T) {
 	assert.NotNil(t, ValidateWithContext(context.Background(),"abc", xyzRule))
 }
 
+type key int
+
 func TestByWithContext(t *testing.T) {
+	k := key(1)
 	abcRule := WithContext(func(ctx context.Context, value interface{}) error {
-		if ctx.Value("key") != value.(string) {
+		if ctx.Value(k) != value.(string) {
 			return errors.New("must be abc")
 		}
 		return nil
 	})
-	ctx := context.WithValue(context.Background(), "key", "abc")
+	ctx := context.WithValue(context.Background(), k, "abc")
 	assert.Nil(t, ValidateWithContext(ctx, "abc", abcRule))
 	err := ValidateWithContext(ctx, "xyz", abcRule)
 	if assert.NotNil(t, err) {

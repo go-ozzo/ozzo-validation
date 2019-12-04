@@ -131,8 +131,10 @@ func Example_five() {
 	// Level: cannot be blank; Name: cannot be blank.
 }
 
+type contextKey int
+
 func Example_six() {
-	key := "test"
+	key := contextKey(1)
 	rule := validation.WithContext(func(ctx context.Context, value interface{}) error {
 		s, _ := value.(string)
 		if ctx.Value(key) == s {
