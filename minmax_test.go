@@ -60,7 +60,7 @@ func TestMin(t *testing.T) {
 	for _, test := range tests {
 		r := Min(test.threshold)
 		if test.exclusive {
-			r.Exclusive()
+			r = r.Exclusive()
 		}
 		err := r.Validate(test.value)
 		assertError(t, test.err, err, test.tag)
@@ -71,7 +71,7 @@ func TestMinError(t *testing.T) {
 	r := Min(10)
 	assert.Equal(t, "must be no less than 10", r.message)
 
-	r.Error("123")
+	r = r.Error("123")
 	assert.Equal(t, "123", r.message)
 }
 
@@ -122,7 +122,7 @@ func TestMax(t *testing.T) {
 	for _, test := range tests {
 		r := Max(test.threshold)
 		if test.exclusive {
-			r.Exclusive()
+			r = r.Exclusive()
 		}
 		err := r.Validate(test.value)
 		assertError(t, test.err, err, test.tag)
@@ -133,6 +133,6 @@ func TestMaxError(t *testing.T) {
 	r := Max(10)
 	assert.Equal(t, "must be no greater than 10", r.message)
 
-	r.Error("123")
+	r = r.Error("123")
 	assert.Equal(t, "123", r.message)
 }
