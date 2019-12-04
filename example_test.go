@@ -73,7 +73,7 @@ func Example_second() {
 	err := validation.Validate(data,
 		validation.Required,       // not empty
 		validation.Length(5, 100), // length between 5 and 100
-		is.URL, // is a valid URL
+		is.URL,                    // is a valid URL
 	)
 	fmt.Println(err)
 	// Output:

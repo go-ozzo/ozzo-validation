@@ -11,7 +11,7 @@ install:
   - go get golang.org/x/lint/golint
 
 script:
-  - test -z "`gofmt -l .`"
+  - test -z "`gofmt -l -d .`"
   - test -z "`golint ./...`"
   - go test -v -covermode=count -coverprofile=coverage.out
   - $HOME/gopath/bin/goveralls -coverprofile=coverage.out -service=travis-ci

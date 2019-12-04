@@ -24,9 +24,9 @@ func TestValidate(t *testing.T) {
 		withCtx StringValidateContext = "xyz"
 	)
 	tests := []struct {
-		tag   string
-		value interface{}
-		err   string
+		tag            string
+		value          interface{}
+		err            string
 		errWithContext string
 	}{
 		{"t1", 123, "", ""},
@@ -102,7 +102,7 @@ func TestBy(t *testing.T) {
 	assert.Nil(t, Validate("xyz", xyzRule))
 	assert.NotNil(t, Validate("abc", xyzRule))
 	assert.Nil(t, ValidateWithContext(context.Background(), "xyz", xyzRule))
-	assert.NotNil(t, ValidateWithContext(context.Background(),"abc", xyzRule))
+	assert.NotNil(t, ValidateWithContext(context.Background(), "abc", xyzRule))
 }
 
 type key int

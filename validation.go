@@ -53,7 +53,7 @@ var (
 	// Skip is a special validation rule that indicates all rules following it should be skipped.
 	Skip = &skipRule{}
 
-	validatableType = reflect.TypeOf((*Validatable)(nil)).Elem()
+	validatableType            = reflect.TypeOf((*Validatable)(nil)).Elem()
 	validatableWithContextType = reflect.TypeOf((*ValidatableWithContext)(nil)).Elem()
 )
 
@@ -235,7 +235,7 @@ func (r *skipRule) Validate(interface{}) error {
 }
 
 type inlineRule struct {
-	f RuleFunc
+	f  RuleFunc
 	fc RuleWithContextFunc
 }
 

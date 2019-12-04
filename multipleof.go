@@ -7,7 +7,7 @@ import (
 )
 
 // MultipleOf returns a validation rule that checks if a value is a multiple of the "base" value.
-// Note that "base" should be of integer type. 
+// Note that "base" should be of integer type.
 func MultipleOf(base interface{}) *MultipleOfRule {
 	return &MultipleOfRule{
 		base,
@@ -17,8 +17,8 @@ func MultipleOf(base interface{}) *MultipleOfRule {
 
 // MultipleOfRule is a validation rule that checks if a value is a multiple of the "base" value.
 type MultipleOfRule struct {
-	base interface{}
-	message   string
+	base    interface{}
+	message string
 }
 
 // Error sets the error message for the rule.
