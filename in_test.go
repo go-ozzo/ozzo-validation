@@ -27,6 +27,7 @@ func TestIn(t *testing.T) {
 		{"t5", []interface{}{1, 2}, "1", "must be a valid value"},
 		{"t6", []interface{}{1, 2}, &v, ""},
 		{"t7", []interface{}{1, 2}, v2, ""},
+		{"t8", []interface{}{[]byte{1}, 1, 2}, []byte{1}, ""},
 	}
 
 	for _, test := range tests {
