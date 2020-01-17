@@ -1,9 +1,13 @@
+// Copyright 2016 Qiang Xue. All rights reserved.
+// Use of this source code is governed by a MIT-style
+// license that can be found in the LICENSE file.
+
 package validation
 
-// LangMap use to define language rules translation map.
+// LangMap contain translation of rules in languages
 type LangMap map[string]string
 
-// EnLang is key of translated messages map for english language.
+// EnLang is the key to translated messages map for the English language.
 var EnLang = "en"
 
 // Language to use for validation error messages.
@@ -18,7 +22,7 @@ func AddRuleTranslation(lang, ruleName, translation string) {
 	TranslationMap[lang][ruleName] = translation
 }
 
-// Add language to the TranslationMap, if already,
+// Add language to the TranslationMap, if already
 // exists that language, union two maps.
 func AddLang(lang string, langMap LangMap) {
 	setEmptyLangMapIfNotExists(lang)
@@ -28,8 +32,8 @@ func AddLang(lang string, langMap LangMap) {
 	}
 }
 
-// setEmptyLangMapIfNotExists check if does not exists map for
-//specified language, create new zero value map.
+// setEmptyLangMapIfNotExists check if does not exists the translation
+// map of the language, create a new zero value map.
 func setEmptyLangMapIfNotExists(lang string) {
 	if _, ok := TranslationMap[lang]; !ok {
 		TranslationMap[lang] = LangMap{}

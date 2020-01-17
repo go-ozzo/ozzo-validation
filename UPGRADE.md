@@ -1,5 +1,18 @@
 # Upgrade Instructions
 
+## Upgrade from 3.x to 4.x
+* We changed the signature of `NewStringRule` method, instead of getting `validator function` and `message`, it now
+get `validator function` and `ruleName`, this is because of adding the translation feature. The following snippet shows
+how to modify your code if you want to define new string rule:
+ ```go
+// 3.x
+// Assume Email is your custom rule:
+var Email = validation.NewStringRule(govalidator.IsEmail, "must be a valid email address")
+
+// 4.x
+var Email = validation.NewStringRule(govalidator.IsEmail, "email").DefaultMessage("must be a valid email address")
+```
+
 ## Upgrade from 2.x to 3.x
 
 * Instead of using `StructRules` to define struct validation rules, use `ValidateStruct()` to declare and perform

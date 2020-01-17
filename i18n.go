@@ -1,3 +1,7 @@
+// Copyright 2016 Qiang Xue. All rights reserved.
+// Use of this source code is governed by a MIT-style
+// license that can be found in the LICENSE file.
+
 package validation
 
 var TranslationMap = map[string]LangMap{

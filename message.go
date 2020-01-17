@@ -1,28 +1,35 @@
+// Copyright 2016 Qiang Xue. All rights reserved.
+// Use of this source code is governed by a MIT-style
+// license that can be found in the LICENSE file.
+
 package validation
 
-// Msg check if custom message is not empty, it return
-// your custom messgae, otherwise try to find translated
-// message for that rule.
+// Msg check if the custom message is not empty, it returns your custom
+// message otherwise tries to find the translated message for that rule.
 func Msg(ruleName string, customMsg string) string {
 	return msgInLang(Lang, ruleName, "", customMsg)
 }
 
-// MsgWithDefault return rules translated message , if not found return
-// default message.
+// MsgWithDefault return rules translated message, if
+//not found return default message.
 func MsgWithDefault(ruleName string, defaultMsg string, customMsg string) string {
 	return msgInLang(Lang, ruleName, defaultMsg, customMsg)
 }
 
-// MsgInLang check if you pass custom message, it return your custom message.
-// otherwise try to find your rule translation in specified lang, if not found,
-// search in "en" lang , finally if not found again, return your efault message.
+// MsgInLang checks if you pass the custom message, it returns your
+// custom message otherwise try to find your rule translation in
+// specified lang if not found search in "en" language, finally
+// if the English lang does no having any translation for that
+// rule, returns your default message.
 func MsgInLang(lang string, ruleName string, defaultMsg string, customMsg string) string {
 	return msgInLang(lang, ruleName, defaultMsg, customMsg)
 }
 
-// msgInLang check if you pass custom message, it return your custom message.
-// otherwise try to find your rule translation in specified lang, if not found,
-// search in "en" lang , finally if not found again, return your efault message.
+// msgInLang checks if you pass the custom message, it returns your
+// custom message otherwise try to find your rule translation in
+// specified lang if not found search in "en" language, finally
+// if the English lang does no having any translation for that
+// rule, returns your default message.
 func msgInLang(lang string, ruleName string, defaultMsg string, customMsg string) string {
 	if customMsg != "" {
 		return customMsg
