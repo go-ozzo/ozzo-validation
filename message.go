@@ -1,16 +1,5 @@
 package validation
 
-// LangMap use to define language rules translation map.
-type LangMap map[string]string
-
-// EnLang is key of translated messages map for english language.
-var EnLang = "en"
-
-// Language to use for validation error messages.
-// To specify your current language for rules messages
-// translation, set this variable.
-var Lang = EnLang
-
 // Msg check if custom message is not empty, it return
 // your custom messgae, otherwise try to find translated
 // message for that rule.
