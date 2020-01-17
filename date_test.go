@@ -37,9 +37,10 @@ func TestDate(t *testing.T) {
 }
 
 func TestDateRule_Error(t *testing.T) {
-	r := Date(time.ANSIC)
-	assert.Equal(t, "must be a valid date", r.message)
-	assert.Equal(t, "the data is out of range", r.rangeMessage)
+	r := Date(time.RFC3339)
+	assert.Equal(t, "must be a valid date", r.Validate("0001-01-02T15:04:05Z07:00").Error())
+	r2 := r.Min(time.Date(2000, 1, 1, 1, 1, 1, 0, time.UTC))
+	assert.Equal(t, "the data is out of range", r2.Validate("1999-01-02T15:04:05Z").Error())
 	r = r.Error("123")
 	r = r.RangeError("456")
 	assert.Equal(t, "123", r.message)

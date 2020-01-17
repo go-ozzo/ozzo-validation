@@ -16,7 +16,7 @@ import (
 func In(values ...interface{}) InRule {
 	return InRule{
 		elements: values,
-		message:  "must be a valid value",
+		message:  "",
 	}
 }
 
@@ -38,7 +38,7 @@ func (r InRule) Validate(value interface{}) error {
 			return nil
 		}
 	}
-	return errors.New(r.message)
+	return errors.New(Msg("in", r.message))
 }
 
 // Error sets the error message for the rule.

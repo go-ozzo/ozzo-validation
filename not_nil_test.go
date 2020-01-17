@@ -43,8 +43,8 @@ func TestNotNil(t *testing.T) {
 
 func Test_notNilRule_Error(t *testing.T) {
 	r := NotNil
-	assert.Equal(t, "is required", r.message)
+	assert.Equal(t, "is required", r.Validate(nil).Error())
 	r2 := r.Error("123")
-	assert.Equal(t, "is required", r.message)
+	assert.Equal(t, "is required", r.Validate(nil).Error())
 	assert.Equal(t, "123", r2.message)
 }

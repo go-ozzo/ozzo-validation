@@ -16,6 +16,7 @@ type ThresholdRule struct {
 	threshold interface{}
 	operator  int
 	message   string
+	ruleName  string
 }
 
 const (
@@ -34,8 +35,10 @@ func Min(min interface{}) ThresholdRule {
 	return ThresholdRule{
 		threshold: min,
 		operator:  greaterEqualThan,
-		message:   fmt.Sprintf("must be no less than %v", min),
+		message:   "",
+		ruleName:  "min_no_less_than",
 	}
+
 }
 
 // Max returns a validation rule that checks if a value is less or equal than the specified value.
@@ -47,7 +50,8 @@ func Max(max interface{}) ThresholdRule {
 	return ThresholdRule{
 		threshold: max,
 		operator:  lessEqualThan,
-		message:   fmt.Sprintf("must be no greater than %v", max),
+		message:   "",
+		ruleName:  "max_no_greater_than",
 	}
 }
 
@@ -55,10 +59,10 @@ func Max(max interface{}) ThresholdRule {
 func (r ThresholdRule) Exclusive() ThresholdRule {
 	if r.operator == greaterEqualThan {
 		r.operator = greaterThan
-		r.message = fmt.Sprintf("must be greater than %v", r.threshold)
+		r.ruleName = "exclusive_greater_than"
 	} else if r.operator == lessEqualThan {
 		r.operator = lessThan
-		r.message = fmt.Sprintf("must be less than %v", r.threshold)
+		r.ruleName = "exclusive_less_than"
 	}
 	return r
 }
@@ -116,7 +120,7 @@ func (r ThresholdRule) Validate(value interface{}) error {
 		return fmt.Errorf("type not supported: %v", rv.Type())
 	}
 
-	return errors.New(r.message)
+	return errors.New(fmt.Sprintf(Msg(r.ruleName, r.message), r.threshold))
 }
 
 // Error sets the error message for the rule.

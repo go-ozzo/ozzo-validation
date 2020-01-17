@@ -31,8 +31,8 @@ type DateRule struct {
 func Date(layout string) DateRule {
 	return DateRule{
 		layout:       layout,
-		message:      "must be a valid date",
-		rangeMessage: "the data is out of range",
+		message:      "",
+		rangeMessage: "",
 	}
 }
 
@@ -74,11 +74,11 @@ func (r DateRule) Validate(value interface{}) error {
 
 	date, err := time.Parse(r.layout, str)
 	if err != nil {
-		return errors.New(r.message)
+		return errors.New(Msg("date", r.message))
 	}
 
 	if !r.min.IsZero() && r.min.After(date) || !r.max.IsZero() && date.After(r.max) {
-		return errors.New(r.rangeMessage)
+		return errors.New(Msg("date_range", r.rangeMessage))
 	}
 
 	return nil

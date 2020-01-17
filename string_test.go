@@ -20,11 +20,13 @@ func validateMe(s string) bool {
 func TestNewStringRule(t *testing.T) {
 	v := NewStringRule(validateMe, "abc")
 	assert.NotNil(t, v.validate)
-	assert.Equal(t, "abc", v.message)
+	assert.Equal(t, "abc", v.ruleName)
 }
 
 func TestStringValidator_Error(t *testing.T) {
-	v := NewStringRule(validateMe, "abc")
+	v := NewStringRule(validateMe, "abc_rule").Error("abc").DefaultMessage("abc_default_message")
+	assert.Equal(t, "abc_rule", v.ruleName)
+	assert.Equal(t, "abc_default_message", v.defaultMessage)
 	assert.Equal(t, "abc", v.message)
 	v2 := v.Error("correct")
 	assert.Equal(t, "correct", v2.message)
@@ -32,7 +34,7 @@ func TestStringValidator_Error(t *testing.T) {
 }
 
 func TestStringValidator_Validate(t *testing.T) {
-	v := NewStringRule(validateMe, "wrong")
+	v := NewStringRule(validateMe, "wrong_rule").Error("wrong")
 
 	value := "me"
 

@@ -59,19 +59,19 @@ func TestNilOrNotEmpty(t *testing.T) {
 
 func Test_requiredRule_Error(t *testing.T) {
 	r := Required
-	assert.Equal(t, "cannot be blank", r.message)
+	assert.Equal(t, "cannot be blank", r.Validate(nil).Error())
 	assert.False(t, r.skipNil)
 	r2 := r.Error("123")
-	assert.Equal(t, "cannot be blank", r.message)
+	assert.Equal(t, "cannot be blank", r.Validate(nil).Error())
 	assert.False(t, r.skipNil)
 	assert.Equal(t, "123", r2.message)
 	assert.False(t, r2.skipNil)
 
 	r = NilOrNotEmpty
-	assert.Equal(t, "cannot be blank", r.message)
+	assert.Equal(t, "cannot be blank", r.Validate("").Error())
 	assert.True(t, r.skipNil)
 	r2 = r.Error("123")
-	assert.Equal(t, "cannot be blank", r.message)
+	assert.Equal(t, "cannot be blank", r.Validate("").Error())
 	assert.True(t, r.skipNil)
 	assert.Equal(t, "123", r2.message)
 	assert.True(t, r2.skipNil)

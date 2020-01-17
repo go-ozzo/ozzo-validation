@@ -15,7 +15,7 @@ import (
 func Match(re *regexp.Regexp) MatchRule {
 	return MatchRule{
 		re:      re,
-		message: "must be in a valid format",
+		message: "",
 	}
 }
 
@@ -38,7 +38,7 @@ func (v MatchRule) Validate(value interface{}) error {
 	} else if isBytes && (len(bs) == 0 || v.re.Match(bs)) {
 		return nil
 	}
-	return errors.New(v.message)
+	return errors.New(Msg("match", v.message))
 }
 
 // Error sets the error message for the rule.

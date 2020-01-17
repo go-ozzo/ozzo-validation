@@ -28,7 +28,7 @@ func TestMultipleof(t *testing.T) {
 
 func Test_Multipleof_Error(t *testing.T) {
 	r := MultipleOf(10)
-	assert.Equal(t, "must be multiple of 10", r.message)
+	assert.Equal(t, "must be multiple of 10", r.Validate(3).Error())
 
 	r = r.Error("some error string ...")
 	assert.Equal(t, "some error string ...", r.message)
