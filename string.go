@@ -21,11 +21,10 @@ type StringRule struct {
 // An empty value is considered to be valid. Please use the Required rule to make sure a value is not empty.
 func NewStringRule(validator stringValidator, ruleName string) StringRule {
 	return StringRule{
-		validate:       validator,
-		ruleName:       ruleName,
+		validate: validator,
+		ruleName: ruleName,
 	}
 }
-
 
 // Error sets the error message for the rule.
 func (v StringRule) Error(message string) StringRule {

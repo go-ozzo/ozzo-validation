@@ -1,7 +1,6 @@
 package validation
 
 import (
-	"errors"
 	"fmt"
 	"reflect"
 )
@@ -50,5 +49,5 @@ func (r MultipleOfRule) Validate(value interface{}) error {
 		return fmt.Errorf("type not supported: %v", rv.Type())
 	}
 
-	return errors.New(fmt.Sprintf(Msg("multiple_of", r.message), r.base))
+	return fmt.Errorf(Msg("multiple_of", r.message), r.base)
 }

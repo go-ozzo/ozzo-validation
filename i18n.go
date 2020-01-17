@@ -4,6 +4,7 @@
 
 package validation
 
+// TranslationMap contain all translation messages in various languages.
 var TranslationMap = map[string]LangMap{
 	"en": {
 		"required":               "cannot be blank",

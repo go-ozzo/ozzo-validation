@@ -82,7 +82,7 @@ func Test_LengthRule_Error(t *testing.T) {
 	assert.Equal(t, "the length must be between 10 and 20", r.Validate("abc").Error())
 
 	r = Length(0, 20)
-	assert.Equal(t, "the length must be no more than 20", r.Validate(make([]string,21)).Error())
+	assert.Equal(t, "the length must be no more than 20", r.Validate(make([]string, 21)).Error())
 
 	r = Length(10, 0)
 	assert.Equal(t, "the length must be no less than 10", r.Validate([9]string{}).Error())

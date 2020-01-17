@@ -5,7 +5,6 @@
 package validation
 
 import (
-	"errors"
 	"fmt"
 	"reflect"
 	"time"
@@ -120,7 +119,7 @@ func (r ThresholdRule) Validate(value interface{}) error {
 		return fmt.Errorf("type not supported: %v", rv.Type())
 	}
 
-	return errors.New(fmt.Sprintf(Msg(r.ruleName, r.message), r.threshold))
+	return fmt.Errorf(Msg(r.ruleName, r.message), r.threshold)
 }
 
 // Error sets the error message for the rule.

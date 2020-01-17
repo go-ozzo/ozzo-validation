@@ -72,9 +72,9 @@ func (v LengthRule) detectLengthErrMsg() string {
 	} else if v.min > 0 && v.max > 0 {
 		if v.min == v.max {
 			return fmt.Sprintf(Msg("length_exactly", v.message), v.min)
-		} else {
-			return fmt.Sprintf(Msg("length_between", v.message), v.min, v.max)
 		}
+
+		return fmt.Sprintf(Msg("length_between", v.message), v.min, v.max)
 	}
 
 	return Msg("length_empty", v.message)

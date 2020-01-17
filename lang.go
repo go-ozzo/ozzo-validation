@@ -10,7 +10,7 @@ type LangMap map[string]string
 // EnLang is the key to translated messages map for the English language.
 var EnLang = "en"
 
-// Language to use for validation error messages.
+// Lang is the language to use for validation error messages.
 // To specify your current language for rules messages
 // translation, set this variable.
 var Lang = EnLang
@@ -22,7 +22,7 @@ func AddRuleTranslation(lang, ruleName, translation string) {
 	TranslationMap[lang][ruleName] = translation
 }
 
-// Add language to the TranslationMap, if already
+// AddLang add language to the TranslationMap, if already
 // exists that language, union two maps.
 func AddLang(lang string, langMap LangMap) {
 	setEmptyLangMapIfNotExists(lang)
