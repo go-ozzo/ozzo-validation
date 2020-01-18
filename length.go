@@ -13,7 +13,7 @@ import (
 // This rule should only be used for validating strings, slices, maps, and arrays.
 // An empty value is considered valid. Use the Required rule to make sure a value is not empty.
 func Length(min, max int) LengthRule {
-	r := LengthRule{min: min, max: max,}
+	r := LengthRule{min: min, max: max}
 
 	r.translationKey, r.errParams = r.detectLengthTranslation()
 	return r
