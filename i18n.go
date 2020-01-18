@@ -26,7 +26,7 @@ var TranslationMap = map[string]LangMap{
 		"not_nil":                "is required",
 		"nil_or_not_empty":       "cannot be blank",
 
-		// "is" package:
+		// The "is" package:
 		"email":              "must be a valid email address",
 		"url":                "must be a valid URL",
 		"request_url":        "must be a valid request URL",

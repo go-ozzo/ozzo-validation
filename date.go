@@ -5,7 +5,6 @@
 package validation
 
 import (
-	"errors"
 	"time"
 )
 
@@ -74,11 +73,11 @@ func (r DateRule) Validate(value interface{}) error {
 
 	date, err := time.Parse(r.layout, str)
 	if err != nil {
-		return errors.New(Msg("date", r.message))
+		return newErrMessage("date", r.message)
 	}
 
 	if !r.min.IsZero() && r.min.After(date) || !r.max.IsZero() && date.After(r.max) {
-		return errors.New(Msg("date_range", r.rangeMessage))
+		return newErrMessage("date_range", r.rangeMessage)
 	}
 
 	return nil

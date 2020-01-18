@@ -4,8 +4,6 @@
 
 package validation
 
-import "errors"
-
 // NotIn returns a validation rule that checks if a value is absent from the given list of values.
 // Note that the value being checked and the possible range of values must be of the same type.
 // An empty value is considered valid. Use the Required rule to make sure a value is not empty.
@@ -31,7 +29,7 @@ func (r NotInRule) Validate(value interface{}) error {
 
 	for _, e := range r.elements {
 		if e == value {
-			return errors.New(Msg("not_in", r.message))
+			return newErrMessage("not_in", r.message)
 		}
 	}
 	return nil

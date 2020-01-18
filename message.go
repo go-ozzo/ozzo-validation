@@ -6,14 +6,14 @@ package validation
 
 // Msg check if the custom message is not empty, it returns your custom
 // message otherwise tries to find the translated message for that rule.
-func Msg(ruleName string, customMsg string) string {
-	return msgInLang(Lang, ruleName, "", customMsg)
+func Msg(traslationKey string, customMsg string) string {
+	return msgInLang(Lang, traslationKey, "", customMsg) // TODO: check this line, we should not use Lang variable here.
 }
 
 // MsgWithDefault return rules translated message, if
 //not found return default message.
-func MsgWithDefault(ruleName string, defaultMsg string, customMsg string) string {
-	return msgInLang(Lang, ruleName, defaultMsg, customMsg)
+func MsgWithDefault(translationKey string, defaultMsg string, customMsg string) string {
+	return msgInLang(Lang, translationKey, defaultMsg, customMsg) // TODO: check Lang, we should not use it here.
 }
 
 // MsgInLang checks if you pass the custom message, it returns your
@@ -21,8 +21,8 @@ func MsgWithDefault(ruleName string, defaultMsg string, customMsg string) string
 // specified lang if not found search in "en" language, finally
 // if the English lang does no having any translation for that
 // rule, returns your default message.
-func MsgInLang(lang string, ruleName string, defaultMsg string, customMsg string) string {
-	return msgInLang(lang, ruleName, defaultMsg, customMsg)
+func MsgInLang(lang string, translationKey string, defaultMsg string, customMsg string) string {
+	return msgInLang(lang, translationKey, defaultMsg, customMsg)
 }
 
 // msgInLang checks if you pass the custom message, it returns your
@@ -30,31 +30,35 @@ func MsgInLang(lang string, ruleName string, defaultMsg string, customMsg string
 // specified lang if not found search in "en" language, finally
 // if the English lang does no having any translation for that
 // rule, returns your default message.
-func msgInLang(lang string, ruleName string, defaultMsg string, customMsg string) string {
+func msgInLang(lang string, translationKey string, defaultMsg string, customMsg string) string {
 	if customMsg != "" {
 		return customMsg
 	}
 
-	if translation := getRuleTranslation(lang, ruleName); translation != "" {
+	if lang == "" {
+		lang = Lang
+	}
+
+	if translation := getTranslation(lang, translationKey); translation != "" {
 		return translation
 	}
 
-	if translation := getRuleTranslation(EnLang, ruleName); translation != "" {
+	if translation := getTranslation(EnLang, translationKey); translation != "" {
 		return translation
 	}
 
 	return defaultMsg
 }
 
-// getRuleTranslation return rule's translated message.
-func getRuleTranslation(lang, ruleName string) string {
+// getTranslation return rule's translated message.
+func getTranslation(lang, translationKey string) string {
 	langMap, ok := TranslationMap[lang]
 
 	if !ok {
 		return ""
 	}
 
-	if translatedRule, ok := langMap[ruleName]; ok {
+	if translatedRule, ok := langMap[translationKey]; ok {
 		return translatedRule
 	}
 

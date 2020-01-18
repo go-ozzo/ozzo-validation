@@ -12,7 +12,17 @@ import (
 )
 
 type (
+	// ErrMessage return by each rule or validate method that want to return validation errors.
+	ErrMessage struct {
+		Lang           string
+		TranslationKey string
+		DefaultMessage string
+		Message        string
+		Params         []interface{}
+	}
+
 	// Errors represents the validation errors that are indexed by struct field names, map or slice keys.
+	// values are ErrMessage or Errors (for map,slice and array error value is Errors).
 	Errors map[string]error
 
 	// InternalError represents an error that should NOT be treated as a validation error.
@@ -34,6 +44,65 @@ func NewInternalError(err error) InternalError {
 // InternalError returns the actual error that it wraps around.
 func (e internalError) InternalError() error {
 	return e.error
+}
+
+// SetParams set the message params that using to format the message.
+func (e ErrMessage) SetParams(params []interface{}) ErrMessage {
+	e.Params = params
+	return e
+}
+
+// CustomMessage set our custom message, so ErrMessage ignore
+// the translated message or default message and just return
+// custom message on "Error" method.
+func (e ErrMessage) CustomMessage(message string, params []interface{}) ErrMessage {
+	e.Message = message
+	e.Params = params
+	return e
+}
+
+// Default set default message for ErrMessage. ErrMessage use
+// this message as its message if does not exists any translation
+// the key for it in the translation map.
+func (e ErrMessage) Default(defaultMessage string) ErrMessage {
+	e.DefaultMessage = defaultMessage
+	return e
+}
+
+// ToLang set error message language, ErrMessage use
+// this language to detect the translated message.
+func (e ErrMessage) ToLang(lang string) ErrMessage {
+	e.Lang = lang
+	return e
+}
+
+// Error returns the error message in the specified language.
+// Priority to returning message is :
+// - The custom message
+// - The translated message in ErrMessage language
+// - The translated message in Lang language
+// - The translated message in the English language
+// - The default message
+// - Empty string
+func (e ErrMessage) Error() string {
+	return fmt.Sprintf(msgInLang(e.Lang, e.TranslationKey, e.DefaultMessage, e.Message), e.Params...)
+}
+
+// ToLang method recursively change language of all ErrMessage errors.
+func (es Errors) ToLang(lang string) Errors {
+	newErrors := Errors{}
+
+	for k, e := range es {
+		if errors, ok := e.(Errors); ok {
+			newErrors[k] = errors.ToLang(lang)
+		} else if ve, ok := e.(ErrMessage); ok {
+			newErrors[k] = ve.ToLang(lang)
+		} else {
+			newErrors[k] = e
+		}
+	}
+
+	return newErrors
 }
 
 // Error returns the error string of Errors.
@@ -88,4 +157,23 @@ func (es Errors) Filter() error {
 		return nil
 	}
 	return es
+}
+
+// newErr generate new error.we use this function just for our validation errors, for users defined rules
+// its better to use ErrWithDefault function, it get default message instead of custom message.
+func newErrMessage(translationKey, customMessage string) ErrMessage {
+	return ErrMessage{
+		TranslationKey: translationKey,
+		Message:        customMessage,
+	}
+}
+
+// ErrMessageWithDefault generate new validation error
+// with specified default message.
+func ErrMessageWithDefault(translationKey, defaultMessage string, params []interface{}) ErrMessage {
+	return ErrMessage{
+		TranslationKey: translationKey,
+		DefaultMessage: defaultMessage,
+		Params:         params,
+	}
 }

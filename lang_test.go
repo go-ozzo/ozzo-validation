@@ -38,8 +38,8 @@ func TestAddRuleTranslation(t *testing.T) {
 	dateRage := "بازه زمانی اشتباه می باشد."
 	match := "فرمت داده نامعتبر می باشد."
 
-	AddRuleTranslation(Fa, "date_range", dateRage)
-	AddRuleTranslation(Fa, "match", match)
+	AddTranslation(Fa, "date_range", dateRage)
+	AddTranslation(Fa, "match", match)
 
 	assert.Equal(t, dateRage, TranslationMap[Fa]["date_range"])
 	assert.Equal(t, match, TranslationMap[Fa]["match"])

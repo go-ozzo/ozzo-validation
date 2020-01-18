@@ -2,7 +2,7 @@
 
 ## Upgrade from 3.x to 4.x
 * We changed the signature of `NewStringRule` method, instead of getting `validator function` and `message`, it now
-get `validator function` and `ruleName`, this is because of adding the translation feature. The following snippet shows
+get `validator function` and `translationKey`, this is because of adding the translation feature. The following snippet shows
 how to modify your code if you want to define new string rule:
  ```go
 // 3.x

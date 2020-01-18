@@ -12,10 +12,10 @@ import (
 
 // ThresholdRule is a validation rule that checks if a value satisfies the specified threshold requirement.
 type ThresholdRule struct {
-	threshold interface{}
-	operator  int
-	message   string
-	ruleName  string
+	threshold      interface{}
+	operator       int
+	message        string
+	translationKey string
 }
 
 const (
@@ -32,10 +32,10 @@ const (
 // An empty value is considered valid. Please use the Required rule to make sure a value is not empty.
 func Min(min interface{}) ThresholdRule {
 	return ThresholdRule{
-		threshold: min,
-		operator:  greaterEqualThan,
-		message:   "",
-		ruleName:  "min_no_less_than",
+		threshold:      min,
+		operator:       greaterEqualThan,
+		message:        "",
+		translationKey: "min_no_less_than",
 	}
 
 }
@@ -47,10 +47,10 @@ func Min(min interface{}) ThresholdRule {
 // An empty value is considered valid. Please use the Required rule to make sure a value is not empty.
 func Max(max interface{}) ThresholdRule {
 	return ThresholdRule{
-		threshold: max,
-		operator:  lessEqualThan,
-		message:   "",
-		ruleName:  "max_no_greater_than",
+		threshold:      max,
+		operator:       lessEqualThan,
+		message:        "",
+		translationKey: "max_no_greater_than",
 	}
 }
 
@@ -58,10 +58,10 @@ func Max(max interface{}) ThresholdRule {
 func (r ThresholdRule) Exclusive() ThresholdRule {
 	if r.operator == greaterEqualThan {
 		r.operator = greaterThan
-		r.ruleName = "exclusive_greater_than"
+		r.translationKey = "exclusive_greater_than"
 	} else if r.operator == lessEqualThan {
 		r.operator = lessThan
-		r.ruleName = "exclusive_less_than"
+		r.translationKey = "exclusive_less_than"
 	}
 	return r
 }
@@ -119,7 +119,7 @@ func (r ThresholdRule) Validate(value interface{}) error {
 		return fmt.Errorf("type not supported: %v", rv.Type())
 	}
 
-	return fmt.Errorf(Msg(r.ruleName, r.message), r.threshold)
+	return newErrMessage(r.translationKey, r.message).SetParams([]interface{}{r.threshold})
 }
 
 // Error sets the error message for the rule.

@@ -5,6 +5,7 @@
 package is
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/go-ozzo/ozzo-validation/v4"
@@ -37,6 +38,7 @@ func TestAll(t *testing.T) {
 		{"MAC", MAC, "0123.4567.89ab", "74.125.19.99", "must be a valid MAC address"},
 		{"Subdomain", Subdomain, "example-subdomain", "example.com", "must be a valid subdomain"},
 		{"Domain", Domain, "example-domain.com", "localhost", "must be a valid domain"},
+		{"Domain", Domain, "example-domain.com", strings.Repeat("a", 256), "must be a valid domain"},
 		{"DNSName", DNSName, "example.com", "abc%", "must be a valid DNS name"},
 		{"Host", Host, "example.com", "abc%", "must be a valid IP address or DNS name"},
 		{"Port", Port, "123", "99999", "must be a valid port number"},

@@ -20,12 +20,12 @@ func validateMe(s string) bool {
 func TestNewStringRule(t *testing.T) {
 	v := NewStringRule(validateMe, "abc")
 	assert.NotNil(t, v.validate)
-	assert.Equal(t, "abc", v.ruleName)
+	assert.Equal(t, "abc", v.translationKey)
 }
 
 func TestStringValidator_Error(t *testing.T) {
 	v := NewStringRule(validateMe, "abc_rule").Error("abc").DefaultMessage("abc_default_message")
-	assert.Equal(t, "abc_rule", v.ruleName)
+	assert.Equal(t, "abc_rule", v.translationKey)
 	assert.Equal(t, "abc_default_message", v.defaultMessage)
 	assert.Equal(t, "abc", v.message)
 	v2 := v.Error("correct")
@@ -105,4 +105,19 @@ func TestGetErrorFieldName(t *testing.T) {
 		field, _ := a.FieldByName(test.field)
 		assert.Equal(t, test.name, getErrorFieldName(&field), test.tag)
 	}
+}
+
+func TestStringRuleTranslation(t *testing.T) {
+	me := NewStringRule(validateMe, "me")
+	assert.Equal(t, me.defaultMessage, "")
+
+	me = me.DefaultMessage("defaultMsg")
+	assert.Equal(t, me.defaultMessage, "defaultMsg")
+
+	me = me.TranslationKey("me_key")
+	assert.Equal(t, me.translationKey, "me_key")
+
+	params := []interface{}{1, 2, "3"}
+	me = me.TranslationParams(params)
+	assert.Equal(t, me.translationParams, params)
 }

@@ -15,11 +15,11 @@ var EnLang = "en"
 // translation, set this variable.
 var Lang = EnLang
 
-// AddRuleTranslation add or replace translation of the rule.
-func AddRuleTranslation(lang, ruleName, translation string) {
+// AddTranslation add or replace translation of rules.
+func AddTranslation(lang, translationKey, translation string) {
 	setEmptyLangMapIfNotExists(lang)
 
-	TranslationMap[lang][ruleName] = translation
+	TranslationMap[lang][translationKey] = translation
 }
 
 // AddLang add language to the TranslationMap, if already

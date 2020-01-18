@@ -5,7 +5,6 @@
 package validation
 
 import (
-	"errors"
 	"regexp"
 )
 
@@ -38,7 +37,7 @@ func (v MatchRule) Validate(value interface{}) error {
 	} else if isBytes && (len(bs) == 0 || v.re.Match(bs)) {
 		return nil
 	}
-	return errors.New(Msg("match", v.message))
+	return newErrMessage("match", v.message)
 }
 
 // Error sets the error message for the rule.

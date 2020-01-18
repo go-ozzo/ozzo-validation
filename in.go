@@ -5,7 +5,6 @@
 package validation
 
 import (
-	"errors"
 	"reflect"
 )
 
@@ -38,7 +37,8 @@ func (r InRule) Validate(value interface{}) error {
 			return nil
 		}
 	}
-	return errors.New(Msg("in", r.message))
+
+	return newErrMessage("in", r.message)
 }
 
 // Error sets the error message for the rule.

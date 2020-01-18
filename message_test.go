@@ -36,7 +36,7 @@ func TestGetMessageInUnknownLanguage(t *testing.T) {
 	assert.Equal(t, "cannot be blank", Msg("required", ""))
 	assert.Equal(t, "cannot be blank", MsgInLang(EnLang, "required", "", ""))
 
-	assert.Equal(t, "", getRuleTranslation(Lang, "required"))
+	assert.Equal(t, "", getTranslation(Lang, "required"))
 }
 
 func TestGetTranslatedMessageInOtherLanguage(t *testing.T) {

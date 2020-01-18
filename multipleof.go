@@ -49,5 +49,5 @@ func (r MultipleOfRule) Validate(value interface{}) error {
 		return fmt.Errorf("type not supported: %v", rv.Type())
 	}
 
-	return fmt.Errorf(Msg("multiple_of", r.message), r.base)
+	return newErrMessage("multiple_of", r.message).SetParams([]interface{}{r.base})
 }

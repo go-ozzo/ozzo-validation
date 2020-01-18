@@ -5,8 +5,6 @@
 package validation
 
 import (
-	"errors"
-	"fmt"
 	"unicode/utf8"
 )
 
@@ -15,11 +13,10 @@ import (
 // This rule should only be used for validating strings, slices, maps, and arrays.
 // An empty value is considered valid. Use the Required rule to make sure a value is not empty.
 func Length(min, max int) LengthRule {
-	return LengthRule{
-		min:     min,
-		max:     max,
-		message: "",
-	}
+	r := LengthRule{min: min, max: max,}
+
+	r.translationKey, r.errParams = r.detectLengthTranslation()
+	return r
 }
 
 // RuneLength returns a validation rule that checks if a string's rune length is within the specified range.
@@ -30,13 +27,19 @@ func Length(min, max int) LengthRule {
 func RuneLength(min, max int) LengthRule {
 	r := Length(min, max)
 	r.rune = true
+
+	r.translationKey, r.errParams = r.detectLengthTranslation()
+
 	return r
 }
 
 // LengthRule is a validation rule that checks if a value's length is within the specified range.
 type LengthRule struct {
+	message        string
+	translationKey string
+	errParams      []interface{}
+
 	min, max int
-	message  string
 	rune     bool
 }
 
@@ -58,26 +61,26 @@ func (v LengthRule) Validate(value interface{}) error {
 	}
 
 	if v.min > 0 && l < v.min || v.max > 0 && l > v.max {
-		return errors.New(v.detectLengthErrMsg())
+		return newErrMessage(v.translationKey, v.message).SetParams(v.errParams)
 	}
+
 	return nil
 }
 
-func (v LengthRule) detectLengthErrMsg() string {
+func (v LengthRule) detectLengthTranslation() (string, []interface{}) {
 
 	if v.min == 0 && v.max > 0 {
-		return fmt.Sprintf(Msg("length_more_than", v.message), v.max)
+		return "length_more_than", []interface{}{v.max}
 	} else if v.min > 0 && v.max == 0 {
-		return fmt.Sprintf(Msg("length_no_less_than", v.message), v.min)
+		return "length_no_less_than", []interface{}{v.min}
 	} else if v.min > 0 && v.max > 0 {
 		if v.min == v.max {
-			return fmt.Sprintf(Msg("length_exactly", v.message), v.min)
+			return "length_exactly", []interface{}{v.min}
 		}
-
-		return fmt.Sprintf(Msg("length_between", v.message), v.min, v.max)
+		return "length_between", []interface{}{v.min, v.max}
 	}
 
-	return Msg("length_empty", v.message)
+	return "length_empty", nil
 }
 
 // Error sets the error message for the rule.

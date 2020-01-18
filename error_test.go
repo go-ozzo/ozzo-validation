@@ -66,5 +66,91 @@ func TestErrors_Filter(t *testing.T) {
 		"B": nil,
 		"C": nil,
 	}
+
 	assert.Nil(t, errs.Filter())
+}
+
+func TestNewValidationErr(t *testing.T) {
+	err := newErrMessage("translationKey", "custom_msg")
+	assert.Equal(t, err.TranslationKey, "translationKey")
+	assert.Equal(t, err.Message, "custom_msg")
+	assert.Equal(t, err.DefaultMessage, "")
+	assert.Equal(t, err.Params, []interface{}(nil))
+
+	err = err.Default("abc")
+	assert.Equal(t, err.DefaultMessage, "abc")
+
+	params := []interface{}{1, 2, 3}
+	err = err.SetParams(params)
+
+	assert.Equal(t, err.Params, params)
+}
+
+func TestGetValidationErrorWithDefault(t *testing.T) {
+	params := []interface{}{1, 2, "3"}
+	err := ErrMessageWithDefault("translationKey", "translationKey", params)
+
+	assert.Equal(t, err.TranslationKey, "translationKey")
+	assert.Equal(t, err.Message, "")
+	assert.Equal(t, err.DefaultMessage, "translationKey")
+	assert.Equal(t, err.Params, params)
+
+	err = ErrMessageWithDefault("translationKey", "", nil)
+
+	assert.Equal(t, err.TranslationKey, "translationKey")
+	assert.Equal(t, err.Message, "")
+	assert.Equal(t, err.DefaultMessage, "")
+	assert.Equal(t, err.Params, []interface{}(nil))
+
+	params = []interface{}{1, 2}
+	err = err.CustomMessage("custom_message", params)
+	assert.Equal(t, err.Message, "custom_message")
+	assert.Equal(t, err.Params, params)
+
+}
+
+func TestTranslateInOtherLanguage(t *testing.T) {
+	Fa := "fa"
+	defer func() {
+		delete(TranslationMap, Fa)
+		Lang = EnLang
+	}()
+
+	AddTranslation(Fa, "required", "نیازه")
+	err := newErrMessage("required", "")
+	assert.Equal(t, err.Error(), "cannot be blank")
+
+	err2 := err.ToLang(Fa)
+	assert.Equal(t, err.Error(), "cannot be blank")
+	assert.Equal(t, err2.Error(), "نیازه")
+}
+
+func TestChangeErrorsLang(t *testing.T) {
+	Fa := "fa"
+	defer func() {
+		delete(TranslationMap, Fa)
+		Lang = EnLang
+	}()
+
+	AddTranslation(Fa, "required", "نیازه")
+	err := newErrMessage("required", "")
+	err2 := err.ToLang(Fa)
+
+	errGroup := Errors{
+		"field_1":       err,
+		"field_2":       err2,
+		"field_group":   Errors{"sub_1": err},
+		"unknown_field": errors.New("unknown_err"),
+	}
+
+	result := Errors{
+		"field_1":       err.ToLang(Fa),
+		"field_2":       err2.ToLang(Fa),
+		"field_group":   Errors{"sub_1": err.ToLang(Fa)},
+		"unknown_field": errors.New("unknown_err"),
+	}
+
+	errGroup = errGroup.ToLang(Fa)
+
+	assert.Equal(t, errGroup, result)
 }
