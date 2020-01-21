@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"sort"
+	"strings"
 )
 
 type (
@@ -47,18 +48,19 @@ func (es Errors) Error() string {
 	}
 	sort.Strings(keys)
 
-	s := ""
+	var s strings.Builder
 	for i, key := range keys {
 		if i > 0 {
-			s += "; "
+			s.WriteString("; ")
 		}
 		if errs, ok := es[key].(Errors); ok {
-			s += fmt.Sprintf("%v: (%v)", key, errs)
+			fmt.Fprintf(&s, "%v: (%v)", key, errs)
 		} else {
-			s += fmt.Sprintf("%v: %v", key, es[key].Error())
+			fmt.Fprintf(&s, "%v: %v", key, es[key].Error())
 		}
 	}
-	return s + "."
+	s.WriteString(".")
+	return s.String()
 }
 
 // MarshalJSON converts the Errors into a valid JSON.
