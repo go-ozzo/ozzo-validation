@@ -30,8 +30,8 @@ type DateRule struct {
 func Date(layout string) DateRule {
 	return DateRule{
 		layout:       layout,
-		message:      "",
-		rangeMessage: "",
+		message:      messages["date"],
+		rangeMessage: messages["date_range"],
 	}
 }
 
@@ -73,11 +73,11 @@ func (r DateRule) Validate(value interface{}) error {
 
 	date, err := time.Parse(r.layout, str)
 	if err != nil {
-		return newErrMessage("date", r.message)
+		return NewError("date", r.message)
 	}
 
 	if !r.min.IsZero() && r.min.After(date) || !r.max.IsZero() && date.After(r.max) {
-		return newErrMessage("date_range", r.rangeMessage)
+		return NewError("date_range", r.rangeMessage)
 	}
 
 	return nil

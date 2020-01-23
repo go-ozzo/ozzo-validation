@@ -10,7 +10,7 @@ package validation
 func NotIn(values ...interface{}) NotInRule {
 	return NotInRule{
 		elements: values,
-		message:  "",
+		message:  messages["not_in"],
 	}
 }
 
@@ -29,7 +29,7 @@ func (r NotInRule) Validate(value interface{}) error {
 
 	for _, e := range r.elements {
 		if e == value {
-			return newErrMessage("not_in", r.message)
+			return NewError("not_in", r.message)
 		}
 	}
 	return nil

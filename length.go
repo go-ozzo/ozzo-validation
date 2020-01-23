@@ -15,8 +15,7 @@ import (
 func Length(min, max int) LengthRule {
 	r := LengthRule{min: min, max: max}
 
-	r.translationKey, r.errParams = r.detectLengthTranslation()
-	return r
+	return r.detectMessage()
 }
 
 // RuneLength returns a validation rule that checks if a string's rune length is within the specified range.
@@ -28,16 +27,14 @@ func RuneLength(min, max int) LengthRule {
 	r := Length(min, max)
 	r.rune = true
 
-	r.translationKey, r.errParams = r.detectLengthTranslation()
-
-	return r
+	return r.detectMessage()
 }
 
 // LengthRule is a validation rule that checks if a value's length is within the specified range.
 type LengthRule struct {
-	message        string
-	translationKey string
-	errParams      []interface{}
+	message   string
+	code      string
+	errParams map[string]interface{}
 
 	min, max int
 	rune     bool
@@ -61,26 +58,32 @@ func (v LengthRule) Validate(value interface{}) error {
 	}
 
 	if v.min > 0 && l < v.min || v.max > 0 && l > v.max {
-		return newErrMessage(v.translationKey, v.message).SetParams(v.errParams)
+		return NewError(v.code, v.message).Params(v.errParams)
 	}
 
 	return nil
 }
 
-func (v LengthRule) detectLengthTranslation() (string, []interface{}) {
+func (v LengthRule) detectMessage() LengthRule {
+
+	v.errParams = map[string]interface{}{"min": v.min, "max": v.max}
 
 	if v.min == 0 && v.max > 0 {
-		return "length_more_than", []interface{}{v.max}
+		v.code = "length_more_than"
 	} else if v.min > 0 && v.max == 0 {
-		return "length_no_less_than", []interface{}{v.min}
+		v.code = "length_no_less_than"
 	} else if v.min > 0 && v.max > 0 {
 		if v.min == v.max {
-			return "length_exactly", []interface{}{v.min}
+			v.code = "length_exactly"
+		} else {
+			v.code = "length_between"
 		}
-		return "length_between", []interface{}{v.min, v.max}
+	} else {
+		v.code = "length_empty"
 	}
 
-	return "length_empty", nil
+	v.message = messages[v.code]
+	return v
 }
 
 // Error sets the error message for the rule.

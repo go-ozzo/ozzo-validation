@@ -10,19 +10,19 @@ type stringValidator func(string) bool
 type StringRule struct {
 	validate stringValidator
 
-	translationKey    string
-	defaultMessage    string
-	message           string
-	translationParams []interface{}
+	code      string
+	message   string
+	errParams map[string]interface{}
 }
 
 // NewStringRule creates a new validation rule using a function that takes a string value and returns a bool.
 // The rule returned will use the function to check if a given string or byte slice is valid or not.
 // An empty value is considered to be valid. Please use the Required rule to make sure a value is not empty.
-func NewStringRule(validator stringValidator, translationKey string) StringRule {
+func NewStringRule(validator stringValidator, code string) StringRule {
 	return StringRule{
-		validate:       validator,
-		translationKey: translationKey,
+		validate: validator,
+		code:     code,
+		message:  messages[code],
 	}
 }
 
@@ -32,21 +32,15 @@ func (v StringRule) Error(message string) StringRule {
 	return v
 }
 
-// TranslationParams sets the rule's translation parameters.
-func (v StringRule) TranslationParams(params []interface{}) StringRule {
-	v.translationParams = params
+// ErrParams sets the rule's error params.
+func (v StringRule) ErrParams(params map[string]interface{}) StringRule {
+	v.errParams = params
 	return v
 }
 
-// TranslationKey sets the rule's translation key.
-func (v StringRule) TranslationKey(key string) StringRule {
-	v.translationKey = key
-	return v
-}
-
-// DefaultMessage sets the default message for the rule.
-func (v StringRule) DefaultMessage(message string) StringRule {
-	v.defaultMessage = message
+// Code sets the rule's translation code (translation key).
+func (v StringRule) Code(code string) StringRule {
+	v.code = code
 	return v
 }
 
@@ -66,7 +60,5 @@ func (v StringRule) Validate(value interface{}) error {
 		return nil
 	}
 
-	return newErrMessage(v.translationKey, v.message).
-		Default(v.defaultMessage).
-		SetParams(v.translationParams)
+	return NewError(v.code, v.message).Params(v.errParams)
 }
