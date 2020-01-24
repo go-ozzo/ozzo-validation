@@ -10,14 +10,14 @@ package validation
 func NotIn(values ...interface{}) NotInRule {
 	return NotInRule{
 		elements: values,
-		message:  messages["not_in"],
+		err:      NewError("validation_not_in_invalid", "must not be in list"),
 	}
 }
 
 // NotInRule is a validation rule that checks if a value is absent from the given list of values.
 type NotInRule struct {
 	elements []interface{}
-	message  string
+	err      Error
 }
 
 // Validate checks if the given value is valid or not.
@@ -29,7 +29,7 @@ func (r NotInRule) Validate(value interface{}) error {
 
 	for _, e := range r.elements {
 		if e == value {
-			return NewError("not_in", r.message)
+			return r.err
 		}
 	}
 	return nil
@@ -37,6 +37,6 @@ func (r NotInRule) Validate(value interface{}) error {
 
 // Error sets the error message for the rule.
 func (r NotInRule) Error(message string) NotInRule {
-	r.message = message
+	r.err = r.err.SetMessage(message)
 	return r
 }

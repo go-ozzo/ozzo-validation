@@ -20,20 +20,37 @@ func validateMe(s string) bool {
 func TestNewStringRule(t *testing.T) {
 	v := NewStringRule(validateMe, "abc")
 	assert.NotNil(t, v.validate)
-	assert.Equal(t, "abc", v.code)
+	assert.Equal(t, "abc", v.err.message)
+}
+
+func TestNewStringValidator(t *testing.T) {
+	v := NewStringValidator(validateMe, "code", "abc")
+	assert.NotNil(t, v.validate)
+	assert.Equal(t, "code", v.err.code)
+	assert.Equal(t, "abc", v.err.message)
+}
+
+func TestStringRule_Error(t *testing.T) {
+	v := NewStringRule(validateMe, "abc_rule").Error("abc")
+	assert.Equal(t, "", v.err.code)
+	assert.Equal(t, "abc", v.err.message)
+
+	v2 := v.Error("correct")
+	assert.Equal(t, "correct", v2.err.message)
 }
 
 func TestStringValidator_Error(t *testing.T) {
-	v := NewStringRule(validateMe, "abc_rule").Error("abc")
-	assert.Equal(t, "abc_rule", v.code)
-	assert.Equal(t, "abc", v.message)
+	v := NewStringValidator(validateMe, "code", "abc_rule").Error("abc")
+	assert.Equal(t, "code", v.err.code)
+	assert.Equal(t, "abc", v.err.message)
 	v2 := v.Error("correct")
-	assert.Equal(t, "correct", v2.message)
-	assert.Equal(t, "abc", v.message)
+	assert.Equal(t, "code", v2.err.code)
+	assert.Equal(t, "correct", v2.err.message)
+	assert.Equal(t, "abc", v.err.message)
 }
 
 func TestStringValidator_Validate(t *testing.T) {
-	v := NewStringRule(validateMe, "wrong_rule").Error("wrong")
+	v := NewStringValidator(validateMe, "code", "wrong_rule").Error("wrong")
 
 	value := "me"
 
@@ -107,19 +124,19 @@ func TestGetErrorFieldName(t *testing.T) {
 }
 
 func TestStringRuleTranslation(t *testing.T) {
-	me := NewStringRule(validateMe, "code").Error("message")
+	me := NewStringValidator(validateMe, "code", "message")
 
-	assert.Equal(t, me.code, "code")
-	assert.Equal(t, me.message, "message")
-	assert.Equal(t, me.errParams, map[string]interface{}(nil))
+	assert.Equal(t, me.err.code, "code")
+	assert.Equal(t, me.err.message, "message")
+	assert.Equal(t, me.err.params, map[string]interface{}(nil))
 
 	me = me.Error("abc")
-	assert.Equal(t, me.message, "abc")
+	assert.Equal(t, me.err.message, "abc")
 
 	me = me.Code("me_key")
-	assert.Equal(t, me.code, "me_key")
+	assert.Equal(t, me.err.code, "me_key")
 
 	params := map[string]interface{}{"field": 1}
 	me = me.ErrParams(params)
-	assert.Equal(t, me.errParams, params)
+	assert.Equal(t, me.err.params, params)
 }

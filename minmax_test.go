@@ -72,7 +72,7 @@ func TestMinError(t *testing.T) {
 	assert.Equal(t, "must be no less than 10", r.Validate(9).Error())
 
 	r = r.Error("123")
-	assert.Equal(t, "123", r.message)
+	assert.Equal(t, "123", r.err.message)
 }
 
 func TestMax(t *testing.T) {
@@ -134,5 +134,5 @@ func TestMaxError(t *testing.T) {
 	assert.Equal(t, "must be no greater than 10", r.Validate(11).Error())
 
 	r = r.Error("123")
-	assert.Equal(t, "123", r.message)
+	assert.Equal(t, "123", r.err.message)
 }

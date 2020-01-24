@@ -43,8 +43,8 @@ func TestDateRule_Error(t *testing.T) {
 	assert.Equal(t, "the data is out of range", r2.Validate("1999-01-02T15:04:05Z").Error())
 	r = r.Error("123")
 	r = r.RangeError("456")
-	assert.Equal(t, "123", r.message)
-	assert.Equal(t, "456", r.rangeMessage)
+	assert.Equal(t, "123", r.err.message)
+	assert.Equal(t, "456", r.rangeErr.message)
 }
 
 func TestDateRule_MinMax(t *testing.T) {

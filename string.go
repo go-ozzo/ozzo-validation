@@ -9,38 +9,47 @@ type stringValidator func(string) bool
 // StringRule is a rule that checks a string variable using a specified stringValidator.
 type StringRule struct {
 	validate stringValidator
-
-	code      string
-	message   string
-	errParams map[string]interface{}
+	err      Error
 }
 
 // NewStringRule creates a new validation rule using a function that takes a string value and returns a bool.
 // The rule returned will use the function to check if a given string or byte slice is valid or not.
 // An empty value is considered to be valid. Please use the Required rule to make sure a value is not empty.
-func NewStringRule(validator stringValidator, code string) StringRule {
+//
+// Deprecated: This function has been deprecated in favor of NewStringValidator. it exists for historical
+// compatibility and should not be used.
+func NewStringRule(validator stringValidator, message string) StringRule {
 	return StringRule{
 		validate: validator,
-		code:     code,
-		message:  messages[code],
+		err:      NewError("", message),
+	}
+}
+
+// NewStringValidator creates a new validation rule using a function that takes a string value and returns a bool.
+// The rule returned will use the function to check if a given string or byte slice is valid or not.
+// An empty value is considered to be valid. Please use the Required rule to make sure a value is not empty.
+func NewStringValidator(validator stringValidator, code, message string) StringRule {
+	return StringRule{
+		validate: validator,
+		err:      NewError(code, message),
 	}
 }
 
 // Error sets the error message for the rule.
 func (v StringRule) Error(message string) StringRule {
-	v.message = message
+	v.err = v.err.SetMessage(message)
 	return v
 }
 
 // ErrParams sets the rule's error params.
 func (v StringRule) ErrParams(params map[string]interface{}) StringRule {
-	v.errParams = params
+	v.err = v.err.SetParams(params)
 	return v
 }
 
 // Code sets the rule's translation code (translation key).
 func (v StringRule) Code(code string) StringRule {
-	v.code = code
+	v.err = v.err.SetCode(code)
 	return v
 }
 
@@ -60,5 +69,5 @@ func (v StringRule) Validate(value interface{}) error {
 		return nil
 	}
 
-	return NewError(v.code, v.message).Params(v.errParams)
+	return v.err
 }

@@ -32,9 +32,7 @@ func RuneLength(min, max int) LengthRule {
 
 // LengthRule is a validation rule that checks if a value's length is within the specified range.
 type LengthRule struct {
-	message   string
-	code      string
-	errParams map[string]interface{}
+	err Error
 
 	min, max int
 	rune     bool
@@ -58,7 +56,7 @@ func (v LengthRule) Validate(value interface{}) error {
 	}
 
 	if v.min > 0 && l < v.min || v.max > 0 && l > v.max {
-		return NewError(v.code, v.message).Params(v.errParams)
+		return v.err
 	}
 
 	return nil
@@ -66,28 +64,27 @@ func (v LengthRule) Validate(value interface{}) error {
 
 func (v LengthRule) detectMessage() LengthRule {
 
-	v.errParams = map[string]interface{}{"min": v.min, "max": v.max}
-
 	if v.min == 0 && v.max > 0 {
-		v.code = "length_more_than"
+		v.err = NewError("validation_length_more_than_invalid", "the length must be no more than {{.max}}")
 	} else if v.min > 0 && v.max == 0 {
-		v.code = "length_no_less_than"
+		v.err = NewError("validation_length_no_less_than_invalid", "the length must be no less than {{.min}}")
 	} else if v.min > 0 && v.max > 0 {
 		if v.min == v.max {
-			v.code = "length_exactly"
+			v.err = NewError("validation_length_exactly_invalid", "the length must be exactly {{.min}}")
 		} else {
-			v.code = "length_between"
+			v.err = NewError("validation_length_between_invalid", "the length must be between {{.min}} and {{.max}}")
 		}
 	} else {
-		v.code = "length_empty"
+		v.err = NewError("validation_length_empty_invalid", "the value must be empty")
 	}
 
-	v.message = messages[v.code]
+	v.err = v.err.SetParams(map[string]interface{}{"min": v.min, "max": v.max})
+
 	return v
 }
 
 // Error sets the error message for the rule.
 func (v LengthRule) Error(message string) LengthRule {
-	v.message = message
+	v.err = v.err.SetMessage(message)
 	return v
 }

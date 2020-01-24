@@ -40,5 +40,5 @@ func Test_MatchRule_Error(t *testing.T) {
 	r := Match(regexp.MustCompile("[a-z]+"))
 	assert.Equal(t, "must be in a valid format", r.Validate("13").Error())
 	r = r.Error("123")
-	assert.Equal(t, "123", r.message)
+	assert.Equal(t, "123", r.err.message)
 }

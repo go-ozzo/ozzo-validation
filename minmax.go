@@ -14,8 +14,7 @@ import (
 type ThresholdRule struct {
 	threshold interface{}
 	operator  int
-	message   string
-	code      string
+	err       Error
 }
 
 const (
@@ -34,8 +33,7 @@ func Min(min interface{}) ThresholdRule {
 	return ThresholdRule{
 		threshold: min,
 		operator:  greaterEqualThan,
-		message:   messages["min_no_less_than"],
-		code:      "min_no_less_than",
+		err:       NewError("validation_min_no_less_than_invalid", "must be no less than {{.threshold}}"),
 	}
 
 }
@@ -49,8 +47,7 @@ func Max(max interface{}) ThresholdRule {
 	return ThresholdRule{
 		threshold: max,
 		operator:  lessEqualThan,
-		message:   messages["max_no_greater_than"],
-		code:      "max_no_greater_than",
+		err:       NewError("validation_max_no_greater_than_invalid", "must be no greater than {{.threshold}}"),
 	}
 }
 
@@ -58,12 +55,10 @@ func Max(max interface{}) ThresholdRule {
 func (r ThresholdRule) Exclusive() ThresholdRule {
 	if r.operator == greaterEqualThan {
 		r.operator = greaterThan
-		r.message = messages["exclusive_greater_than"]
-		r.code = "exclusive_greater_than"
+		r.err = NewError("validation_exclusive_greater_than_invalid", "must be greater than {{.threshold}}")
 	} else if r.operator == lessEqualThan {
 		r.operator = lessThan
-		r.message = messages["exclusive_less_than"]
-		r.code = "exclusive_less_than"
+		r.err = NewError("validation_exclusive_less_than_invalid", "must be less than {{.threshold}}")
 	}
 	return r
 }
@@ -121,12 +116,12 @@ func (r ThresholdRule) Validate(value interface{}) error {
 		return fmt.Errorf("type not supported: %v", rv.Type())
 	}
 
-	return NewError(r.code, r.message).Params(map[string]interface{}{"threshold": r.threshold})
+	return r.err.SetParams(map[string]interface{}{"threshold": r.threshold})
 }
 
 // Error sets the error message for the rule.
 func (r ThresholdRule) Error(message string) ThresholdRule {
-	r.message = message
+	r.err = r.err.SetMessage(message)
 	return r
 }
 

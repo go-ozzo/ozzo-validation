@@ -8,18 +8,20 @@ import (
 // MultipleOf returns a validation rule that checks if a value is a multiple of the "base" value.
 // Note that "base" should be of integer type.
 func MultipleOf(base interface{}) MultipleOfRule {
-	return MultipleOfRule{base, messages["multiple_of"]}
+	return MultipleOfRule{
+		base: base,
+		err:  NewError("validation_multiple_of_invalid", "must be multiple of {{.base}}")}
 }
 
 // MultipleOfRule is a validation rule that checks if a value is a multiple of the "base" value.
 type MultipleOfRule struct {
-	base    interface{}
-	message string
+	base interface{}
+	err  Error
 }
 
 // Error sets the error message for the rule.
 func (r MultipleOfRule) Error(message string) MultipleOfRule {
-	r.message = message
+	r.err = r.err.SetMessage(message)
 	return r
 }
 
@@ -49,5 +51,5 @@ func (r MultipleOfRule) Validate(value interface{}) error {
 		return fmt.Errorf("type not supported: %v", rv.Type())
 	}
 
-	return NewError("multiple_of", r.message).Params(map[string]interface{}{"base": r.base})
+	return r.err.SetParams(map[string]interface{}{"base": r.base})
 }

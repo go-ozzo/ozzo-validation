@@ -13,15 +13,15 @@ import (
 // An empty value is considered valid. Use the Required rule to make sure a value is not empty.
 func Match(re *regexp.Regexp) MatchRule {
 	return MatchRule{
-		re:      re,
-		message: messages["match"],
+		re:  re,
+		err: NewError("validation_match_invalid", "must be in a valid format"),
 	}
 }
 
 // MatchRule is a validation rule that checks if a value matches the specified regular expression.
 type MatchRule struct {
-	re      *regexp.Regexp
-	message string
+	re  *regexp.Regexp
+	err Error
 }
 
 // Validate checks if the given value is valid or not.
@@ -37,11 +37,11 @@ func (v MatchRule) Validate(value interface{}) error {
 	} else if isBytes && (len(bs) == 0 || v.re.Match(bs)) {
 		return nil
 	}
-	return NewError("match", v.message)
+	return v.err
 }
 
 // Error sets the error message for the rule.
 func (v MatchRule) Error(message string) MatchRule {
-	v.message = message
+	v.err = v.err.SetMessage(message)
 	return v
 }

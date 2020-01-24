@@ -15,14 +15,14 @@ import (
 func In(values ...interface{}) InRule {
 	return InRule{
 		elements: values,
-		message:  messages["in"],
+		err:      NewError("validation_in_invalid", "must be a valid value"),
 	}
 }
 
 // InRule is a validation rule that validates if a value can be found in the given list of values.
 type InRule struct {
 	elements []interface{}
-	message  string
+	err      Error
 }
 
 // Validate checks if the given value is valid or not.
@@ -38,11 +38,11 @@ func (r InRule) Validate(value interface{}) error {
 		}
 	}
 
-	return NewError("in", r.message)
+	return r.err
 }
 
 // Error sets the error message for the rule.
 func (r InRule) Error(message string) InRule {
-	r.message = message
+	r.err = r.err.SetMessage(message)
 	return r
 }

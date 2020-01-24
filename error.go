@@ -34,13 +34,6 @@ type (
 	internalError struct {
 		error
 	}
-
-	// Translator is the interface that need to be implemented if we
-	// need to error translation feature.
-	Translator interface {
-		TranslateStructFieldErr(field string, err Error) (string, error)
-		TranslateSingleFieldErr(err Error) (string, error)
-	}
 )
 
 // NewInternalError wraps a given error into an InternalError.
@@ -53,37 +46,37 @@ func (e internalError) InternalError() error {
 	return e.error
 }
 
-// Code set the error's translation code.
-func (e Error) Code(code string) Error {
+// SetCode set the error's translation code.
+func (e Error) SetCode(code string) Error {
 	e.code = code
 
 	return e
 }
 
-// GetCode get the error's translation code.
-func (e Error) GetCode() string {
+// Code get the error's translation code.
+func (e Error) Code() string {
 	return e.code
 }
 
-// Params set the error's params.
-func (e Error) Params(params map[string]interface{}) Error {
+// SetParams set the error's params.
+func (e Error) SetParams(params map[string]interface{}) Error {
 	e.params = params
 	return e
 }
 
-// GetParams returns the error's params.
-func (e Error) GetParams() map[string]interface{} {
+// Params returns the error's params.
+func (e Error) Params() map[string]interface{} {
 	return e.params
 }
 
-// Message set the error's message.
-func (e Error) Message(message string) Error {
+// SetMessage set the error's message.
+func (e Error) SetMessage(message string) Error {
 	e.message = message
 	return e
 }
 
-// GetMessage return the error's message.
-func (e Error) GetMessage() string {
+// Message return the error's message.
+func (e Error) Message() string {
 	return e.message
 }
 
@@ -97,40 +90,6 @@ func (e Error) Error() string {
 	_ = template.Must(template.New("err").Parse(e.message)).Execute(&res, e.params)
 
 	return res.String()
-}
-
-// Translate get a translator that must implemented Translator and
-// return translated errors.
-func (e Error) Translate(t Translator) (string, error) {
-	return t.TranslateSingleFieldErr(e)
-}
-
-// Translate method recursively change language of all Error errors.
-func (es Errors) Translate(t Translator) (map[string]interface{}, error) {
-	var errCollection = make(map[string]interface{})
-	var err error
-
-	for k, e := range es {
-		if errors, ok := e.(Errors); ok {
-			errCollection[k], err = errors.Translate(t)
-
-			if err != nil {
-				return nil, err
-			}
-
-		} else if ve, ok := e.(Error); ok {
-			errCollection[k], err = t.TranslateStructFieldErr(k, ve)
-
-			if err != nil {
-				return nil, err
-			}
-
-		} else {
-			errCollection[k] = e
-		}
-	}
-
-	return errCollection, nil
 }
 
 // Error returns the error string of Errors.

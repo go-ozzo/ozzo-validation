@@ -42,5 +42,5 @@ func Test_InRule_Error(t *testing.T) {
 	val := 4
 	assert.Equal(t, "must be a valid value", r.Validate(&val).Error())
 	r = r.Error("123")
-	assert.Equal(t, "123", r.message)
+	assert.Equal(t, "123", r.err.message)
 }

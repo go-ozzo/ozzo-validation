@@ -40,5 +40,5 @@ func Test_NotInRule_Error(t *testing.T) {
 	r := NotIn(1, 2, 3)
 	assert.Equal(t, "must not be in list", r.Validate(1).Error())
 	r = r.Error("123")
-	assert.Equal(t, "123", r.message)
+	assert.Equal(t, "123", r.err.message)
 }
