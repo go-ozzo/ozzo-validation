@@ -7,7 +7,7 @@ package validation
 var (
 	// ErrRequired is the error that returns when a value is required.
 	ErrRequired = NewError("validation_required", "cannot be blank")
-	// ErrNotNilRequired is the error that returns when a value is not nil and is empty.
+	// ErrNilOrNotEmpty is the error that returns when a value is not nil and is empty.
 	ErrNilOrNotEmpty = NewError("validation_nil_or_not_empty_required", "cannot be blank")
 )
 
@@ -30,19 +30,19 @@ type requiredRule struct {
 }
 
 // Validate checks if the given value is valid or not.
-func (v requiredRule) Validate(value interface{}) error {
+func (r requiredRule) Validate(value interface{}) error {
 	value, isNil := Indirect(value)
-	if v.skipNil && !isNil && IsEmpty(value) || !v.skipNil && (isNil || IsEmpty(value)) {
-		return v.err
+	if r.skipNil && !isNil && IsEmpty(value) || !r.skipNil && (isNil || IsEmpty(value)) {
+		return r.err
 	}
 	return nil
 }
 
 // Error sets the error message for the rule.
-func (v requiredRule) Error(message string) requiredRule {
-	v.err.SetMessage(message)
+func (r requiredRule) Error(message string) requiredRule {
+	r.err.SetMessage(message)
 
-	return v
+	return r
 }
 
 // ErrorObject sets the error struct for the rule.

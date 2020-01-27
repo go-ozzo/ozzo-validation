@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	// ErrValidationIsEmail is the error that returns in case of an invalid email.
+	// ErrEmail is the error that returns in case of an invalid email.
 	ErrEmail = validation.NewError("validation_is_email", "must be a valid email address")
 	// ErrURL is the error that returns in case of an invalid URL.
 	ErrURL = validation.NewError("validation_is_url", "must be a valid URL")
