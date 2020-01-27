@@ -15,9 +15,6 @@ type StringRule struct {
 // NewStringRule creates a new validation rule using a function that takes a string value and returns a bool.
 // The rule returned will use the function to check if a given string or byte slice is valid or not.
 // An empty value is considered to be valid. Please use the Required rule to make sure a value is not empty.
-//
-// Deprecated: This function has been deprecated in favor of NewStringValidator. it exists for historical
-// compatibility and should not be used.
 func NewStringRule(validator stringValidator, message string) StringRule {
 	return StringRule{
 		validate: validator,
@@ -25,36 +22,42 @@ func NewStringRule(validator stringValidator, message string) StringRule {
 	}
 }
 
-// NewStringValidator creates a new validation rule using a function that takes a string value and returns a bool.
+// NewStringRuleWithError creates a new validation rule using a function that takes a string value and returns a bool.
 // The rule returned will use the function to check if a given string or byte slice is valid or not.
 // An empty value is considered to be valid. Please use the Required rule to make sure a value is not empty.
-func NewStringValidator(validator stringValidator, code, message string) StringRule {
+func NewStringRuleWithError(validator stringValidator, err Error) StringRule {
 	return StringRule{
 		validate: validator,
-		err:      NewError(code, message),
+		err:      err,
 	}
 }
 
 // Error sets the error message for the rule.
-func (v StringRule) Error(message string) StringRule {
-	v.err = v.err.SetMessage(message)
-	return v
+func (r StringRule) Error(message string) StringRule {
+	r.err.SetMessage(message)
+	return r
+}
+
+// ErrorObject sets the error struct for the rule.
+func (r StringRule) ErrorObject(err Error) StringRule {
+	r.err = err
+	return r
 }
 
 // ErrParams sets the rule's error params.
-func (v StringRule) ErrParams(params map[string]interface{}) StringRule {
-	v.err = v.err.SetParams(params)
-	return v
+func (r StringRule) ErrParams(params map[string]interface{}) StringRule {
+	r.err.SetParams(params)
+	return r
 }
 
 // Code sets the rule's translation code (translation key).
-func (v StringRule) Code(code string) StringRule {
-	v.err = v.err.SetCode(code)
-	return v
+func (r StringRule) Code(code string) StringRule {
+	r.err.SetCode(code)
+	return r
 }
 
 // Validate checks if the given value is valid or not.
-func (v StringRule) Validate(value interface{}) error {
+func (r StringRule) Validate(value interface{}) error {
 	value, isNil := Indirect(value)
 	if isNil || IsEmpty(value) {
 		return nil
@@ -65,9 +68,9 @@ func (v StringRule) Validate(value interface{}) error {
 		return err
 	}
 
-	if v.validate(str) {
+	if r.validate(str) {
 		return nil
 	}
 
-	return v.err
+	return r.err
 }

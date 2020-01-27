@@ -76,3 +76,15 @@ func Test_requiredRule_Error(t *testing.T) {
 	assert.Equal(t, "123", r2.err.message)
 	assert.True(t, r2.skipNil)
 }
+
+func TestRequiredRule_Error(t *testing.T) {
+	r := Required
+
+	err := NewError("code", "abc")
+	r = r.ErrorObject(err)
+
+	assert.Equal(t, err, r.err)
+	assert.Equal(t, err.code, r.err.code)
+	assert.Equal(t, err.message, r.err.message)
+	assert.NotEqual(t, err, Required.err)
+}

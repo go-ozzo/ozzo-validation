@@ -1,16 +1,19 @@
 # Upgrade Instructions
 
 ## Upgrade from 3.x to 4.x
-* We deprecated the `NewStrnigRule`  function in favor of the `NewStringValidator`. The new function 
-gets `validator function`, `code`(to use as the translation key in error translation) and `message` as
-its params. The following snippet shows how to modify your code if you want to define new string rule:
+* If you want to support i18n for your defined string rules, instead of `NewStringRule` use the `NewStringRuleWithError`
+method to define them.
  ```go
 // 3.x
 // Assume Email is your custom rule:
 var Email = validation.NewStringRule(govalidator.IsEmail, "must be a valid email address")
 
 // 4.x
-var Email = validation.NewStringValidator(govalidator.IsEmail, "email","must be a valid email address")
+// ErrValidationIsEmail is the error that returns in case of an invalid email.
+var ErrEmail = validation.NewError("validation_is_email", "must be a valid email address")
+
+// Define your rule.
+var Email = validation.NewStringRuleWithError(govalidator.IsEmail, ErrEmail)
 ```
 
 ## Upgrade from 2.x to 3.x

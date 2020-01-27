@@ -4,10 +4,13 @@
 
 package validation
 
+// ErrNotNilRequired is the error that returns when a value is Nil.
+var ErrNotNilRequired = NewError("validation_not_nil_required", "is required")
+
 // NotNil is a validation rule that checks if a value is not nil.
 // NotNil only handles types including interface, pointer, slice, and map.
 // All other types are considered valid.
-var NotNil = notNilRule{err: NewError("validation_not_nil_invalid", "is required")}
+var NotNil = notNilRule{err: ErrNotNilRequired}
 
 type notNilRule struct {
 	err Error
@@ -24,7 +27,13 @@ func (r notNilRule) Validate(value interface{}) error {
 
 // Error sets the error message for the rule.
 func (r notNilRule) Error(message string) notNilRule {
-	r.err = r.err.SetMessage(message)
+	r.err.SetMessage(message)
 
+	return r
+}
+
+// ErrorObject sets the error struct for the rule.
+func (r notNilRule) ErrorObject(err Error) notNilRule {
+	r.err = err
 	return r
 }

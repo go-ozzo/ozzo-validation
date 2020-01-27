@@ -10,6 +10,17 @@ import (
 	"time"
 )
 
+var (
+	// ErrMinGreaterEqualThanRequired is the error that returns when a value is less than a specified threshold.
+	ErrMinGreaterEqualThanRequired = NewError("validation_min_greater_equal_than_required", "must be no less than {{.threshold}}")
+	// ErrMaxLessEqualThanRequired is the error that returns when a value is greater than a specified threshold.
+	ErrMaxLessEqualThanRequired = NewError("validation_max_less_equal_than_required", "must be no greater than {{.threshold}}")
+	// ErrMinGreaterThanRequired is the error that returns when a value is less than or equal to a specified threshold.
+	ErrMinGreaterThanRequired = NewError("validation_min_greater_than_required", "must be greater than {{.threshold}}")
+	// ErrMaxLessThanRequired is the error that returns when a value is greater than or equal to a specified threshold.
+	ErrMaxLessThanRequired = NewError("validation_max_less_than_required", "must be less than {{.threshold}}")
+)
+
 // ThresholdRule is a validation rule that checks if a value satisfies the specified threshold requirement.
 type ThresholdRule struct {
 	threshold interface{}
@@ -33,7 +44,7 @@ func Min(min interface{}) ThresholdRule {
 	return ThresholdRule{
 		threshold: min,
 		operator:  greaterEqualThan,
-		err:       NewError("validation_min_no_less_than_invalid", "must be no less than {{.threshold}}"),
+		err:       ErrMinGreaterEqualThanRequired,
 	}
 
 }
@@ -47,7 +58,7 @@ func Max(max interface{}) ThresholdRule {
 	return ThresholdRule{
 		threshold: max,
 		operator:  lessEqualThan,
-		err:       NewError("validation_max_no_greater_than_invalid", "must be no greater than {{.threshold}}"),
+		err:       ErrMaxLessEqualThanRequired,
 	}
 }
 
@@ -55,10 +66,10 @@ func Max(max interface{}) ThresholdRule {
 func (r ThresholdRule) Exclusive() ThresholdRule {
 	if r.operator == greaterEqualThan {
 		r.operator = greaterThan
-		r.err = NewError("validation_exclusive_greater_than_invalid", "must be greater than {{.threshold}}")
+		r.err = ErrMinGreaterThanRequired
 	} else if r.operator == lessEqualThan {
 		r.operator = lessThan
-		r.err = NewError("validation_exclusive_less_than_invalid", "must be less than {{.threshold}}")
+		r.err = ErrMaxLessThanRequired
 	}
 	return r
 }
@@ -116,12 +127,20 @@ func (r ThresholdRule) Validate(value interface{}) error {
 		return fmt.Errorf("type not supported: %v", rv.Type())
 	}
 
-	return r.err.SetParams(map[string]interface{}{"threshold": r.threshold})
+	r.err.SetParams(map[string]interface{}{"threshold": r.threshold})
+
+	return r.err
 }
 
 // Error sets the error message for the rule.
 func (r ThresholdRule) Error(message string) ThresholdRule {
-	r.err = r.err.SetMessage(message)
+	r.err.SetMessage(message)
+	return r
+}
+
+// ErrorObject sets the error struct for the rule.
+func (r ThresholdRule) ErrorObject(err Error) ThresholdRule {
+	r.err = err
 	return r
 }
 

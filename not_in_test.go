@@ -42,3 +42,14 @@ func Test_NotInRule_Error(t *testing.T) {
 	r = r.Error("123")
 	assert.Equal(t, "123", r.err.message)
 }
+
+func TestNotInRule_ErrorObject(t *testing.T) {
+	r := NotIn(1, 2, 3)
+
+	err := NewError("code", "abc")
+	r = r.ErrorObject(err)
+
+	assert.Equal(t, err, r.err)
+	assert.Equal(t, err.code, r.err.code)
+	assert.Equal(t, err.message, r.err.message)
+}

@@ -19,30 +19,28 @@ func validateMe(s string) bool {
 
 func TestNewStringRule(t *testing.T) {
 	v := NewStringRule(validateMe, "abc")
+
 	assert.NotNil(t, v.validate)
+	assert.Equal(t, "", v.err.code)
 	assert.Equal(t, "abc", v.err.message)
 }
 
-func TestNewStringValidator(t *testing.T) {
-	v := NewStringValidator(validateMe, "code", "abc")
+func TestNewStringRuleWithError(t *testing.T) {
+	err := NewError("C", "abc")
+	v := NewStringRuleWithError(validateMe, err)
+
 	assert.NotNil(t, v.validate)
-	assert.Equal(t, "code", v.err.code)
+	assert.Equal(t, err, v.err)
+	assert.Equal(t, "C", v.err.code)
 	assert.Equal(t, "abc", v.err.message)
 }
 
 func TestStringRule_Error(t *testing.T) {
-	v := NewStringRule(validateMe, "abc_rule").Error("abc")
-	assert.Equal(t, "", v.err.code)
-	assert.Equal(t, "abc", v.err.message)
-
-	v2 := v.Error("correct")
-	assert.Equal(t, "correct", v2.err.message)
-}
-
-func TestStringValidator_Error(t *testing.T) {
-	v := NewStringValidator(validateMe, "code", "abc_rule").Error("abc")
+	err := NewError("code", "abc")
+	v := NewStringRuleWithError(validateMe, err).Error("abc")
 	assert.Equal(t, "code", v.err.code)
 	assert.Equal(t, "abc", v.err.message)
+
 	v2 := v.Error("correct")
 	assert.Equal(t, "code", v2.err.code)
 	assert.Equal(t, "correct", v2.err.message)
@@ -50,7 +48,7 @@ func TestStringValidator_Error(t *testing.T) {
 }
 
 func TestStringValidator_Validate(t *testing.T) {
-	v := NewStringValidator(validateMe, "code", "wrong_rule").Error("wrong")
+	v := NewStringRule(validateMe, "wrong_rule").Error("wrong")
 
 	value := "me"
 
@@ -123,20 +121,32 @@ func TestGetErrorFieldName(t *testing.T) {
 	}
 }
 
-func TestStringRuleTranslation(t *testing.T) {
-	me := NewStringValidator(validateMe, "code", "message")
+func TestStringRule_ErrorObject(t *testing.T) {
+	r := NewStringRule(validateMe, "wrong_rule")
 
-	assert.Equal(t, me.err.code, "code")
-	assert.Equal(t, me.err.message, "message")
-	assert.Equal(t, me.err.params, map[string]interface{}(nil))
+	err := NewError("code", "abc")
+	r = r.ErrorObject(err)
 
-	me = me.Error("abc")
-	assert.Equal(t, me.err.message, "abc")
+	assert.Equal(t, err, r.err)
+	assert.Equal(t, err.code, r.err.code)
+	assert.Equal(t, err.message, r.err.message)
+}
 
-	me = me.Code("me_key")
-	assert.Equal(t, me.err.code, "me_key")
+func TestStringRule_ErrParams(t *testing.T) {
+	p := map[string]interface{}{
+		"A": "a",
+		"B": "b",
+	}
 
-	params := map[string]interface{}{"field": 1}
-	me = me.ErrParams(params)
-	assert.Equal(t, me.err.params, params)
+	r := NewStringRule(validateMe, "wrong_rule")
+	r = r.ErrParams(p)
+
+	assert.Equal(t, r.err.params, p)
+}
+
+func TestStringRule_Code(t *testing.T) {
+	r := NewStringRule(validateMe, "wrong_rule")
+	r = r.Code("code")
+
+	assert.Equal(t, r.err.code, "code")
 }

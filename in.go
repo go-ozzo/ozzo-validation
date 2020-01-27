@@ -8,6 +8,9 @@ import (
 	"reflect"
 )
 
+// ErrInInvalid is the error that returns in case of an invalid value for "in" rule.
+var ErrInInvalid = NewError("validation_in_invalid", "must be a valid value")
+
 // In returns a validation rule that checks if a value can be found in the given list of values.
 // reflect.DeepEqual() will be used to determine if two values are equal.
 // For more details please refer to https://golang.org/pkg/reflect/#DeepEqual
@@ -15,7 +18,7 @@ import (
 func In(values ...interface{}) InRule {
 	return InRule{
 		elements: values,
-		err:      NewError("validation_in_invalid", "must be a valid value"),
+		err:      ErrInInvalid,
 	}
 }
 
@@ -43,6 +46,12 @@ func (r InRule) Validate(value interface{}) error {
 
 // Error sets the error message for the rule.
 func (r InRule) Error(message string) InRule {
-	r.err = r.err.SetMessage(message)
+	r.err.SetMessage(message)
+	return r
+}
+
+// ErrorObject sets the error struct for the rule.
+func (r InRule) ErrorObject(err Error) InRule {
+	r.err = err
 	return r
 }

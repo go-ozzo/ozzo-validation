@@ -48,3 +48,15 @@ func Test_notNilRule_Error(t *testing.T) {
 	assert.Equal(t, "is required", r.Validate(nil).Error())
 	assert.Equal(t, "123", r2.err.message)
 }
+
+func TestNotNilRule_ErrorObject(t *testing.T) {
+	r := NotNil
+
+	err := NewError("code", "abc")
+	r = r.ErrorObject(err)
+
+	assert.Equal(t, err, r.err)
+	assert.Equal(t, err.code, r.err.code)
+	assert.Equal(t, err.message, r.err.message)
+	assert.NotEqual(t, err, NotNil.err)
+}

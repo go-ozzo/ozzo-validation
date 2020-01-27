@@ -33,3 +33,13 @@ func Test_Multipleof_Error(t *testing.T) {
 	r = r.Error("some error string ...")
 	assert.Equal(t, "some error string ...", r.err.message)
 }
+
+func TestMultipleOfRule_ErrorObject(t *testing.T) {
+	r := MultipleOf(10)
+	err := NewError("code", "abc")
+	r = r.ErrorObject(err)
+
+	assert.Equal(t, err, r.err)
+	assert.Equal(t, err.code, r.err.code)
+	assert.Equal(t, err.message, r.err.message)
+}

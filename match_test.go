@@ -42,3 +42,14 @@ func Test_MatchRule_Error(t *testing.T) {
 	r = r.Error("123")
 	assert.Equal(t, "123", r.err.message)
 }
+
+func TestMatchRule_ErrorObject(t *testing.T) {
+	r := Match(regexp.MustCompile("[a-z]+"))
+
+	err := NewError("code", "abc")
+	r = r.ErrorObject(err)
+
+	assert.Equal(t, err, r.err)
+	assert.Equal(t, err.code, r.err.code)
+	assert.Equal(t, err.message, r.err.message)
+}

@@ -8,6 +8,13 @@ import (
 	"time"
 )
 
+var (
+	// ErrDateInvalid is the error that returns in case of an invalid date.
+	ErrDateInvalid = NewError("validation_date_invalid", "must be a valid date")
+	// ErrDateOutOfRange is the error that returns in case of an invalid date.
+	ErrDateOutOfRange = NewError("validation_date_out_of_range", "the data is out of range")
+)
+
 // DateRule is a validation rule that validates date/time string values.
 type DateRule struct {
 	layout        string
@@ -29,20 +36,32 @@ type DateRule struct {
 func Date(layout string) DateRule {
 	return DateRule{
 		layout:   layout,
-		err:      NewError("validation_date_invalid", "must be a valid date"),
-		rangeErr: NewError("validation_date_range_invalid", "the data is out of range"),
+		err:      ErrDateInvalid,
+		rangeErr: ErrDateOutOfRange,
 	}
 }
 
 // Error sets the error message that is used when the value being validated is not a valid date.
 func (r DateRule) Error(message string) DateRule {
-	r.err = r.err.SetMessage(message)
+	r.err.SetMessage(message)
+	return r
+}
+
+// ErrorObject sets the error struct that is used when the value being validated is not a valid date..
+func (r DateRule) ErrorObject(err Error) DateRule {
+	r.err = err
 	return r
 }
 
 // RangeError sets the error message that is used when the value being validated is out of the specified Min/Max date range.
 func (r DateRule) RangeError(message string) DateRule {
-	r.rangeErr = r.rangeErr.SetMessage(message)
+	r.rangeErr.SetMessage(message)
+	return r
+}
+
+// RangeErrorObject sets the error struct that is used when the value being validated is out of the specified Min/Max date range.
+func (r DateRule) RangeErrorObject(err Error) DateRule {
+	r.rangeErr = err
 	return r
 }
 

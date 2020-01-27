@@ -6,16 +6,10 @@ package validation
 
 import (
 	"errors"
-	"github.com/stretchr/testify/mock"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
-
-// TestTranslator is a mocked struct that implements Translator.
-type TestTranslator struct {
-	mock.Mock
-}
 
 func TestNewInternalError(t *testing.T) {
 	err := NewInternalError(errors.New("abc"))
@@ -76,40 +70,52 @@ func TestErrors_Filter(t *testing.T) {
 	assert.Nil(t, errs.Filter())
 }
 
-func TestError_Code(t *testing.T) {
+func TestError_SetCode(t *testing.T) {
 	err := NewError("A", "msg")
-	err2 := err.SetCode("B")
 
 	assert.Equal(t, err.code, "A")
 	assert.Equal(t, err.Code(), "A")
 
-	assert.Equal(t, err2.code, "B")
-	assert.Equal(t, err2.Code(), "B")
+	err.SetCode("B")
+	assert.Equal(t, err.code, "B")
+}
+
+func TestError_Code(t *testing.T) {
+	err := NewError("A", "msg")
+
+	assert.Equal(t, err.code, "A")
+	assert.Equal(t, err.Code(), "A")
 }
 
 func TestError_Message(t *testing.T) {
 	err := NewError("code", "A")
-	err2 := err.SetMessage("B")
 
 	assert.Equal(t, err.message, "A")
 	assert.Equal(t, err.Message(), "A")
-
-	assert.Equal(t, err2.message, "B")
-	assert.Equal(t, err2.Message(), "B")
 }
 
 func TestError_Params(t *testing.T) {
 	p := map[string]interface{}{"A": "val1", "AA": "val2"}
-	p2 := map[string]interface{}{"B": "val1", "BB": "val2"}
 
-	err := NewError("code", "A").SetParams(p)
-	err2 := err.SetMessage("B").SetParams(p2)
+	err := NewError("code", "A")
+	err.SetParams(p)
+	err.SetMessage("B")
 
 	assert.Equal(t, err.params, p)
 	assert.Equal(t, err.Params(), p)
+}
 
-	assert.Equal(t, err2.params, p2)
-	assert.Equal(t, err2.Params(), p2)
+func TestError_AddParam(t *testing.T) {
+	p := map[string]interface{}{"A": "val1", "B": "val2"}
+
+	err := NewError("code", "A")
+	err.SetParams(p)
+	err.AddParam("C", "val3")
+
+	p["C"] = "val3"
+
+	assert.Equal(t, err.params, p)
+	assert.Equal(t, err.Params(), p)
 }
 
 func TestValidationError(t *testing.T) {
@@ -117,13 +123,15 @@ func TestValidationError(t *testing.T) {
 		"A": "B",
 	}
 
-	err := NewError("code", "msg").SetParams(params)
+	err := NewError("code", "msg")
+	err.SetParams(params)
+
 	assert.Equal(t, err.code, "code")
 	assert.Equal(t, err.message, "msg")
 	assert.Equal(t, err.params, params)
 
 	params = map[string]interface{}{"min": 1}
-	err = err.SetParams(params)
+	err.SetParams(params)
 
 	assert.Equal(t, err.params, params)
 }

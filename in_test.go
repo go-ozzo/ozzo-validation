@@ -44,3 +44,14 @@ func Test_InRule_Error(t *testing.T) {
 	r = r.Error("123")
 	assert.Equal(t, "123", r.err.message)
 }
+
+func TestInRule_ErrorObject(t *testing.T) {
+	r := In(1, 2, 3)
+
+	err := NewError("code", "abc")
+	r = r.ErrorObject(err)
+
+	assert.Equal(t, err, r.err)
+	assert.Equal(t, err.code, r.err.code)
+	assert.Equal(t, err.message, r.err.message)
+}

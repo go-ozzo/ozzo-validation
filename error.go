@@ -47,10 +47,8 @@ func (e internalError) InternalError() error {
 }
 
 // SetCode set the error's translation code.
-func (e Error) SetCode(code string) Error {
+func (e *Error) SetCode(code string) {
 	e.code = code
-
-	return e
 }
 
 // Code get the error's translation code.
@@ -59,9 +57,13 @@ func (e Error) Code() string {
 }
 
 // SetParams set the error's params.
-func (e Error) SetParams(params map[string]interface{}) Error {
+func (e *Error) SetParams(params map[string]interface{}) {
 	e.params = params
-	return e
+}
+
+// AddParam add parameter to the error's parameters.
+func (e *Error) AddParam(name string, value interface{}) {
+	e.params[name] = value
 }
 
 // Params returns the error's params.
@@ -70,9 +72,8 @@ func (e Error) Params() map[string]interface{} {
 }
 
 // SetMessage set the error's message.
-func (e Error) SetMessage(message string) Error {
+func (e *Error) SetMessage(message string) {
 	e.message = message
-	return e
 }
 
 // Message return the error's message.

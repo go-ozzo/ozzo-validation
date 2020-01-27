@@ -4,6 +4,13 @@
 
 package validation
 
+var (
+	// ErrRequired is the error that returns when a value is required.
+	ErrRequired = NewError("validation_required", "cannot be blank")
+	// ErrNotNilRequired is the error that returns when a value is not nil and is empty.
+	ErrNilOrNotEmpty = NewError("validation_nil_or_not_empty_required", "cannot be blank")
+)
+
 // Required is a validation rule that checks if a value is not empty.
 // A value is considered not empty if
 // - integer, float: not zero
@@ -11,11 +18,11 @@ package validation
 // - string, array, slice, map: len() > 0
 // - interface, pointer: not nil and the referenced value is not empty
 // - any other types
-var Required = requiredRule{err: NewError("validation_required_is_blank", "cannot be blank"), skipNil: false}
+var Required = requiredRule{err: ErrRequired, skipNil: false}
 
 // NilOrNotEmpty checks if a value is a nil pointer or a value that is not empty.
 // NilOrNotEmpty differs from Required in that it treats a nil pointer as valid.
-var NilOrNotEmpty = requiredRule{err: NewError("validation_nil_or_not_empty_is_blank", "cannot be blank"), skipNil: true}
+var NilOrNotEmpty = requiredRule{err: ErrNilOrNotEmpty, skipNil: true}
 
 type requiredRule struct {
 	skipNil bool
@@ -33,7 +40,13 @@ func (v requiredRule) Validate(value interface{}) error {
 
 // Error sets the error message for the rule.
 func (v requiredRule) Error(message string) requiredRule {
-	v.err = v.err.SetMessage(message)
+	v.err.SetMessage(message)
 
 	return v
+}
+
+// ErrorObject sets the error struct for the rule.
+func (r requiredRule) ErrorObject(err Error) requiredRule {
+	r.err = err
+	return r
 }

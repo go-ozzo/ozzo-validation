@@ -4,13 +4,16 @@
 
 package validation
 
+// ErrNotInInvalid is the error that returns when a value is in a list.
+var ErrNotInInvalid = NewError("validation_not_in_invalid", "must not be in list")
+
 // NotIn returns a validation rule that checks if a value is absent from the given list of values.
 // Note that the value being checked and the possible range of values must be of the same type.
 // An empty value is considered valid. Use the Required rule to make sure a value is not empty.
 func NotIn(values ...interface{}) NotInRule {
 	return NotInRule{
 		elements: values,
-		err:      NewError("validation_not_in_invalid", "must not be in list"),
+		err:      ErrNotInInvalid,
 	}
 }
 
@@ -37,6 +40,12 @@ func (r NotInRule) Validate(value interface{}) error {
 
 // Error sets the error message for the rule.
 func (r NotInRule) Error(message string) NotInRule {
-	r.err = r.err.SetMessage(message)
+	r.err.SetMessage(message)
+	return r
+}
+
+// ErrorObject sets the error struct for the rule.
+func (r NotInRule) ErrorObject(err Error) NotInRule {
+	r.err = err
 	return r
 }

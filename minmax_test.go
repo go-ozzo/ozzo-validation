@@ -136,3 +136,13 @@ func TestMaxError(t *testing.T) {
 	r = r.Error("123")
 	assert.Equal(t, "123", r.err.message)
 }
+
+func TestThresholdRule_ErrorObject(t *testing.T) {
+	r := Max(10)
+	err := NewError("code", "abc")
+	r = r.ErrorObject(err)
+
+	assert.Equal(t, err, r.err)
+	assert.Equal(t, err.code, r.err.code)
+	assert.Equal(t, err.message, r.err.message)
+}
