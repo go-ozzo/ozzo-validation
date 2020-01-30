@@ -46,7 +46,7 @@ func (r InRule) Validate(value interface{}) error {
 
 // Error sets the error message for the rule.
 func (r InRule) Error(message string) InRule {
-	r.err.SetMessage(message)
+	r.err = r.err.SetMessage(message)
 	return r
 }
 

@@ -40,7 +40,7 @@ func (r NotInRule) Validate(value interface{}) error {
 
 // Error sets the error message for the rule.
 func (r NotInRule) Error(message string) NotInRule {
-	r.err.SetMessage(message)
+	r.err = r.err.SetMessage(message)
 	return r
 }
 

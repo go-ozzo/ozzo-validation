@@ -75,7 +75,7 @@ func (r LengthRule) Validate(value interface{}) error {
 
 // Error sets the error message for the rule.
 func (r LengthRule) Error(message string) LengthRule {
-	r.err.SetMessage(message)
+	r.err = r.err.SetMessage(message)
 	return r
 }
 
@@ -100,7 +100,5 @@ func buildLengthRuleError(min, max int) (err Error) {
 		err = ErrLengthEmptyRequired
 	}
 
-	err.SetParams(map[string]interface{}{"min": min, "max": max})
-
-	return err
+	return err.SetParams(map[string]interface{}{"min": min, "max": max})
 }

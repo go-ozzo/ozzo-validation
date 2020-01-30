@@ -12,7 +12,7 @@ var (
 	// ErrDateInvalid is the error that returns in case of an invalid date.
 	ErrDateInvalid = NewError("validation_date_invalid", "must be a valid date")
 	// ErrDateOutOfRange is the error that returns in case of an invalid date.
-	ErrDateOutOfRange = NewError("validation_date_out_of_range", "the data is out of range")
+	ErrDateOutOfRange = NewError("validation_date_out_of_range", "the date is out of range")
 )
 
 // DateRule is a validation rule that validates date/time string values.
@@ -43,7 +43,7 @@ func Date(layout string) DateRule {
 
 // Error sets the error message that is used when the value being validated is not a valid date.
 func (r DateRule) Error(message string) DateRule {
-	r.err.SetMessage(message)
+	r.err = r.err.SetMessage(message)
 	return r
 }
 
@@ -55,7 +55,7 @@ func (r DateRule) ErrorObject(err Error) DateRule {
 
 // RangeError sets the error message that is used when the value being validated is out of the specified Min/Max date range.
 func (r DateRule) RangeError(message string) DateRule {
-	r.rangeErr.SetMessage(message)
+	r.rangeErr = r.rangeErr.SetMessage(message)
 	return r
 }
 

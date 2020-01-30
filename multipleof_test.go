@@ -31,7 +31,7 @@ func Test_Multipleof_Error(t *testing.T) {
 	assert.Equal(t, "must be multiple of 10", r.Validate(3).Error())
 
 	r = r.Error("some error string ...")
-	assert.Equal(t, "some error string ...", r.err.message)
+	assert.Equal(t, "some error string ...", r.err.Message())
 }
 
 func TestMultipleOfRule_ErrorObject(t *testing.T) {
@@ -40,6 +40,6 @@ func TestMultipleOfRule_ErrorObject(t *testing.T) {
 	r = r.ErrorObject(err)
 
 	assert.Equal(t, err, r.err)
-	assert.Equal(t, err.code, r.err.code)
-	assert.Equal(t, err.message, r.err.message)
+	assert.Equal(t, err.Code(), r.err.Code())
+	assert.Equal(t, err.Message(), r.err.Message())
 }

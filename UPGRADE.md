@@ -1,19 +1,14 @@
 # Upgrade Instructions
 
 ## Upgrade from 3.x to 4.x
-* If you want to support i18n for your defined string rules, instead of `NewStringRule` use the `NewStringRuleWithError`
-method to define them.
+* Change your error message placeholders from the Go `fmt` package `verbs` to the `template variables`. 
  ```go
 // 3.x
-// Assume Email is your custom rule:
-var Email = validation.NewStringRule(govalidator.IsEmail, "must be a valid email address")
+// Assume you want to set a custom message for the LengthRule:
+var lengthRule= validation.Length(2,10).Error("the length must be between %v and %v")
 
 // 4.x
-// ErrValidationIsEmail is the error that returns in case of an invalid email.
-var ErrEmail = validation.NewError("validation_is_email", "must be a valid email address")
-
-// Define your rule.
-var Email = validation.NewStringRuleWithError(govalidator.IsEmail, ErrEmail)
+var lengthRule= validation.Length(2,10).Error("the length must be between {{.min}} and {{.max}}")
 ```
 
 ## Upgrade from 2.x to 3.x

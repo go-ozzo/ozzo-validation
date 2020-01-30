@@ -27,8 +27,7 @@ func (r notNilRule) Validate(value interface{}) error {
 
 // Error sets the error message for the rule.
 func (r notNilRule) Error(message string) notNilRule {
-	r.err.SetMessage(message)
-
+	r.err = r.err.SetMessage(message)
 	return r
 }
 

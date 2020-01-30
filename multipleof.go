@@ -25,7 +25,7 @@ type MultipleOfRule struct {
 
 // Error sets the error message for the rule.
 func (r MultipleOfRule) Error(message string) MultipleOfRule {
-	r.err.SetMessage(message)
+	r.err = r.err.SetMessage(message)
 	return r
 }
 
@@ -61,6 +61,5 @@ func (r MultipleOfRule) Validate(value interface{}) error {
 		return fmt.Errorf("type not supported: %v", rv.Type())
 	}
 
-	r.err.SetParams(map[string]interface{}{"base": r.base})
-	return r.err
+	return r.err.SetParams(map[string]interface{}{"base": r.base})
 }

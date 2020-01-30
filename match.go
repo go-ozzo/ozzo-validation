@@ -8,8 +8,8 @@ import (
 	"regexp"
 )
 
-// ErrValidationMatchInvalid is the error that returns in case of invalid format.
-var ErrValidationMatchInvalid = NewError("validation_match_invalid", "must be in a valid format")
+// ErrMatchInvalid is the error that returns in case of invalid format.
+var ErrMatchInvalid = NewError("validation_match_invalid", "must be in a valid format")
 
 // Match returns a validation rule that checks if a value matches the specified regular expression.
 // This rule should only be used for validating strings and byte slices, or a validation error will be reported.
@@ -17,7 +17,7 @@ var ErrValidationMatchInvalid = NewError("validation_match_invalid", "must be in
 func Match(re *regexp.Regexp) MatchRule {
 	return MatchRule{
 		re:  re,
-		err: ErrValidationMatchInvalid,
+		err: ErrMatchInvalid,
 	}
 }
 
@@ -45,7 +45,7 @@ func (r MatchRule) Validate(value interface{}) error {
 
 // Error sets the error message for the rule.
 func (r MatchRule) Error(message string) MatchRule {
-	r.err.SetMessage(message)
+	r.err = r.err.SetMessage(message)
 	return r
 }
 

@@ -34,25 +34,13 @@ func NewStringRuleWithError(validator stringValidator, err Error) StringRule {
 
 // Error sets the error message for the rule.
 func (r StringRule) Error(message string) StringRule {
-	r.err.SetMessage(message)
+	r.err = r.err.SetMessage(message)
 	return r
 }
 
 // ErrorObject sets the error struct for the rule.
 func (r StringRule) ErrorObject(err Error) StringRule {
 	r.err = err
-	return r
-}
-
-// ErrParams sets the rule's error params.
-func (r StringRule) ErrParams(params map[string]interface{}) StringRule {
-	r.err.SetParams(params)
-	return r
-}
-
-// Code sets the rule's translation code (translation key).
-func (r StringRule) Code(code string) StringRule {
-	r.err.SetCode(code)
 	return r
 }
 

@@ -127,14 +127,12 @@ func (r ThresholdRule) Validate(value interface{}) error {
 		return fmt.Errorf("type not supported: %v", rv.Type())
 	}
 
-	r.err.SetParams(map[string]interface{}{"threshold": r.threshold})
-
-	return r.err
+	return r.err.SetParams(map[string]interface{}{"threshold": r.threshold})
 }
 
 // Error sets the error message for the rule.
 func (r ThresholdRule) Error(message string) ThresholdRule {
-	r.err.SetMessage(message)
+	r.err = r.err.SetMessage(message)
 	return r
 }
 

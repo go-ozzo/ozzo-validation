@@ -64,7 +64,7 @@ func Test_requiredRule_Error(t *testing.T) {
 	r2 := r.Error("123")
 	assert.Equal(t, "cannot be blank", r.Validate(nil).Error())
 	assert.False(t, r.skipNil)
-	assert.Equal(t, "123", r2.err.message)
+	assert.Equal(t, "123", r2.err.Message())
 	assert.False(t, r2.skipNil)
 
 	r = NilOrNotEmpty
@@ -73,7 +73,7 @@ func Test_requiredRule_Error(t *testing.T) {
 	r2 = r.Error("123")
 	assert.Equal(t, "cannot be blank", r.Validate("").Error())
 	assert.True(t, r.skipNil)
-	assert.Equal(t, "123", r2.err.message)
+	assert.Equal(t, "123", r2.err.Message())
 	assert.True(t, r2.skipNil)
 }
 
@@ -84,7 +84,7 @@ func TestRequiredRule_Error(t *testing.T) {
 	r = r.ErrorObject(err)
 
 	assert.Equal(t, err, r.err)
-	assert.Equal(t, err.code, r.err.code)
-	assert.Equal(t, err.message, r.err.message)
+	assert.Equal(t, err.Code(), r.err.Code())
+	assert.Equal(t, err.Message(), r.err.Message())
 	assert.NotEqual(t, err, Required.err)
 }
