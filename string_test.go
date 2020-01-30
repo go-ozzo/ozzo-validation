@@ -19,20 +19,36 @@ func validateMe(s string) bool {
 
 func TestNewStringRule(t *testing.T) {
 	v := NewStringRule(validateMe, "abc")
+
 	assert.NotNil(t, v.validate)
-	assert.Equal(t, "abc", v.message)
+	assert.Equal(t, "", v.err.Code())
+	assert.Equal(t, "abc", v.err.Message())
 }
 
-func TestStringValidator_Error(t *testing.T) {
-	v := NewStringRule(validateMe, "abc")
-	assert.Equal(t, "abc", v.message)
+func TestNewStringRuleWithError(t *testing.T) {
+	err := NewError("C", "abc")
+	v := NewStringRuleWithError(validateMe, err)
+
+	assert.NotNil(t, v.validate)
+	assert.Equal(t, err, v.err)
+	assert.Equal(t, "C", v.err.Code())
+	assert.Equal(t, "abc", v.err.Message())
+}
+
+func TestStringRule_Error(t *testing.T) {
+	err := NewError("code", "abc")
+	v := NewStringRuleWithError(validateMe, err).Error("abc")
+	assert.Equal(t, "code", v.err.Code())
+	assert.Equal(t, "abc", v.err.Message())
+
 	v2 := v.Error("correct")
-	assert.Equal(t, "correct", v2.message)
-	assert.Equal(t, "abc", v.message)
+	assert.Equal(t, "code", v.err.Code())
+	assert.Equal(t, "correct", v2.err.Message())
+	assert.Equal(t, "abc", v.err.Message())
 }
 
 func TestStringValidator_Validate(t *testing.T) {
-	v := NewStringRule(validateMe, "wrong")
+	v := NewStringRule(validateMe, "wrong_rule").Error("wrong")
 
 	value := "me"
 
@@ -103,4 +119,15 @@ func TestGetErrorFieldName(t *testing.T) {
 		field, _ := a.FieldByName(test.field)
 		assert.Equal(t, test.name, getErrorFieldName(&field), test.tag)
 	}
+}
+
+func TestStringRule_ErrorObject(t *testing.T) {
+	r := NewStringRule(validateMe, "wrong_rule")
+
+	err := NewError("code", "abc")
+	r = r.ErrorObject(err)
+
+	assert.Equal(t, err, r.err)
+	assert.Equal(t, "code", r.err.Code())
+	assert.Equal(t, "abc", r.err.Message())
 }

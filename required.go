@@ -4,7 +4,12 @@
 
 package validation
 
-import "errors"
+var (
+	// ErrRequired is the error that returns when a value is required.
+	ErrRequired = NewError("validation_required", "cannot be blank")
+	// ErrNilOrNotEmpty is the error that returns when a value is not nil and is empty.
+	ErrNilOrNotEmpty = NewError("validation_nil_or_not_empty_required", "cannot be blank")
+)
 
 // Required is a validation rule that checks if a value is not empty.
 // A value is considered not empty if
@@ -13,30 +18,34 @@ import "errors"
 // - string, array, slice, map: len() > 0
 // - interface, pointer: not nil and the referenced value is not empty
 // - any other types
-var Required = requiredRule{message: "cannot be blank", skipNil: false}
+var Required = requiredRule{err: ErrRequired, skipNil: false}
 
 // NilOrNotEmpty checks if a value is a nil pointer or a value that is not empty.
 // NilOrNotEmpty differs from Required in that it treats a nil pointer as valid.
-var NilOrNotEmpty = requiredRule{message: "cannot be blank", skipNil: true}
+var NilOrNotEmpty = requiredRule{err: ErrNilOrNotEmpty, skipNil: true}
 
 type requiredRule struct {
-	message string
 	skipNil bool
+	err     Error
 }
 
 // Validate checks if the given value is valid or not.
-func (v requiredRule) Validate(value interface{}) error {
+func (r requiredRule) Validate(value interface{}) error {
 	value, isNil := Indirect(value)
-	if v.skipNil && !isNil && IsEmpty(value) || !v.skipNil && (isNil || IsEmpty(value)) {
-		return errors.New(v.message)
+	if r.skipNil && !isNil && IsEmpty(value) || !r.skipNil && (isNil || IsEmpty(value)) {
+		return r.err
 	}
 	return nil
 }
 
 // Error sets the error message for the rule.
-func (v requiredRule) Error(message string) requiredRule {
-	return requiredRule{
-		message: message,
-		skipNil: v.skipNil,
-	}
+func (r requiredRule) Error(message string) requiredRule {
+	r.err = r.err.SetMessage(message)
+	return r
+}
+
+// ErrorObject sets the error struct for the rule.
+func (r requiredRule) ErrorObject(err Error) requiredRule {
+	r.err = err
+	return r
 }

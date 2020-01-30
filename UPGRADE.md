@@ -1,5 +1,16 @@
 # Upgrade Instructions
 
+## Upgrade from 3.x to 4.x
+* Change your error message placeholders from the Go `fmt` package `verbs` to the `template variables`. 
+ ```go
+// 3.x
+// Assume you want to set a custom message for the LengthRule:
+var lengthRule= validation.Length(2,10).Error("the length must be between %v and %v")
+
+// 4.x
+var lengthRule= validation.Length(2,10).Error("the length must be between {{.min}} and {{.max}}")
+```
+
 ## Upgrade from 2.x to 3.x
 
 * Instead of using `StructRules` to define struct validation rules, use `ValidateStruct()` to declare and perform

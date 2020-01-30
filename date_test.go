@@ -37,13 +37,35 @@ func TestDate(t *testing.T) {
 }
 
 func TestDateRule_Error(t *testing.T) {
-	r := Date(time.ANSIC)
-	assert.Equal(t, "must be a valid date", r.message)
-	assert.Equal(t, "the data is out of range", r.rangeMessage)
+	r := Date(time.RFC3339)
+	assert.Equal(t, "must be a valid date", r.Validate("0001-01-02T15:04:05Z07:00").Error())
+	r2 := r.Min(time.Date(2000, 1, 1, 1, 1, 1, 0, time.UTC))
+	assert.Equal(t, "the date is out of range", r2.Validate("1999-01-02T15:04:05Z").Error())
 	r = r.Error("123")
 	r = r.RangeError("456")
-	assert.Equal(t, "123", r.message)
-	assert.Equal(t, "456", r.rangeMessage)
+	assert.Equal(t, "123", r.err.Message())
+	assert.Equal(t, "456", r.rangeErr.Message())
+}
+
+func TestDateRule_ErrorObject(t *testing.T) {
+	r := Date(time.RFC3339)
+	assert.Equal(t, "must be a valid date", r.Validate("0001-01-02T15:04:05Z07:00").Error())
+
+	r = r.ErrorObject(NewError("code", "abc"))
+
+	assert.Equal(t, "code", r.err.Code())
+	assert.Equal(t, "abc", r.Validate("0001-01-02T15:04:05Z07:00").Error())
+
+	r2 := r.Min(time.Date(2000, 1, 1, 1, 1, 1, 0, time.UTC))
+	assert.Equal(t, "the date is out of range", r2.Validate("1999-01-02T15:04:05Z").Error())
+
+	r = r.ErrorObject(NewError("C", "def"))
+	r = r.RangeErrorObject(NewError("D", "123"))
+
+	assert.Equal(t, "C", r.err.Code())
+	assert.Equal(t, "def", r.err.Message())
+	assert.Equal(t, "D", r.rangeErr.Code())
+	assert.Equal(t, "123", r.rangeErr.Message())
 }
 
 func TestDateRule_MinMax(t *testing.T) {
@@ -60,10 +82,10 @@ func TestDateRule_MinMax(t *testing.T) {
 	assert.Nil(t, r2.Validate("2010-01-02"))
 	err := r2.Validate("1999-01-02")
 	if assert.NotNil(t, err) {
-		assert.Equal(t, "the data is out of range", err.Error())
+		assert.Equal(t, "the date is out of range", err.Error())
 	}
 	err2 := r2.Validate("2021-01-02")
 	if assert.NotNil(t, err) {
-		assert.Equal(t, "the data is out of range", err2.Error())
+		assert.Equal(t, "the date is out of range", err2.Error())
 	}
 }
