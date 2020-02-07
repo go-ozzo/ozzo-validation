@@ -29,6 +29,11 @@ type requiredRule struct {
 	err     Error
 }
 
+// When validate provided value by "required" rule just when the condition is true.
+func (r requiredRule) When(condition bool) WhenRule {
+	return When(condition, r)
+}
+
 // Validate checks if the given value is valid or not.
 func (r requiredRule) Validate(value interface{}) error {
 	value, isNil := Indirect(value)
