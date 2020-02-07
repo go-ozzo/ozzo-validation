@@ -35,6 +35,16 @@ func TestRequired(t *testing.T) {
 	}
 }
 
+func TestRequiredRule_When(t *testing.T) {
+	r := Required.When(false)
+	err := Validate(nil, r)
+	assert.Nil(t, err)
+
+	r = Required.When(true)
+	err = Validate(nil, r)
+	assert.Equal(t, ErrRequired, err)
+}
+
 func TestNilOrNotEmpty(t *testing.T) {
 	s1 := "123"
 	s2 := ""
