@@ -19,6 +19,7 @@ It has the following features:
 * provide a rich set of validation rules right out of box.
 * extremely easy to create and use custom validation rules.
 
+For an example on how this library is used in an application, please refer to [go-rest-api](https://github.com/qiangxue/go-rest-api) which is a starter kit for building RESTful APIs in Go.
 
 ## Requirements
 
