@@ -91,7 +91,11 @@ var (
 	// ErrCountryCode3 is the error that returns in case of an invalid three-letter country code.
 	ErrCountryCode3 = validation.NewError("validation_is_country_code_3_letter", "must be a valid three-letter country code")
 	// ErrCountryCode is the error that returns in case of an invalid country code.
-	ErrCountryCode = validation.NewError("validation_is_currency_code", "must be valid ISO 4217 currency code")
+	//
+	// Deprecated: Use ErrCurrencyCode instead.
+	ErrCountryCode = ErrCurrencyCode
+	// ErrCurrencyCode is the error that returns in case of an invalid currency code.
+	ErrCurrencyCode = validation.NewError("validation_is_currency_code", "must be valid ISO 4217 currency code")
 	// ErrDialString is the error that returns in case of an invalid string.
 	ErrDialString = validation.NewError("validation_is_dial_string", "must be a valid dial string")
 	// ErrMac is the error that returns in case of an invalid mac address.
@@ -202,7 +206,7 @@ var (
 	// CountryCode3 validates if a string is a valid ISO3166 Alpha 3 country code
 	CountryCode3 = validation.NewStringRuleWithError(govalidator.IsISO3166Alpha3, ErrCountryCode3)
 	// CurrencyCode validates if a string is a valid IsISO4217 currency code.
-	CurrencyCode = validation.NewStringRuleWithError(govalidator.IsISO4217, ErrCountryCode)
+	CurrencyCode = validation.NewStringRuleWithError(govalidator.IsISO4217, ErrCurrencyCode)
 	// DialString validates if a string is a valid dial string that can be passed to Dial()
 	DialString = validation.NewStringRuleWithError(govalidator.IsDialString, ErrDialString)
 	// MAC validates if a string is a MAC address
