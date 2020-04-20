@@ -71,6 +71,26 @@ func TestAbsentRule_When(t *testing.T) {
 	assert.Equal(t, ErrNil, err)
 }
 
+func Test_absentRule_Error(t *testing.T) {
+	r := Nil
+	assert.Equal(t, "must be blank", r.Validate("42").Error())
+	assert.False(t, r.skipNil)
+	r2 := r.Error("123")
+	assert.Equal(t, "must be blank", r.Validate("42").Error())
+	assert.False(t, r.skipNil)
+	assert.Equal(t, "123", r2.err.Message())
+	assert.False(t, r2.skipNil)
+
+	r = Empty
+	assert.Equal(t, "must be blank", r.Validate("42").Error())
+	assert.True(t, r.skipNil)
+	r2 = r.Error("123")
+	assert.Equal(t, "must be blank", r.Validate("42").Error())
+	assert.True(t, r.skipNil)
+	assert.Equal(t, "123", r2.err.Message())
+	assert.True(t, r2.skipNil)
+}
+
 func TestAbsentRule_Error(t *testing.T) {
 	r := Nil
 
