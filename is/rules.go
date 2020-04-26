@@ -10,7 +10,7 @@ import (
 	"regexp"
 	"unicode"
 
-	"gopkg.in/asaskevich/govalidator.v9"
+	"github.com/asaskevich/govalidator"
 )
 
 var (
@@ -125,8 +125,10 @@ var (
 )
 
 var (
-	// Email validates if a string is an email or not.
-	Email = validation.NewStringRuleWithError(govalidator.IsEmail, ErrEmail)
+	// Email validates if a string is an email or not. It also checks if the MX record exists for the email domain.
+	Email = validation.NewStringRuleWithError(govalidator.IsExistingEmail, ErrEmail)
+	// EmailFormat validates if a string is an email or not. Note that it does NOT check if the MX record exists or not.
+	EmailFormat = validation.NewStringRuleWithError(govalidator.IsEmail, ErrEmail)
 	// URL validates if a string is a valid URL
 	URL = validation.NewStringRuleWithError(govalidator.IsURL, ErrURL)
 	// RequestURL validates if a string is a valid request URL

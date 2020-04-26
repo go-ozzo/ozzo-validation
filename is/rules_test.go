@@ -20,6 +20,7 @@ func TestAll(t *testing.T) {
 		err            string
 	}{
 		{"Email", Email, "test@example.com", "example.com", "must be a valid email address"},
+		{"EmailFormat", EmailFormat, "test@example.com", "example.com", "must be a valid email address"},
 		{"URL", URL, "http://example.com", "examplecom", "must be a valid URL"},
 		{"RequestURL", RequestURL, "http://example.com", "examplecom", "must be a valid request URL"},
 		{"RequestURI", RequestURI, "http://example.com", "examplecom", "must be a valid request URI"},

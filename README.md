@@ -422,7 +422,7 @@ The following code implements the aforementioned examples:
 result := validation.ValidateStruct(&a,
     validation.Field(&a.Unit, validation.When(a.Quantity != "", validation.Required).Else(validation.Nil)),
     validation.Field(&a.Phone, validation.When(a.Email == "", validation.Required.Error('Either phone or Email is required.')),
-	validation.Field(&a.Email, validation.When(a.Phone == "", validation.Required.Error('Either phone or Email is required.')),
+    validation.Field(&a.Email, validation.When(a.Phone == "", validation.Required.Error('Either phone or Email is required.')),
 )
 ```
 
@@ -470,7 +470,8 @@ of a value satisfies certain requirements. Note that these rules only handle str
  or byte slice is empty, it is considered valid. You may use a `Required` rule to ensure a value is not empty.
 Below is the whole list of the rules provided by the `is` package:
 
-* `Email`: validates if a string is an email or not
+* `Email`: validates if a string is an email or not. It also checks if the MX record exists for the email domain.
+* `EmailFormat`: validates if a string is an email or not. It does NOT check the existence of the MX record.
 * `URL`: validates if a string is a valid URL
 * `RequestURL`: validates if a string is a valid request URL
 * `RequestURI`: validates if a string is a valid request URI
