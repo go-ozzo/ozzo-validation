@@ -416,23 +416,23 @@ fmt.Println(err)
 Sometimes, we may want to validate a value only when certain condition is met. For example, we want to ensure the 
 `unit` struct field is not empty only when the `quantity` field is not empty; or we may want to ensure either `email`
 or `phone` is provided. The so-called conditional validation can be achieved with the help of `validation.When`.
-The following code implements the aforementioned two examples:
+The following code implements the aforementioned examples:
 
 ```go
 result := validation.ValidateStruct(&a,
-    validation.Field(&a.Unit, validation.When(a.Quantity != "", validation.Required)),
+    validation.Field(&a.Unit, validation.When(a.Quantity != "", validation.Required).Else(validation.Nil)),
     validation.Field(&a.Phone, validation.When(a.Email == "", validation.Required.Error('Either phone or Email is required.')),
-    validation.Field(&a.Email, validation.When(a.Phone == "", validation.Required.Error('Either phone or Email is required.')),
+	validation.Field(&a.Email, validation.When(a.Phone == "", validation.Required.Error('Either phone or Email is required.')),
 )
 ```
 
-Note that `validation.When` can take a list of validation rules. These rules will be executed only when the condition is true.
+Note that `validation.When` and `validation.When.Else` can take a list of validation rules. These rules will be executed only when the condition is true (When) or false (Else).
 
 The above code can also be simplified using the shortcut `validation.Required.When`:
 
 ```go
 result := validation.ValidateStruct(&a,
-    validation.Field(&a.Unit, validation.Required.When(a.Quantity != "")),
+    validation.Field(&a.Unit, validation.Required.When(a.Quantity != ""), validation.Nil.When(a.Quantity == "")),
     validation.Field(&a.Phone, validation.Required.When(a.Email == "").Error('Either phone or Email is required.')),
     validation.Field(&a.Email, validation.Required.When(a.Phone == "").Error('Either phone or Email is required.')),
 )
@@ -463,6 +463,7 @@ The following rules are provided in the `validation` package:
 * `MultipleOf`: checks if the value is a multiple of the specified range.
 * `Each(rules ...Rule)`: checks the elements within an iterable (map/slice/array) with other rules.
 * `When(condition, rules ...Rule)`: validates with the specified rules only when the condition is true.
+* `Else(rules ...Rule)`: must be used with `When(condition, rules ...Rule)`, validates with the specified rules only when the condition is false.
 
 The `is` sub-package provides a list of commonly used string validation rules that can be used to check if the format
 of a value satisfies certain requirements. Note that these rules only handle strings and byte slices and if a string
