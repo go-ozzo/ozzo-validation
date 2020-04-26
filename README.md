@@ -457,6 +457,8 @@ The following rules are provided in the `validation` package:
 * `Required`: checks if a value is not empty (neither nil nor zero).
 * `NotNil`: checks if a pointer value is not nil. Non-pointer values are considered valid.
 * `NilOrNotEmpty`: checks if a value is a nil pointer or a non-empty value. This differs from `Required` in that it treats a nil pointer as valid.
+* `Nil`: checks if a value is a nil pointer.
+* `Empty`: checks if a value is empty. nil pointers are considered valid.
 * `Skip`: this is a special rule used to indicate that all rules following it should be skipped (including the nested ones).
 * `MultipleOf`: checks if the value is a multiple of the specified range.
 * `Each(rules ...Rule)`: checks the elements within an iterable (map/slice/array) with other rules.
