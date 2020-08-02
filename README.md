@@ -38,8 +38,7 @@ or `validation.ValidateStruct()` to validate the value.
 Run the following command to install the package:
 
 ```
-go get github.com/go-ozzo/ozzo-validation/v4
-go get github.com/go-ozzo/ozzo-validation/v4/is
+go get github.com/go-ozzo/ozzo-validation
 ```
 
 ### Validating a Simple Value
