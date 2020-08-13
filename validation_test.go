@@ -56,22 +56,26 @@ func TestValidate(t *testing.T) {
 
 	// with rules
 	err := Validate("123", &validateAbc{}, &validateXyz{})
-	if assert.NotNil(t, err) {
-		assert.Equal(t, "error abc", err.Error())
-	}
+	assert.EqualError(t, err, "error abc")
 	err = Validate("abc", &validateAbc{}, &validateXyz{})
-	if assert.NotNil(t, err) {
-		assert.Equal(t, "error xyz", err.Error())
-	}
+	assert.EqualError(t, err, "error xyz")
 	err = Validate("abcxyz", &validateAbc{}, &validateXyz{})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	err = Validate("123", &validateAbc{}, Skip, &validateXyz{})
-	if assert.NotNil(t, err) {
-		assert.Equal(t, "error abc", err.Error())
-	}
+	assert.EqualError(t, err, "error abc")
 	err = Validate("abc", &validateAbc{}, Skip, &validateXyz{})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
+
+	err = Validate("123", &validateAbc{}, Skip.When(true), &validateXyz{})
+	assert.EqualError(t, err, "error abc")
+	err = Validate("abc", &validateAbc{}, Skip.When(true), &validateXyz{})
+	assert.NoError(t, err)
+
+	err = Validate("123", &validateAbc{}, Skip.When(false), &validateXyz{})
+	assert.EqualError(t, err, "error abc")
+	err = Validate("abc", &validateAbc{}, Skip.When(false), &validateXyz{})
+	assert.EqualError(t, err, "error xyz")
 }
 
 func stringEqual(str string) RuleFunc {
@@ -131,9 +135,9 @@ func Test_skipRule_Validate(t *testing.T) {
 
 func assertError(t *testing.T, expected string, err error, tag string) {
 	if expected == "" {
-		assert.Nil(t, err, tag)
-	} else if assert.NotNil(t, err, tag) {
-		assert.Equal(t, expected, err.Error(), tag)
+		assert.NoError(t, err, tag)
+	} else {
+		assert.EqualError(t, err, expected, tag)
 	}
 }
 
