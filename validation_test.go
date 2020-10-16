@@ -156,7 +156,7 @@ func (v *validateContextAbc) Validate(obj interface{}) error {
 	return v.ValidateWithContext(context.Background(), obj)
 }
 
-func (v *validateContextAbc) ValidateWithContext(ctx context.Context, obj interface{}) error {
+func (v *validateContextAbc) ValidateWithContext(_ context.Context, obj interface{}) error {
 	if !strings.Contains(obj.(string), "abc") {
 		return errors.New("error abc")
 	}
@@ -178,7 +178,7 @@ func (v *validateContextXyz) Validate(obj interface{}) error {
 	return v.ValidateWithContext(context.Background(), obj)
 }
 
-func (v *validateContextXyz) ValidateWithContext(ctx context.Context, obj interface{}) error {
+func (v *validateContextXyz) ValidateWithContext(_ context.Context, obj interface{}) error {
 	if !strings.Contains(obj.(string), "xyz") {
 		return errors.New("error xyz")
 	}
@@ -262,7 +262,7 @@ func (s StringValidateContext) Validate() error {
 	return nil
 }
 
-func (s StringValidateContext) ValidateWithContext(ctx context.Context) error {
+func (s StringValidateContext) ValidateWithContext(context.Context) error {
 	if string(s) != "abc" {
 		return errors.New("must be abc with context")
 	}

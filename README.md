@@ -82,16 +82,6 @@ to achieve this purpose. A single struct can have rules for multiple fields, and
 rules. For example,
 
 ```go
-package main
-
-import (
-	"fmt"
-	"regexp"
-
-	"github.com/go-ozzo/ozzo-validation/v4"
-	"github.com/go-ozzo/ozzo-validation/v4/is"
-)
-
 type Address struct {
 	Street string
 	City   string
@@ -112,19 +102,17 @@ func (a Address) Validate() error {
 	)
 }
 
-func main() {
-	a := Address{
-		Street: "123",
-		City:   "Unknown",
-		State:  "Virginia",
-		Zip:    "12345",
-	}
-
-	err := a.Validate()
-	fmt.Println(err)
-	// Output:
-	// Street: the length must be between 5 and 50; State: must be in a valid format.
+a := Address{
+    Street: "123",
+    City:   "Unknown",
+    State:  "Virginia",
+    Zip:    "12345",
 }
+
+err := a.Validate()
+fmt.Println(err)
+// Output:
+// Street: the length must be between 5 and 50; State: must be in a valid format.
 ```
 
 Note that when calling `validation.ValidateStruct` to validate a struct, you should pass to the method a pointer 
@@ -457,8 +445,6 @@ You can also customize the pre-defined error(s) of a built-in rule such that the
 instance of the rule. For example, the `Required` rule uses the pre-defined error `ErrRequired`. You can customize it
 during the application initialization:
 ```go
-import "github.com/go-ozzo/ozzo-validation/v4"
-
 validation.ErrRequired = validation.ErrRequired.SetMessage("the value is required") 
 ```
 

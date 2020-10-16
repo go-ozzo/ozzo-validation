@@ -84,8 +84,8 @@ func TestDateRule_MinMax(t *testing.T) {
 	if assert.NotNil(t, err) {
 		assert.Equal(t, "the date is out of range", err.Error())
 	}
-	err2 := r2.Validate("2021-01-02")
+	err = r2.Validate("2021-01-02")
 	if assert.NotNil(t, err) {
-		assert.Equal(t, "the date is out of range", err2.Error())
+		assert.Equal(t, "the date is out of range", err.Error())
 	}
 }
