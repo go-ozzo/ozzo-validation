@@ -10,14 +10,23 @@ import (
 var (
 	// ErrNotMap is the error that the value being validated is not a map.
 	ErrNotMap = errors.New("only a map can be validated")
+
+	// ErrKeyWrongType is the error returned in case of an incorrect key type.
+	ErrKeyWrongType = NewError("validation_key_wrong_type", "key not the correct type")
+
+	// ErrKeyMissing is the error returned in case of a missing key.
+	ErrKeyMissing = NewError("validation_key_missing", "required key is missing")
+
+	// ErrKeyUnexpected is the error returned in case of an unexpected key.
+	ErrKeyUnexpected = NewError("validation_key_unexpected", "key not expected")
 )
 
 type (
-	// ErrKeyWrongType is the error that a key is the wrong type.
-	ErrKeyWrongType string
-
-	// ErrKeyNotFound is the error that a key cannot be found in the map.
-	ErrKeyNotFound string
+	// MapRule represents a rule set associated with a map.
+	MapRule struct {
+		keys           []*KeyRules
+		allowExtraKeys bool
+	}
 
 	// KeyRules represents a rule set associated with a map key.
 	KeyRules struct {
@@ -26,43 +35,34 @@ type (
 	}
 )
 
-// Error returns the error string of ErrKeyWrongType.
-func (e ErrKeyWrongType) Error() string {
-	return fmt.Sprintf("key %q is the wrong type", string(e))
-}
-
-// Error returns the error string of ErrKeyNotFound.
-func (e ErrKeyNotFound) Error() string {
-	return fmt.Sprintf("key %q cannot be found in the map", string(e))
-}
-
-// ValidateMap validates a map by checking the specified map keys against the corresponding validation rules.
-// Note that if the value is nil, it is considered valid.
-// Use Key() to specify map keys that need to be validated. Each Key() call specifies a single key. A key can
+// Map returns a validation rule that checks the keys and values of a map.
+// This rule should only be used for validating maps, or a validation error will be reported.
+// Use Key() to specify map keys that need to be validated. Each Key() call specifies a single key which can
 // be associated with multiple rules.
 // For example,
-//
-//    value := map[string]string{
-//        "Name":  "name",
-//        "Value": "demo",
-//    }
-//    err := validation.ValidateMap(value,
-//         validation.Key("Name", validation.Required),
-//         validation.Key("Value", validation.Required, validation.Length(5, 10)),
+//    validation.Map(
+//        validation.Key("Name", validation.Required),
+//        validation.Key("Value", validation.Required, validation.Length(5, 10)),
 //    )
-//    fmt.Println(err)
-//    // Value: the length must be between 5 and 10.
 //
-// An error will be returned if validation fails.
-func ValidateMap(m interface{}, keys ...*KeyRules) error {
-	return ValidateMapWithContext(nil, m, keys...)
+// A nil value is considered valid. Use the Required rule to make sure a map value is present.
+func Map(keys ...*KeyRules) MapRule {
+	return MapRule{keys: keys}
 }
 
-// ValidateMapWithContext validates a map with the given context.
-// The only difference between ValidateMapWithContext and ValidateMap is that the former will
-// validate map keys with the provided context.
-// Please refer to ValidateMap for the detailed instructions on how to use this function.
-func ValidateMapWithContext(ctx context.Context, m interface{}, keys ...*KeyRules) error {
+// AllowExtraKeys configures the rule to ignore extra keys.
+func (r MapRule) AllowExtraKeys() MapRule {
+	r.allowExtraKeys = true
+	return r
+}
+
+// Validate checks if the given value is valid or not.
+func (r MapRule) Validate(m interface{}) error {
+	return r.ValidateWithContext(nil, m)
+}
+
+// ValidateWithContext checks if the given value is valid or not.
+func (r MapRule) ValidateWithContext(ctx context.Context, m interface{}) error {
 	value := reflect.ValueOf(m)
 	if value.Kind() == reflect.Ptr {
 		value = value.Elem()
@@ -79,17 +79,21 @@ func ValidateMapWithContext(ctx context.Context, m interface{}, keys ...*KeyRule
 	errs := Errors{}
 	kt := value.Type().Key()
 
-	for _, kr := range keys {
-		kv := reflect.ValueOf(kr.key)
-		if !kt.AssignableTo(kv.Type()) {
-			return NewInternalError(ErrKeyWrongType(getErrorKeyName(kr.key)))
+	var extraKeys map[interface{}]bool
+	if !r.allowExtraKeys {
+		extraKeys = make(map[interface{}]bool, value.Len())
+		for _, k := range value.MapKeys() {
+			extraKeys[k.Interface()] = true
 		}
-		vv := value.MapIndex(kv)
-		if !vv.IsValid() {
-			return NewInternalError(ErrKeyNotFound(getErrorKeyName(kr.key)))
-		}
+	}
+
+	for _, kr := range r.keys {
 		var err error
-		if ctx == nil {
+		if kv := reflect.ValueOf(kr.key); !kt.AssignableTo(kv.Type()) {
+			err = ErrKeyWrongType
+		} else if vv := value.MapIndex(kv); !vv.IsValid() {
+			err = ErrKeyMissing
+		} else if ctx == nil {
 			err = Validate(vv.Interface(), kr.rules...)
 		} else {
 			err = ValidateWithContext(ctx, vv.Interface(), kr.rules...)
@@ -99,6 +103,15 @@ func ValidateMapWithContext(ctx context.Context, m interface{}, keys ...*KeyRule
 				return err
 			}
 			errs[getErrorKeyName(kr.key)] = err
+		}
+		if !r.allowExtraKeys {
+			delete(extraKeys, kr.key)
+		}
+	}
+
+	if !r.allowExtraKeys {
+		for key := range extraKeys {
+			errs[getErrorKeyName(key)] = ErrKeyUnexpected
 		}
 	}
 
@@ -119,20 +132,4 @@ func Key(key interface{}, rules ...Rule) *KeyRules {
 // getErrorKeyName returns the name that should be used to represent the validation error of a map key.
 func getErrorKeyName(key interface{}) string {
 	return fmt.Sprintf("%v", key)
-}
-
-type MapRule struct {
-	keys []*KeyRules
-}
-
-func (r *MapRule) Validate(value interface{}) error {
-	return ValidateMap(value, r.keys...)
-}
-
-func (r *MapRule) ValidateWithContext(ctx context.Context, value interface{}) error {
-	return ValidateMapWithContext(ctx, value, r.keys...)
-}
-
-func Map(keys ...*KeyRules) *MapRule {
-	return &MapRule{keys}
 }

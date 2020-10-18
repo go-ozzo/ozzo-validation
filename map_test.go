@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestValidateMap(t *testing.T) {
+func TestMap(t *testing.T) {
 	var m0 map[string]interface{}
 	m1 := map[string]interface{}{"A": "abc", "B": "xyz", "c": "abc", "D": (*string)(nil), "F": (*String123)(nil), "H": []string{"abc", "abc"}, "I": map[string]string{"foo": "abc"}}
 	m2 := map[string]interface{}{"E": String123("xyz"), "F": (*String123)(nil)}
@@ -41,8 +41,8 @@ func TestValidateMap(t *testing.T) {
 		{"t3.4", &m0, []*KeyRules{}, ""},
 		{"t3.5", 123, []*KeyRules{}, ErrNotMap.Error()},
 		// invalid key spec
-		{"t4.1", m1, []*KeyRules{Key(123)}, ErrKeyWrongType("123").Error()},
-		{"t4.2", m1, []*KeyRules{Key("X")}, ErrKeyNotFound("X").Error()},
+		{"t4.1", m1, []*KeyRules{Key(123)}, "123: key not the correct type."},
+		{"t4.2", m1, []*KeyRules{Key("X")}, "X: required key is missing."},
 		// non-string keys
 		{"t5.1", m6, []*KeyRules{Key(11, &validateAbc{}), Key(22, &validateXyz{})}, ""},
 		{"t5.2", m6, []*KeyRules{Key(11, &validateXyz{}), Key(22, &validateAbc{})}, "11: error xyz; 22: error abc."},
@@ -68,21 +68,21 @@ func TestValidateMap(t *testing.T) {
 		{"t9.1", m5, []*KeyRules{Key("A", &validateAbc{}), Key("B", Required), Key("A", &validateInternalError{})}, "error internal"},
 	}
 	for _, test := range tests {
-		err1 := ValidateMap(test.model, test.rules...)
-		err2 := ValidateMapWithContext(context.Background(), test.model, test.rules...)
+		err1 := Validate(test.model, Map(test.rules...).AllowExtraKeys())
+		err2 := ValidateWithContext(context.Background(), test.model, Map(test.rules...).AllowExtraKeys())
 		assertError(t, test.err, err1, test.tag)
 		assertError(t, test.err, err2, test.tag)
 	}
 
-	a := map[string]interface{}{"Name": "name", "Value": "demo"}
-	err := ValidateMap(a,
+	a := map[string]interface{}{"Name": "name", "Value": "demo", "Extra": true}
+	err := Validate(a, Map(
 		Key("Name", Required),
 		Key("Value", Required, Length(5, 10)),
-	)
-	assert.EqualError(t, err, "Value: the length must be between 5 and 10.")
+	))
+	assert.EqualError(t, err, "Extra: key not expected; Value: the length must be between 5 and 10.")
 }
 
-func TestValidateMapWithContext(t *testing.T) {
+func TestMapWithContext(t *testing.T) {
 	m1 := map[string]interface{}{"A": "abc", "B": "xyz", "c": "abc", "g": "xyz"}
 	m2 := map[string]interface{}{"A": "internal", "B": ""}
 	tests := []struct {
@@ -103,16 +103,16 @@ func TestValidateMapWithContext(t *testing.T) {
 		{"t3.1", m2, []*KeyRules{Key("A", &validateContextAbc{}), Key("B", Required), Key("A", &validateInternalError{})}, "error internal"},
 	}
 	for _, test := range tests {
-		err := ValidateMapWithContext(context.Background(), test.model, test.rules...)
+		err := ValidateWithContext(context.Background(), test.model, Map(test.rules...).AllowExtraKeys())
 		assertError(t, test.err, err, test.tag)
 	}
 
-	a := map[string]interface{}{"Name": "name", "Value": "demo"}
-	err := ValidateMapWithContext(context.Background(), a,
+	a := map[string]interface{}{"Name": "name", "Value": "demo", "Extra": true}
+	err := ValidateWithContext(context.Background(), a, Map(
 		Key("Name", Required),
 		Key("Value", Required, Length(5, 10)),
-	)
+	))
 	if assert.NotNil(t, err) {
-		assert.Equal(t, "Value: the length must be between 5 and 10.", err.Error())
+		assert.Equal(t, "Extra: key not expected; Value: the length must be between 5 and 10.", err.Error())
 	}
 }

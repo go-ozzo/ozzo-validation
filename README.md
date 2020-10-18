@@ -126,7 +126,7 @@ If a rule fails, an error is recorded for that field, and the validation will co
 
 ### Validating a Map
 
-Sometimes you might need to work with dynamic data stored in maps rather than a typed model. You can use `validation.ValidateMap()`
+Sometimes you might need to work with dynamic data stored in maps rather than a typed model. You can use `validation.Map()`
 in this situation. A single map can have rules for multiple keys, and a key can be associated with multiple 
 rules. For example,
 
@@ -142,29 +142,31 @@ c := map[string]interface{}{
 	},
 }
 
-err := validation.ValidateMap(c,
-	// Name cannot be empty, and the length must be between 5 and 20.
-	validation.Key("Name", validation.Required, validation.Length(5, 20)),
-	// Email cannot be empty and should be in a valid email format.
-	validation.Key("Email", validation.Required, is.Email),
-	// Validate Address using its own validation rules
-	validation.Key("Address", validation.Map(
-		// Street cannot be empty, and the length must between 5 and 50
-		validation.Key("Street", validation.Required, validation.Length(5, 50)),
-		// City cannot be empty, and the length must between 5 and 50
-		validation.Key("City", validation.Required, validation.Length(5, 50)),
-		// State cannot be empty, and must be a string consisting of two letters in upper case
-		validation.Key("State", validation.Required, validation.Match(regexp.MustCompile("^[A-Z]{2}$"))),
-		// State cannot be empty, and must be a string consisting of five digits
-		validation.Key("Zip", validation.Required, validation.Match(regexp.MustCompile("^[0-9]{5}$"))),
-	)),
+err := validation.Validate(c,
+	validation.Map(
+		// Name cannot be empty, and the length must be between 5 and 20.
+		validation.Key("Name", validation.Required, validation.Length(5, 20)),
+		// Email cannot be empty and should be in a valid email format.
+		validation.Key("Email", validation.Required, is.Email),
+		// Validate Address using its own validation rules
+		validation.Key("Address", validation.Map(
+			// Street cannot be empty, and the length must between 5 and 50
+			validation.Key("Street", validation.Required, validation.Length(5, 50)),
+			// City cannot be empty, and the length must between 5 and 50
+			validation.Key("City", validation.Required, validation.Length(5, 50)),
+			// State cannot be empty, and must be a string consisting of two letters in upper case
+			validation.Key("State", validation.Required, validation.Match(regexp.MustCompile("^[A-Z]{2}$"))),
+			// State cannot be empty, and must be a string consisting of five digits
+			validation.Key("Zip", validation.Required, validation.Match(regexp.MustCompile("^[0-9]{5}$"))),
+		)),
+	),
 )
 fmt.Println(err)
 // Output:
 // Address: (State: must be in a valid format; Street: the length must be between 5 and 50.); Email: must be a valid email address.
 ```
 
-When the map validation is performed, the keys are validated in the order they are specified in `ValidateMap`. 
+When the map validation is performed, the keys are validated in the order they are specified in `Map`. 
 And when each key is validated, its rules are also evaluated in the order they are associated with the key.
 If a rule fails, an error is recorded for that key, and the validation will continue with the next key.
 
