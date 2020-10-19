@@ -10,10 +10,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestMultipleof(t *testing.T) {
-	r := MultipleOf(int(10))
-	assert.Equal(t, "must be multiple of 10", r.Validate(int(11)).Error())
-	assert.Equal(t, nil, r.Validate(int(20)))
+func TestMultipleOf(t *testing.T) {
+	r := MultipleOf(10)
+	assert.Equal(t, "must be multiple of 10", r.Validate(11).Error())
+	assert.Equal(t, nil, r.Validate(20))
 	assert.Equal(t, "cannot convert float32 to int64", r.Validate(float32(20)).Error())
 
 	r2 := MultipleOf("some string ....")
@@ -26,7 +26,7 @@ func TestMultipleof(t *testing.T) {
 
 }
 
-func Test_Multipleof_Error(t *testing.T) {
+func Test_MultipleOf_Error(t *testing.T) {
 	r := MultipleOf(10)
 	assert.Equal(t, "must be multiple of 10", r.Validate(3).Error())
 
