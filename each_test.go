@@ -1,6 +1,9 @@
 package validation
 
 import (
+	"context"
+	"errors"
+	"strings"
 	"testing"
 )
 
@@ -34,6 +37,38 @@ func TestEach(t *testing.T) {
 	for _, test := range tests {
 		r := Each(Required)
 		err := r.Validate(test.value)
+		assertError(t, test.err, err, test.tag)
+	}
+}
+
+func TestEachWithContext(t *testing.T) {
+	rule := Each(WithContext(func(ctx context.Context, value interface{}) error {
+		if !strings.Contains(value.(string), ctx.Value("contains").(string)) {
+			return errors.New("unexpected value")
+		}
+		return nil
+	}))
+	ctx1 := context.WithValue(context.Background(), "contains", "abc")
+	ctx2 := context.WithValue(context.Background(), "contains", "xyz")
+
+	tests := []struct {
+		tag   string
+		value interface{}
+		ctx   context.Context
+		err   string
+	}{
+		{"t1.1", map[string]string{"key": "abc"}, ctx1, ""},
+		{"t1.2", map[string]string{"key": "abc"}, ctx2, "key: unexpected value."},
+		{"t1.3", map[string]string{"key": "xyz"}, ctx1, "key: unexpected value."},
+		{"t1.4", map[string]string{"key": "xyz"}, ctx2, ""},
+		{"t1.5", []string{"abc"}, ctx1, ""},
+		{"t1.6", []string{"abc"}, ctx2, "0: unexpected value."},
+		{"t1.7", []string{"xyz"}, ctx1, "0: unexpected value."},
+		{"t1.8", []string{"xyz"}, ctx2, ""},
+	}
+
+	for _, test := range tests {
+		err := ValidateWithContext(test.ctx, test.value, rule)
 		assertError(t, test.err, err, test.tag)
 	}
 }
