@@ -43,6 +43,7 @@ func TestMap(t *testing.T) {
 		// invalid key spec
 		{"t4.1", m1, []*KeyRules{Key(123)}, "123: key not the correct type."},
 		{"t4.2", m1, []*KeyRules{Key("X")}, "X: required key is missing."},
+		{"t4.3", m1, []*KeyRules{Key("X").Optional()}, ""},
 		// non-string keys
 		{"t5.1", m6, []*KeyRules{Key(11, &validateAbc{}), Key(22, &validateXyz{})}, ""},
 		{"t5.2", m6, []*KeyRules{Key(11, &validateXyz{}), Key(22, &validateAbc{})}, "11: error xyz; 22: error abc."},

@@ -30,8 +30,9 @@ type (
 
 	// KeyRules represents a rule set associated with a map key.
 	KeyRules struct {
-		key   interface{}
-		rules []Rule
+		key      interface{}
+		optional bool
+		rules    []Rule
 	}
 )
 
@@ -92,7 +93,9 @@ func (r MapRule) ValidateWithContext(ctx context.Context, m interface{}) error {
 		if kv := reflect.ValueOf(kr.key); !kt.AssignableTo(kv.Type()) {
 			err = ErrKeyWrongType
 		} else if vv := value.MapIndex(kv); !vv.IsValid() {
-			err = ErrKeyMissing
+			if !kr.optional {
+				err = ErrKeyMissing
+			}
 		} else if ctx == nil {
 			err = Validate(vv.Interface(), kr.rules...)
 		} else {
@@ -127,6 +130,12 @@ func Key(key interface{}, rules ...Rule) *KeyRules {
 		key:   key,
 		rules: rules,
 	}
+}
+
+// Optional configures the rule to ignore the key if missing.
+func (r *KeyRules) Optional() *KeyRules {
+	r.optional = true
+	return r
 }
 
 // getErrorKeyName returns the name that should be used to represent the validation error of a map key.
