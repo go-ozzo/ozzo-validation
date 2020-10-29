@@ -57,15 +57,21 @@ func TestWhen(t *testing.T) {
 	}
 }
 
+type ctxKey int
+
+const (
+	contains ctxKey = iota
+)
+
 func TestWhenWithContext(t *testing.T) {
 	rule := WithContext(func(ctx context.Context, value interface{}) error {
-		if !strings.Contains(value.(string), ctx.Value("contains").(string)) {
+		if !strings.Contains(value.(string), ctx.Value(contains).(string)) {
 			return errors.New("unexpected value")
 		}
 		return nil
 	})
-	ctx1 := context.WithValue(context.Background(), "contains", "abc")
-	ctx2 := context.WithValue(context.Background(), "contains", "xyz")
+	ctx1 := context.WithValue(context.Background(), contains, "abc")
+	ctx2 := context.WithValue(context.Background(), contains, "xyz")
 
 	tests := []struct {
 		tag       string

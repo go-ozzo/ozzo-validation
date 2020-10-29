@@ -43,13 +43,13 @@ func TestEach(t *testing.T) {
 
 func TestEachWithContext(t *testing.T) {
 	rule := Each(WithContext(func(ctx context.Context, value interface{}) error {
-		if !strings.Contains(value.(string), ctx.Value("contains").(string)) {
+		if !strings.Contains(value.(string), ctx.Value(contains).(string)) {
 			return errors.New("unexpected value")
 		}
 		return nil
 	}))
-	ctx1 := context.WithValue(context.Background(), "contains", "abc")
-	ctx2 := context.WithValue(context.Background(), "contains", "xyz")
+	ctx1 := context.WithValue(context.Background(), contains, "abc")
+	ctx2 := context.WithValue(context.Background(), contains, "xyz")
 
 	tests := []struct {
 		tag   string

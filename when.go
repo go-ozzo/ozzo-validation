@@ -28,16 +28,14 @@ func (r WhenRule) ValidateWithContext(ctx context.Context, value interface{}) er
 	if r.condition {
 		if ctx == nil {
 			return Validate(value, r.rules...)
-		} else {
-			return ValidateWithContext(ctx, value, r.rules...)
 		}
+		return ValidateWithContext(ctx, value, r.rules...)
 	}
 
 	if ctx == nil {
 		return Validate(value, r.elseRules...)
-	} else {
-		return ValidateWithContext(ctx, value, r.elseRules...)
 	}
+	return ValidateWithContext(ctx, value, r.elseRules...)
 }
 
 // Else returns a validation rule that executes the given list of rules when the condition is false.
