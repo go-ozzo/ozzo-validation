@@ -9,7 +9,6 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
-	"time"
 )
 
 var (
@@ -117,10 +116,7 @@ func IsEmpty(value interface{}) bool {
 		}
 		return IsEmpty(v.Elem().Interface())
 	case reflect.Struct:
-		v, ok := value.(time.Time)
-		if ok && v.IsZero() {
-			return true
-		}
+		return v.IsZero()
 	}
 
 	return false
