@@ -170,6 +170,123 @@ When the map validation is performed, the keys are validated in the order they a
 And when each key is validated, its rules are also evaluated in the order they are associated with the key.
 If a rule fails, an error is recorded for that key, and the validation will continue with the next key.
 
+#### Allowing Extra Keys
+
+By default, `validation.Map()` will return an `Extra: key not expected` error if there's unexpected key inside the map (you have to specify all expected keys in the validation rules).
+
+```go
+c := map[string]interface{}{
+	"Name":  "Qiang Xue",
+	"Email": "q",
+	"Address": map[string]interface{}{
+		"Street": "123",
+		"City":   "Unknown",
+	},
+}
+
+err := validation.Validate(c,
+	validation.Map(
+		// Name cannot be empty, and the length must be between 5 and 20.
+		validation.Key("Name", validation.Required, validation.Length(5, 20)),
+		// Validate Address using its own validation rules
+		validation.Key("Address", validation.Map(
+			// Street cannot be empty.
+			validation.Key("Street", validation.Required),
+		)),
+	),
+)
+fmt.Println(err)
+// Output:
+// Address: (City: key not expected); Email: key not expected.
+```
+
+If you need to allow extra keys, you can achieve this by using `validation.Map().AllowExtraKeys()`, or `validation.DynamicMap()`.
+
+```go
+err := validation.Validate(c,
+	validation.Map(
+		// Name cannot be empty, and the length must be between 5 and 20.
+		validation.Key("Name", validation.Required, validation.Length(5, 20)),
+		// Validate Address using its own validation rules
+		validation.Key("Address", validation.Map(
+			// Street cannot be empty.
+			validation.Key("Street", validation.Required),
+		).AllowExtraKeys()),
+	).AllowExtraKeys(),
+)
+fmt.Println(err)
+// Output:
+// ""
+
+err2 := validation.Validate(c,
+	validation.DynamicMap(
+		// Name cannot be empty, and the length must be between 5 and 20.
+		validation.Key("Name", validation.Required, validation.Length(5, 20)),
+		// Validate Address using its own validation rules
+		validation.Key("Address", validation.DynamicMap(
+			// Street cannot be empty.
+			validation.Key("Street", validation.Required),
+		)),
+	),
+)
+fmt.Println(err2)
+// Output:
+// ""
+```
+
+#### Allowing Optional Keys
+
+By default, `validation.Key()` expect the key to be provided and will return an `XXX: required key is missing.` error if the key doesn't exist in the map.
+
+```go
+c := map[string]interface{}{
+	"Name":  "Qiang Xue",
+}
+
+err := validation.Validate(c,
+	validation.Map(
+		// Name cannot be empty, and the length must be between 5 and 20.
+		validation.Key("Name", validation.Required, validation.Length(5, 20)),
+		// Email cannot be empty and should be in a valid email format.
+		validation.Key("Email", validation.Required, is.Email),
+	),
+)
+fmt.Println(err)
+// Output:
+// Email: required key is missing.
+```
+
+If you need to allow optional key, you can achieve this by using `validation.Key().Optional()` or `validation.OptionalKey()`.
+
+```go
+c := map[string]interface{}{
+	"Name":  "Qiang Xue",
+}
+
+err := validation.Validate(c,
+	validation.Map(
+		// Name cannot be empty, and the length must be between 5 and 20.
+		validation.Key("Name", validation.Required, validation.Length(5, 20)),
+		// Email is optional, when it exists, it cannot be empty and should be in a valid email format.
+		validation.Key("Email", validation.Required, is.Email).Optional(),
+	),
+)
+fmt.Println(err)
+// Output:
+// ""
+
+err2 := validation.Validate(c,
+	validation.Map(
+		// Name cannot be empty, and the length must be between 5 and 20.
+		validation.Key("Name", validation.Required, validation.Length(5, 20)),
+		// Email is optional, when it exists, it cannot be empty and should be in a valid email format.
+		validation.OptionalKey("Email", validation.Required, is.Email),
+	),
+)
+fmt.Println(err2)
+// Output:
+// ""
+```
 
 ### Validation Errors
 
