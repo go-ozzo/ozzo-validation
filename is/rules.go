@@ -84,7 +84,7 @@ var (
 	ErrBase64 = validation.NewError("validation_is_base64", "must be encoded in Base64")
 	// ErrDataURI is the error that returns in case of an invalid data URI.
 	ErrDataURI = validation.NewError("validation_is_data_uri", "must be a Base64-encoded data URI")
-	// ErrE164 is the error that returns in case of an invalid e165.
+	// ErrE164 is the error that returns in case of an invalid e164.
 	ErrE164 = validation.NewError("validation_is_e164_number", "must be a valid E164 number")
 	// ErrCountryCode2 is the error that returns in case of an invalid two-letter country code.
 	ErrCountryCode2 = validation.NewError("validation_is_country_code_2_letter", "must be a valid two-letter country code")
@@ -197,7 +197,7 @@ var (
 	Base64 = validation.NewStringRuleWithError(govalidator.IsBase64, ErrBase64)
 	// DataURI validates if a string is a valid base64-encoded data URI
 	DataURI = validation.NewStringRuleWithError(govalidator.IsDataURI, ErrDataURI)
-	// E164 validates if a string is a valid ISO3166 Alpha 2 country code
+	// E164 validates if a string is a valid E164 telephone number
 	E164 = validation.NewStringRuleWithError(isE164Number, ErrE164)
 	// CountryCode2 validates if a string is a valid ISO3166 Alpha 2 country code
 	CountryCode2 = validation.NewStringRuleWithError(govalidator.IsISO3166Alpha2, ErrCountryCode2)
