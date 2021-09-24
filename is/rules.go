@@ -197,7 +197,7 @@ var (
 	Base64 = validation.NewStringRuleWithError(govalidator.IsBase64, ErrBase64)
 	// DataURI validates if a string is a valid base64-encoded data URI
 	DataURI = validation.NewStringRuleWithError(govalidator.IsDataURI, ErrDataURI)
-	// E164 validates if a string is a valid ISO3166 Alpha 2 country code
+	// E164 validates if a string is a valid E164 telephone number
 	E164 = validation.NewStringRuleWithError(isE164Number, ErrE164)
 	// CountryCode2 validates if a string is a valid ISO3166 Alpha 2 country code
 	CountryCode2 = validation.NewStringRuleWithError(govalidator.IsISO3166Alpha2, ErrCountryCode2)
