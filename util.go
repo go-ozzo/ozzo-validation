@@ -12,9 +12,27 @@ import (
 	"time"
 )
 
+// Interface for transforming values to validation proxies.
+//
+// The input is the value to transform and the output is
+// the new value and a boolean whether the value was
+// actually transformed.
+type ValidationValuer func(interface{}) (interface{}, bool)
+
+// Default tranformation function to convert sql.driver.Valuer
+// based values
+func sqlValueValuer(orig interface{}) (interface{}, bool) {
+	if valuer, ok := orig.(driver.Valuer); ok {
+		if value, err := valuer.Value(); err == nil {
+			return value, true
+		}
+	}
+	return orig, false
+}
+
 var (
-	bytesType  = reflect.TypeOf([]byte(nil))
-	valuerType = reflect.TypeOf((*driver.Valuer)(nil)).Elem()
+	bytesType          = reflect.TypeOf([]byte(nil))
+	getValidationProxy = sqlValueValuer
 )
 
 // EnsureString ensures the given value is a string.
@@ -148,16 +166,15 @@ func Indirect(value interface{}) (interface{}, bool) {
 		}
 	}
 
-	if rv.Type().Implements(valuerType) {
-		return indirectValuer(value.(driver.Valuer))
+	if getValidationProxy != nil {
+		if val, ok := getValidationProxy(value); ok {
+			return Indirect(val)
+		}
 	}
 
 	return value, false
 }
 
-func indirectValuer(valuer driver.Valuer) (interface{}, bool) {
-	if value, err := valuer.Value(); value != nil && err == nil {
-		return Indirect(value)
-	}
-	return nil, true
+func SetValidationValuer(valuer ValidationValuer) {
+	getValidationProxy = valuer
 }
