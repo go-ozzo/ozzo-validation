@@ -666,6 +666,7 @@ Below is the whole list of the rules provided by the `is` package:
 * `UUIDv4`: validates if a string is a valid version 4 UUID
 * `UUIDv5`: validates if a string is a valid version 5 UUID
 * `UUID`: validates if a string is a valid UUID
+* `ULID`: validates if a string is a valid ULID
 * `CreditCard`: validates if a string is a valid credit card number
 * `ISBN10`: validates if a string is an ISBN version 10
 * `ISBN13`: validates if a string is an ISBN version 13
