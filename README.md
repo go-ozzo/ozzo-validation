@@ -93,8 +93,8 @@ func (a Address) Validate() error {
 	return validation.ValidateStruct(&a,
 		// Street cannot be empty, and the length must between 5 and 50
 		validation.Field(&a.Street, validation.Required, validation.Length(5, 50)),
-		// City cannot be empty, and the length must between 5 and 50
-		validation.Field(&a.City, validation.Required, validation.Length(5, 50)),
+		// City cannot be empty, and the length must between 1 and 50
+		validation.Field(&a.City, validation.Required, validation.Length(1, 50)),
 		// State cannot be empty, and must be a string consisting of two letters in upper case
 		validation.Field(&a.State, validation.Required, validation.Match(regexp.MustCompile("^[A-Z]{2}$"))),
 		// State cannot be empty, and must be a string consisting of five digits
@@ -152,8 +152,8 @@ err := validation.Validate(c,
 		validation.Key("Address", validation.Map(
 			// Street cannot be empty, and the length must between 5 and 50
 			validation.Key("Street", validation.Required, validation.Length(5, 50)),
-			// City cannot be empty, and the length must between 5 and 50
-			validation.Key("City", validation.Required, validation.Length(5, 50)),
+			// City cannot be empty, and the length must between 1 and 50
+			validation.Key("City", validation.Required, validation.Length(1, 50)),
 			// State cannot be empty, and must be a string consisting of two letters in upper case
 			validation.Key("State", validation.Required, validation.Match(regexp.MustCompile("^[A-Z]{2}$"))),
 			// State cannot be empty, and must be a string consisting of five digits
