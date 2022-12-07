@@ -6,6 +6,7 @@ package validation
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"testing"
 
@@ -205,4 +206,95 @@ func Test_getErrorFieldName(t *testing.T) {
 	jsonIgnoredField := findStructField(v1, reflect.ValueOf(&s1.JSONIgnoredField))
 	assert.NotNil(t, jsonIgnoredField)
 	assert.Equal(t, "JSONIgnoredField", getErrorFieldName(jsonIgnoredField))
+}
+
+func TestFindStructFieldJSONName(t *testing.T) {
+	type args struct {
+		structPtr interface{}
+		fieldPtr  interface{}
+	}
+	type testStruct struct {
+		name    string
+		args    args
+		want    string
+		wantErr assert.ErrorAssertionFunc
+		initFn  func(tt *testStruct)
+	}
+	tests := []testStruct{
+		{
+			name:    "find field JSON tag succeeds",
+			args:    args{},
+			want:    "some_json_field",
+			wantErr: assert.NoError,
+			initFn: func(tt *testStruct) {
+				struct1 := &Struct1{}
+				tt.args.structPtr = struct1
+				tt.args.fieldPtr = &struct1.JSONField
+			},
+		},
+		{
+			name:    "nil struct pointer succeeds with bo error and empty JSON name",
+			args:    args{},
+			want:    "",
+			wantErr: assert.NoError,
+			initFn: func(tt *testStruct) {
+				tt.args.structPtr = (*Struct1)(nil)
+				tt.args.fieldPtr = nil
+			},
+		},
+		{
+			name:    "plain old nil pointer fails",
+			args:    args{},
+			want:    "",
+			wantErr: assert.Error,
+			initFn: func(tt *testStruct) {
+				tt.args.structPtr = nil
+				tt.args.fieldPtr = nil
+			},
+		},
+		{
+			name:    "pointer to non-struct fails",
+			args:    args{},
+			want:    "",
+			wantErr: assert.Error,
+			initFn: func(tt *testStruct) {
+				var value int
+				tt.args.structPtr = &value
+				tt.args.fieldPtr = nil
+			},
+		},
+		{
+			name:    "nil field pointer fails",
+			args:    args{},
+			want:    "",
+			wantErr: assert.Error,
+			initFn: func(tt *testStruct) {
+				struct1 := &Struct1{}
+				tt.args.structPtr = struct1
+				tt.args.fieldPtr = nil
+			},
+		},
+		{
+			name:    "field pointer to a different struct fails",
+			args:    args{},
+			want:    "",
+			wantErr: assert.Error,
+			initFn: func(tt *testStruct) {
+				struct1 := &Struct1{}
+				struct2 := &Struct2{}
+				tt.args.structPtr = struct1
+				tt.args.fieldPtr = &struct2.Field21
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.initFn(&tt)
+			got, err := FindStructFieldJSONName(tt.args.structPtr, tt.args.fieldPtr)
+			if !tt.wantErr(t, err, fmt.Sprintf("FindStructFieldJSONName(%v, %v)", tt.args.structPtr, tt.args.fieldPtr)) {
+				return
+			}
+			assert.Equalf(t, tt.want, got, "FindStructFieldJSONName(%v, %v)", tt.args.structPtr, tt.args.fieldPtr)
+		})
+	}
 }
