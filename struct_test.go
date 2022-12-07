@@ -233,7 +233,7 @@ func TestFindStructFieldJSONName(t *testing.T) {
 			},
 		},
 		{
-			name:    "nil struct pointer succeeds with bo error and empty JSON name",
+			name:    "nil struct pointer succeeds with no error and empty JSON name",
 			args:    args{},
 			want:    "",
 			wantErr: assert.NoError,
