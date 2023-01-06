@@ -128,8 +128,8 @@ func Field(fieldPtr interface{}, rules ...Rule) *FieldRules {
 	}
 }
 
-// FindStructFieldJSONName gets the value of the `json` tag for the given field in the given struct
-func FindStructFieldJSONName(structPtr interface{}, fieldPtr interface{}) (string, error) {
+// ErrorFieldName gets the value of the `json` tag for the given field in the given struct
+func ErrorFieldName(structPtr interface{}, fieldPtr interface{}) (string, error) {
 	value := reflect.ValueOf(structPtr)
 	if value.Kind() != reflect.Ptr || !value.IsNil() && value.Elem().Kind() != reflect.Struct {
 		// must be a pointer to a struct

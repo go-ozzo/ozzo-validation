@@ -290,11 +290,11 @@ func TestFindStructFieldJSONName(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.initFn(&tt)
-			got, err := FindStructFieldJSONName(tt.args.structPtr, tt.args.fieldPtr)
-			if !tt.wantErr(t, err, fmt.Sprintf("FindStructFieldJSONName(%v, %v)", tt.args.structPtr, tt.args.fieldPtr)) {
+			got, err := ErrorFieldName(tt.args.structPtr, tt.args.fieldPtr)
+			if !tt.wantErr(t, err, fmt.Sprintf("ErrorFieldName(%v, %v)", tt.args.structPtr, tt.args.fieldPtr)) {
 				return
 			}
-			assert.Equalf(t, tt.want, got, "FindStructFieldJSONName(%v, %v)", tt.args.structPtr, tt.args.fieldPtr)
+			assert.Equalf(t, tt.want, got, "ErrorFieldName(%v, %v)", tt.args.structPtr, tt.args.fieldPtr)
 		})
 	}
 }
