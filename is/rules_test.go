@@ -64,7 +64,13 @@ func TestAll(t *testing.T) {
 		{"CountryCode3", CountryCode3, "USA", "XYZ", "must be a valid three-letter country code"},
 		{"CurrencyCode", CurrencyCode, "USD", "USS", "must be valid ISO 4217 currency code"},
 		{"DialString", DialString, "localhost.local:1", "localhost.loc:100000", "must be a valid dial string"},
-		{"DataURI", DataURI, "data:image/png;base64,TG9yZW0gaXBzdW0gZG9sb3Igc2l0IGFtZXQsIGNvbnNlY3RldHVyIGFkaXBpc2NpbmcgZWxpdC4=", "image/gif;base64,U3VzcGVuZGlzc2UgbGVjdHVzIGxlbw==", "must be a Base64-encoded data URI"},
+		{
+			"DataURI",
+			DataURI,
+			"data:image/png;base64,TG9yZW0gaXBzdW0gZG9sb3Igc2l0IGFtZXQsIGNvbnNlY3RldHVyIGFkaXBpc2NpbmcgZWxpdC4=",
+			"image/gif;base64,U3VzcGVuZGlzc2UgbGVjdHVzIGxlbw==",
+			"must be a Base64-encoded data URI",
+		},
 		{"Base64", Base64, "TG9yZW0gaXBzdW0gZG9sb3Igc2l0IGFtZXQsIGNvbnNlY3RldHVyIGFkaXBpc2NpbmcgZWxpdC4=", "image", "must be encoded in Base64"},
 		{"Multibyte", Multibyte, "ａｂｃ", "abc", "must contain multibyte characters"},
 		{"FullWidth", FullWidth, "３ー０", "abc", "must contain full-width characters"},
@@ -76,6 +82,7 @@ func TestAll(t *testing.T) {
 		{"Int", Int, "100", "1.1", "must be an integer number"},
 		{"Float", Float, "1.1", "a.1", "must be a floating point number"},
 		{"VariableWidth", VariableWidth, "", "", ""},
+		{"KSUID", KSUID, "2KdzQdkTNtDLhC7Zjr1dF0C0BfV", "2KdzQdkTNtDLhC7Zjr1dF0C0Bf", "must be a valid KSUID"},
 	}
 
 	for _, test := range tests {

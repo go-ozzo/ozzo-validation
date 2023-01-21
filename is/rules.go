@@ -11,6 +11,7 @@ import (
 
 	"github.com/asaskevich/govalidator"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
+	"github.com/segmentio/ksuid"
 )
 
 var (
@@ -122,6 +123,8 @@ var (
 	ErrSSN = validation.NewError("validation_is_ssn", "must be a valid social security number")
 	// ErrSemver is the error that returns in case of an invalid semver.
 	ErrSemver = validation.NewError("validation_is_semver", "must be a valid semantic version")
+	// ErrKSUID is the error that returns in case of an invalid ksuid.
+	ErrKSUID = validation.NewError("validation_is_ksuid", "must be a valid KSUID")
 )
 
 var (
@@ -235,6 +238,8 @@ var (
 	SSN = validation.NewStringRuleWithError(govalidator.IsSSN, ErrSSN)
 	// Semver validates if a string is a valid semantic version
 	Semver = validation.NewStringRuleWithError(govalidator.IsSemver, ErrSemver)
+	// KSUID validates if a string is a valid KSUID
+	KSUID = validation.NewStringRuleWithError(isKSUID, ErrKSUID)
 )
 
 var (
@@ -278,6 +283,13 @@ func isUTFNumeric(value string) bool {
 		if unicode.IsNumber(c) == false {
 			return false
 		}
+	}
+	return true
+}
+
+func isKSUID(value string) bool {
+	if _, err := ksuid.Parse(value); err != nil {
+		return false
 	}
 	return true
 }
