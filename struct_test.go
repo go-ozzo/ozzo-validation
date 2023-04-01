@@ -7,6 +7,7 @@ package validation
 import (
 	"context"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -21,8 +22,9 @@ type Struct1 struct {
 	Struct2
 	S1               *Struct2
 	S2               Struct2
-	JSONField        int `json:"some_json_field"`
-	JSONIgnoredField int `json:"-"`
+	JSONField        int    `json:"some_json_field"`
+	ProtobufField    string `protobuf:"bytes,1,opt,name=some_protobuf_field,json=someProtobufField,proto3" json:"some_protobuf_field,omitempty"`
+	JSONIgnoredField int    `json:"-"`
 }
 
 type Struct2 struct {
@@ -171,7 +173,7 @@ func TestValidateStructWithContext(t *testing.T) {
 		assertError(t, test.err, err, test.tag)
 	}
 
-	//embedded struct
+	// embedded struct
 	err := ValidateWithContext(context.Background(), &m3)
 	if assert.NotNil(t, err) {
 		assert.Equal(t, "A: error abc.", err.Error())
@@ -196,13 +198,28 @@ func Test_getErrorFieldName(t *testing.T) {
 
 	sf1 := findStructField(v1, reflect.ValueOf(&s1.Field1))
 	assert.NotNil(t, sf1)
-	assert.Equal(t, "Field1", getErrorFieldName(sf1))
+	assert.Equal(t, "Field1", GetErrorFieldName(sf1))
 
 	jsonField := findStructField(v1, reflect.ValueOf(&s1.JSONField))
 	assert.NotNil(t, jsonField)
-	assert.Equal(t, "some_json_field", getErrorFieldName(jsonField))
+	assert.Equal(t, "some_json_field", GetErrorFieldName(jsonField))
 
 	jsonIgnoredField := findStructField(v1, reflect.ValueOf(&s1.JSONIgnoredField))
 	assert.NotNil(t, jsonIgnoredField)
-	assert.Equal(t, "JSONIgnoredField", getErrorFieldName(jsonIgnoredField))
+	assert.Equal(t, "JSONIgnoredField", GetErrorFieldName(jsonIgnoredField))
+
+	// sample override of default GetErrorFieldName
+	GetErrorFieldName = func(f *reflect.StructField) string {
+		if tag := f.Tag.Get("protobuf"); tag != "" && tag != "-" {
+			for _, v := range strings.Split(tag, ",") {
+				if vs := strings.Split(v, "="); len(vs) == 2 && vs[0] == "json" {
+					return vs[1]
+				}
+			}
+		}
+		return f.Name
+	}
+	protobufField := findStructField(v1, reflect.ValueOf(&s1.ProtobufField))
+	assert.NotNil(t, protobufField)
+	assert.Equal(t, "someProtobufField", GetErrorFieldName(protobufField))
 }
