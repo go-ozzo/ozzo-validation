@@ -15,6 +15,8 @@ import (
 var (
 	// ErrStructPointer is the error that a struct being validated is not specified as a pointer.
 	ErrStructPointer = errors.New("only a pointer to a struct can be validated")
+	// GetErrorFieldName is used to get a field name, overriding the default
+	GetErrorFieldName func(f *reflect.StructField) string = getErrorFieldName
 )
 
 type (
@@ -47,16 +49,16 @@ func (e ErrFieldNotFound) Error() string {
 // should be specified as a pointer to the field. A field can be associated with multiple rules.
 // For example,
 //
-//    value := struct {
-//        Name  string
-//        Value string
-//    }{"name", "demo"}
-//    err := validation.ValidateStruct(&value,
-//        validation.Field(&a.Name, validation.Required),
-//        validation.Field(&a.Value, validation.Required, validation.Length(5, 10)),
-//    )
-//    fmt.Println(err)
-//    // Value: the length must be between 5 and 10.
+//	value := struct {
+//	    Name  string
+//	    Value string
+//	}{"name", "demo"}
+//	err := validation.ValidateStruct(&value,
+//	    validation.Field(&a.Name, validation.Required),
+//	    validation.Field(&a.Value, validation.Required, validation.Length(5, 10)),
+//	)
+//	fmt.Println(err)
+//	// Value: the length must be between 5 and 10.
 //
 // An error will be returned if validation fails.
 func ValidateStruct(structPtr interface{}, fields ...*FieldRules) error {
@@ -109,7 +111,7 @@ func ValidateStructWithContext(ctx context.Context, structPtr interface{}, field
 					continue
 				}
 			}
-			errs[getErrorFieldName(ft)] = err
+			errs[GetErrorFieldName(ft)] = err
 		}
 	}
 
