@@ -1,4 +1,4 @@
-module github.com/go-ozzo/ozzo-validation/v4
+module github.com/micaelAlastor/ozzo-rfc7807-validation
 
 go 1.13
 

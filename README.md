@@ -51,8 +51,8 @@ package main
 import (
 	"fmt"
 
-	"github.com/go-ozzo/ozzo-validation/v4"
-	"github.com/go-ozzo/ozzo-validation/v4/is"
+	"github.com/micaelAlastor/ozzo-rfc7807-validation"
+	"github.com/micaelAlastor/ozzo-rfc7807-validation/is"
 )
 
 func main() {
