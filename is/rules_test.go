@@ -76,6 +76,8 @@ func TestAll(t *testing.T) {
 		{"Int", Int, "100", "1.1", "must be an integer number"},
 		{"Float", Float, "1.1", "a.1", "must be a floating point number"},
 		{"VariableWidth", VariableWidth, "", "", ""},
+		{"Origin", Origin, "https://example.com", "example.com", "must be a valid origin"},
+		{"Origin", Origin, "https://127.0.0.1:8080", "ws://example.com", "must be a valid origin"},
 	}
 
 	for _, test := range tests {
