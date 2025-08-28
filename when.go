@@ -1,4 +1,4 @@
-package validation
+package ozzo
 
 import "context"
 

@@ -2,7 +2,7 @@
 // Use of this source code is governed by a MIT-style
 // license that can be found in the LICENSE file.
 
-package validation
+package ozzo
 
 // ErrNotNilRequired is the error that returns when a value is Nil.
 var ErrNotNilRequired = NewError("validation_not_nil_required", "is required")

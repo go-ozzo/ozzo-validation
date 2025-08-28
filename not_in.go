@@ -2,7 +2,7 @@
 // Use of this source code is governed by a MIT-style
 // license that can be found in the LICENSE file.
 
-package validation
+package ozzo
 
 // ErrNotInInvalid is the error that returns when a value is in a list.
 var ErrNotInInvalid = NewError("validation_not_in_invalid", "must not be in list")
