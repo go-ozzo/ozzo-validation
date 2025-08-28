@@ -8,6 +8,7 @@
 ## Fork changes
 
 - `ozzo.Each` passes the value into the validator without automatically dereferencing it.
+- Added `is.ULID`.
 
 ## Description
 
