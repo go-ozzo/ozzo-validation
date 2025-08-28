@@ -5,6 +5,10 @@
 [![Coverage Status](https://coveralls.io/repos/github/daetabased/ozzo/badge.svg?branch=master)](https://coveralls.io/github/daetabased/ozzo?branch=master)
 [![Go Report](https://goreportcard.com/badge/github.com/daetabased/ozzo)](https://goreportcard.com/report/github.com/daetabased/ozzo)
 
+## Fork changes
+
+- `ozzo.Each` passes the value into the validator without automatically dereferencing it.
+
 ## Description
 
 ozzo is a Go package that provides configurable and extensible data validation capabilities.

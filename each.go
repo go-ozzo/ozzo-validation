@@ -38,7 +38,7 @@ func (r EachRule) ValidateWithContext(ctx context.Context, value interface{}) er
 	switch v.Kind() {
 	case reflect.Map:
 		for _, k := range v.MapKeys() {
-			val := r.getInterface(v.MapIndex(k))
+			val := v.MapIndex(k).Interface()
 			var err error
 			if ctx == nil {
 				err = Validate(val, r.rules...)
@@ -51,7 +51,7 @@ func (r EachRule) ValidateWithContext(ctx context.Context, value interface{}) er
 		}
 	case reflect.Slice, reflect.Array:
 		for i := 0; i < v.Len(); i++ {
-			val := r.getInterface(v.Index(i))
+			val := v.Index(i).Interface()
 			var err error
 			if ctx == nil {
 				err = Validate(val, r.rules...)
@@ -70,18 +70,6 @@ func (r EachRule) ValidateWithContext(ctx context.Context, value interface{}) er
 		return errs
 	}
 	return nil
-}
-
-func (r EachRule) getInterface(value reflect.Value) interface{} {
-	switch value.Kind() {
-	case reflect.Ptr, reflect.Interface:
-		if value.IsNil() {
-			return nil
-		}
-		return value.Elem().Interface()
-	default:
-		return value.Interface()
-	}
 }
 
 func (r EachRule) getString(value reflect.Value) string {

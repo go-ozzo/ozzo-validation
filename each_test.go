@@ -3,6 +3,7 @@ package ozzo
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 	"testing"
 )
@@ -36,6 +37,51 @@ func TestEach(t *testing.T) {
 
 	for _, test := range tests {
 		r := Each(Required)
+		err := r.Validate(test.value)
+		assertError(t, test.err, err, test.tag)
+	}
+}
+
+func TestEachPassesWithoutDeref(t *testing.T) {
+	type structPtr struct{}
+	type structVal struct{}
+
+	structurePtr := structPtr{}
+	structureVal := structVal{}
+	str := "string"
+	slice := []string{"a", "b", "c"}
+
+	ruleFunc := func() RuleFunc {
+		return func(value interface{}) error {
+			_, ok1 := value.(*structPtr)
+			_, ok2 := value.(structVal)
+			_, ok3 := value.(*string)
+			_, ok4 := value.(*[]string)
+
+			if !(ok1 || ok2 || ok3 || ok4) {
+				return fmt.Errorf("expected to receive a *structPtr, structVal, *string, or *[]string, but got %T", value)
+			}
+
+			return nil
+		}
+	}
+
+	tests := []struct {
+		tag   string
+		value interface{}
+		err   string
+	}{
+		{"t1", []*structPtr{&structurePtr}, ""},
+		{"t2", []structVal{structureVal}, ""},
+		{"t3", []*string{&str}, ""},
+		{"t4", []*[]string{&slice}, ""},
+		{"t5", map[string]*structPtr{"structure": &structurePtr}, ""},
+		{"t6", map[string]*string{"str": &str}, ""},
+		{"t7", map[string]*[]string{"str": &slice}, ""},
+	}
+
+	for _, test := range tests {
+		r := Each(By(ruleFunc()))
 		err := r.Validate(test.value)
 		assertError(t, test.err, err, test.tag)
 	}
