@@ -35,6 +35,17 @@ func TestErrors_Error(t *testing.T) {
 	assert.Equal(t, "", errs.Error())
 }
 
+func TestErrors_ErrorNilEntry(t *testing.T) {
+	// Calling Error() must not panic when a key maps to a nil error
+	// (e.g. validation.Errors populated with a nil value before filtering).
+	errs := Errors{
+		"A": errors.New("A1"),
+		"B": nil,
+		"C": errors.New("C1"),
+	}
+	assert.Equal(t, "A: A1; C: C1.", errs.Error())
+}
+
 func TestErrors_MarshalMessage(t *testing.T) {
 	errs := Errors{
 		"A": errors.New("A1"),
