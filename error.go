@@ -127,10 +127,15 @@ func (es Errors) Error() string {
 	sort.Strings(keys)
 
 	var s strings.Builder
-	for i, key := range keys {
-		if i > 0 {
+	count := 0
+	for _, key := range keys {
+		if es[key] == nil {
+			continue
+		}
+		if count > 0 {
 			s.WriteString("; ")
 		}
+		count++
 		if errs, ok := es[key].(Errors); ok {
 			_, _ = fmt.Fprintf(&s, "%v: (%v)", key, errs)
 		} else {
