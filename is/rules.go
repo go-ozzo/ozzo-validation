@@ -126,6 +126,8 @@ var (
 	ErrSSN = validation.NewError("validation_is_ssn", "must be a valid social security number")
 	// ErrSemver is the error that returns in case of an invalid semver.
 	ErrSemver = validation.NewError("validation_is_semver", "must be a valid semantic version")
+	// ErrOrigin is the error that returns in case of an invalid origin.
+	ErrOrigin = validation.NewError("validation_is_origin", "must be a valid origin")
 )
 
 var (
@@ -243,6 +245,8 @@ var (
 	SSN = validation.NewStringRuleWithError(govalidator.IsSSN, ErrSSN)
 	// Semver validates if a string is a valid semantic version
 	Semver = validation.NewStringRuleWithError(govalidator.IsSemver, ErrSemver)
+	// Origin validates if a string is valid origin
+	Origin = validation.NewStringRuleWithError(isOrigin, ErrOrigin)
 )
 
 var (
@@ -255,6 +259,8 @@ var (
 	// Slightly modified: Removed 255 max length validation since Go regex does not
 	// support lookarounds. More info: https://stackoverflow.com/a/38935027
 	reDomain = regexp.MustCompile(`^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+(?:[a-zA-Z]{1,63}| xn--[a-z0-9]{1,59})$`)
+	// Origin regex: scheme + host + optional port, no path. Labels must not start/end with hyphen.
+	reOrigin = regexp.MustCompile(`^https?://([a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?\.)*[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(:\d{1,5})?$`)
 )
 
 func isISBN(value string) bool {
@@ -288,6 +294,13 @@ func isUTFNumeric(value string) bool {
 		}
 	}
 	return true
+}
+
+func isOrigin(value string) bool {
+	if len(value) > 255 {
+		return false
+	}
+	return reOrigin.MatchString(value)
 }
 
 func isUUIDv7(value string) bool {

@@ -78,6 +78,11 @@ func TestAll(t *testing.T) {
 		{"Int", Int, "100", "1.1", "must be an integer number"},
 		{"Float", Float, "1.1", "a.1", "must be a floating point number"},
 		{"VariableWidth", VariableWidth, "", "", ""},
+		{"Origin_https", Origin, "https://example.com", "example.com", "must be a valid origin"},
+		{"Origin_port", Origin, "https://127.0.0.1:8080", "ws://example.com", "must be a valid origin"},
+		{"Origin_http", Origin, "http://localhost", "ftp://example.com", "must be a valid origin"},
+		{"Origin_subdomain", Origin, "https://sub.example.com", "https://", "must be a valid origin"},
+		{"Origin_localhost_port", Origin, "http://localhost:3000", "https://-invalid.com", "must be a valid origin"},
 	}
 
 	for _, test := range tests {
