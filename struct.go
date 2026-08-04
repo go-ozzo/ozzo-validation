@@ -86,7 +86,10 @@ func ValidateStructWithContext(ctx context.Context, structPtr interface{}, field
 		if fv.Kind() != reflect.Ptr {
 			return NewInternalError(ErrFieldPointer(i))
 		}
-		ft := findStructField(value, fv)
+		ft := findStructFieldCached(value, fv)
+		if ft == nil {
+			ft = findStructField(value, fv)
+		}
 		if ft == nil {
 			return NewInternalError(ErrFieldNotFound(i))
 		}
