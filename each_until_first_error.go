@@ -5,45 +5,64 @@
 package validation
 
 import (
+	"context"
 	"errors"
 	"reflect"
 	"strconv"
 )
 
-// EachUntilFirstError is the same as Each but stops early once the first item with a validation error was encountered.
-// Use this instead of Each for array's or maps that may potentially contain ten-thousands of erroneous items and
-// you want to avoid returning ten-thousands of validation errors (for memory and cpu reasons).
+// EachUntilFirstError returns a validation rule that loops through the given iterable (map, slice, or array)
+// and validates each item with the given rules. It stops at the first item that has a validation error.
+// Use this instead of Each for collections that may contain many erroneous items and you want to avoid
+// generating a large number of validation errors.
 func EachUntilFirstError(rules ...Rule) EachUntilFirstErrorRule {
 	return EachUntilFirstErrorRule{
 		rules: rules,
 	}
 }
 
-// EachUntilFirstErrorRule is the same as EachRule but stops early once the first item with a validation error was encountered.
-// Use this instead of EachRule for array's or maps that may potentially contain ten-thousands of erroneous items and
-// you want to avoid returning ten-thousands of validation errors (for memory and cpu reasons).
+// EachUntilFirstErrorRule is a validation rule that validates each item in an iterable
+// and stops at the first error. See EachUntilFirstError().
 type EachUntilFirstErrorRule struct {
 	rules []Rule
 }
 
-// Validate loops through the given iterable and calls the Ozzo Validate() method for each value.
+// Validate loops through the given iterable and validates each value, stopping at the first error.
 func (r EachUntilFirstErrorRule) Validate(value interface{}) error {
+	return r.ValidateWithContext(nil, value)
+}
+
+// ValidateWithContext loops through the given iterable and validates each value with context,
+// stopping at the first error.
+func (r EachUntilFirstErrorRule) ValidateWithContext(ctx context.Context, value interface{}) error {
 	errs := Errors{}
 
 	v := reflect.ValueOf(value)
 	switch v.Kind() {
 	case reflect.Map:
 		for _, k := range v.MapKeys() {
-			val := r.getInterface(v.MapIndex(k))
-			if err := Validate(val, r.rules...); err != nil {
-				errs[r.getString(k)] = err
+			val := getIterableInterface(v.MapIndex(k))
+			var err error
+			if ctx == nil {
+				err = Validate(val, r.rules...)
+			} else {
+				err = ValidateWithContext(ctx, val, r.rules...)
+			}
+			if err != nil {
+				errs[getIterableString(k)] = err
 				break
 			}
 		}
 	case reflect.Slice, reflect.Array:
 		for i := 0; i < v.Len(); i++ {
-			val := r.getInterface(v.Index(i))
-			if err := Validate(val, r.rules...); err != nil {
+			val := getIterableInterface(v.Index(i))
+			var err error
+			if ctx == nil {
+				err = Validate(val, r.rules...)
+			} else {
+				err = ValidateWithContext(ctx, val, r.rules...)
+			}
+			if err != nil {
 				errs[strconv.Itoa(i)] = err
 				break
 			}
@@ -56,28 +75,4 @@ func (r EachUntilFirstErrorRule) Validate(value interface{}) error {
 		return errs
 	}
 	return nil
-}
-
-func (r EachUntilFirstErrorRule) getInterface(value reflect.Value) interface{} {
-	switch value.Kind() {
-	case reflect.Ptr, reflect.Interface:
-		if value.IsNil() {
-			return nil
-		}
-		return value.Elem().Interface()
-	default:
-		return value.Interface()
-	}
-}
-
-func (r EachUntilFirstErrorRule) getString(value reflect.Value) string {
-	switch value.Kind() {
-	case reflect.Ptr, reflect.Interface:
-		if value.IsNil() {
-			return ""
-		}
-		return value.Elem().String()
-	default:
-		return value.String()
-	}
 }
