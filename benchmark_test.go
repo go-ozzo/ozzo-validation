@@ -15,6 +15,8 @@ type benchStruct struct {
 	Zip    string
 }
 
+var benchZipRegex = regexp.MustCompile(`^\d{5}$`)
+
 func BenchmarkValidateStruct(b *testing.B) {
 	s := benchStruct{
 		Name:   "John Doe",
@@ -33,7 +35,7 @@ func BenchmarkValidateStruct(b *testing.B) {
 			Field(&s.Age, Required, Min(1), Max(150)),
 			Field(&s.Street, Required, Length(1, 200)),
 			Field(&s.City, Required, Length(1, 100)),
-			Field(&s.Zip, Required, Match(regexp.MustCompile(`^\d{5}$`))),
+			Field(&s.Zip, Required, Match(benchZipRegex)),
 		)
 	}
 }
