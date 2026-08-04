@@ -23,7 +23,6 @@ func TestMultipleOf(t *testing.T) {
 	assert.Equal(t, "must be multiple of 10", r3.Validate(uint(11)).Error())
 	assert.Equal(t, nil, r3.Validate(uint(20)))
 	assert.Equal(t, "cannot convert float32 to uint64", r3.Validate(float32(20)).Error())
-
 }
 
 func Test_MultipleOf_Error(t *testing.T) {
