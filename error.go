@@ -128,6 +128,9 @@ func (es Errors) Error() string {
 
 	var s strings.Builder
 	for i, key := range keys {
+		if es[key] == nil {
+			continue
+		}
 		if i > 0 {
 			s.WriteString("; ")
 		}
