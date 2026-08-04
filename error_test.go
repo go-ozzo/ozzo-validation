@@ -33,6 +33,16 @@ func TestErrors_Error(t *testing.T) {
 
 	errs = Errors{}
 	assert.Equal(t, "", errs.Error())
+
+	// issue #147: nil value should not cause panic
+	errs = Errors{
+		"A": errors.New("A1"),
+		"B": nil,
+		"C": errors.New("C1"),
+	}
+	assert.NotPanics(t, func() {
+		_ = errs.Error()
+	})
 }
 
 func TestErrors_MarshalMessage(t *testing.T) {

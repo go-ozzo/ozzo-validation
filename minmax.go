@@ -77,7 +77,7 @@ func (r ThresholdRule) Exclusive() ThresholdRule {
 // Validate checks if the given value is valid or not.
 func (r ThresholdRule) Validate(value interface{}) error {
 	value, isNil := Indirect(value)
-	if isNil || IsEmpty(value) {
+	if isNil {
 		return nil
 	}
 
@@ -119,7 +119,7 @@ func (r ThresholdRule) Validate(value interface{}) error {
 		if !ok {
 			return fmt.Errorf("cannot convert %v to time.Time", reflect.TypeOf(value))
 		}
-		if v.IsZero() || r.compareTime(t, v) {
+		if r.compareTime(t, v) {
 			return nil
 		}
 
