@@ -60,6 +60,8 @@ var (
 	ErrUUIDv7 = validation.NewError("validation_is_uuid_v7", "must be a valid UUID v7")
 	// ErrUUID is the error that returns in case of an invalid UUID value.
 	ErrUUID = validation.NewError("validation_is_uuid", "must be a valid UUID")
+	// ErrULID is the error that returns in case of an invalid ULID value.
+	ErrULID = validation.NewError("validation_is_ulid", "must be a valid ULID")
 	// ErrCreditCard is the error that returns in case of an invalid credit card number.
 	ErrCreditCard = validation.NewError("validation_is_credit_card", "must be a valid credit card number")
 	// ErrISBN10 is the error that returns in case of an invalid ISBN-10 value.
@@ -175,6 +177,8 @@ var (
 	UUIDv7 = validation.NewStringRuleWithError(isUUIDv7, ErrUUIDv7)
 	// UUID validates if a string is a valid UUID
 	UUID = validation.NewStringRuleWithError(govalidator.IsUUID, ErrUUID)
+	// ULID validates if a string is a valid ULID
+	ULID = validation.NewStringRuleWithError(govalidator.IsULID, ErrULID)
 	// CreditCard validates if a string is a valid credit card number
 	CreditCard = validation.NewStringRuleWithError(govalidator.IsCreditCard, ErrCreditCard)
 	// ISBN10 validates if a string is an ISBN version 10
