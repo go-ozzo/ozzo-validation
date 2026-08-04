@@ -50,11 +50,11 @@ func TestFindStructField(t *testing.T) {
 	assert.NotNil(t, findStructField(v1, reflect.ValueOf(&s1.S1)))
 	assert.NotNil(t, findStructField(v1, reflect.ValueOf(&s1.Field21)))
 	assert.NotNil(t, findStructField(v1, reflect.ValueOf(&s1.Field22)))
-	assert.NotNil(t, findStructField(v1, reflect.ValueOf(&s1.Struct2.Field22)))
+	assert.NotNil(t, findStructField(v1, reflect.ValueOf(&s1.Field22)))
 	s2 := reflect.ValueOf(&s1.Struct2).Elem()
 	assert.NotNil(t, findStructField(s2, reflect.ValueOf(&s1.Field21)))
-	assert.NotNil(t, findStructField(s2, reflect.ValueOf(&s1.Struct2.Field21)))
-	assert.NotNil(t, findStructField(s2, reflect.ValueOf(&s1.Struct2.Field22)))
+	assert.NotNil(t, findStructField(s2, reflect.ValueOf(&s1.Field21)))
+	assert.NotNil(t, findStructField(s2, reflect.ValueOf(&s1.Field22)))
 	s3 := Struct3{
 		Struct2: &Struct2{},
 	}
@@ -171,7 +171,7 @@ func TestValidateStructWithContext(t *testing.T) {
 		assertError(t, test.err, err, test.tag)
 	}
 
-	//embedded struct
+	// embedded struct
 	err := ValidateWithContext(context.Background(), &m3)
 	if assert.NotNil(t, err) {
 		assert.Equal(t, "A: error abc.", err.Error())
