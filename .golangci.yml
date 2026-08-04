@@ -1,0 +1,149 @@
+version: "2"
+
+run:
+  timeout: 5m
+  tests: true
+
+linters:
+  enable:
+    # Complexity
+    - gocyclo
+    - gocognit
+    - funlen
+    - nestif
+
+    # Bug detection
+    - govet
+    - staticcheck
+    - errcheck
+    - gosec
+    - nilnil
+    - nilerr
+    - ineffassign
+
+    # Style
+    - misspell
+    - whitespace
+    - unconvert
+    - unparam
+
+    # Naming
+    - revive
+
+    # Performance
+    - prealloc
+
+    # Code practices
+    - goconst
+    - gocritic
+    - goprintffuncname
+    - nolintlint
+    - nakedret
+
+    # Duplication
+    - dupl
+    - durationcheck
+
+  settings:
+    govet:
+      enable:
+        - copylocks
+      disable:
+        - fieldalignment
+
+    gocyclo:
+      min-complexity: 20
+
+    funlen:
+      lines: 120
+      statements: 60
+
+    gocognit:
+      min-complexity: 35
+
+    misspell:
+      locale: US
+
+    nestif:
+      min-complexity: 6
+
+    revive:
+      rules:
+        - name: var-naming
+        - name: error-return
+        - name: error-naming
+        - name: if-return
+        - name: increment-decrement
+        - name: var-declaration
+        - name: range
+        - name: receiver-naming
+        - name: time-naming
+        - name: unexported-return
+        - name: indent-error-flow
+        - name: errorf
+        - name: empty-block
+        - name: superfluous-else
+        - name: unreachable-code
+        - name: redefines-builtin-id
+
+    gocritic:
+      enabled-tags:
+        - diagnostic
+        - performance
+
+      disabled-checks:
+        - commentFormatting
+        - whyNoLint
+        - unnamedResult
+        - commentedOutCode
+        - paramTypeCombine
+        - builtinShadow
+        - ifElseChain
+        - regexpSimplify
+
+      settings:
+        hugeParam:
+          sizeThreshold: 256
+
+  exclusions:
+    rules:
+      - path: _test\.go
+        linters:
+          - gocyclo
+          - funlen
+          - errcheck
+          - gosec
+          - goconst
+          - dupl
+          - gocognit
+
+      # Intentional test for unknown struct tag option
+      - path: string_test\.go
+        linters:
+          - staticcheck
+        text: "SA5008"
+
+      # Legacy public API types — cannot rename without breaking changes
+      - linters:
+          - errname
+        text: "ErrorObject|Errors|ErrFieldPointer|ErrFieldNotFound"
+
+      # Legacy pattern: nil context passed to WithContext variants
+      - linters:
+          - staticcheck
+        text: "SA1012"
+
+      # Legacy pattern: type assertions on errors (changing would break API)
+      - linters:
+          - errorlint
+        text: "type assertion on error"
+
+      # Go 1.22+ inlining suggestions for reflect constants
+      - linters:
+          - govet
+        text: "inline"
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  new: false
