@@ -1,0 +1,53 @@
+name: Benchmark
+
+# Historical Benchmark Tracking:
+# - Runs on push to master (track performance over time)
+# - Stores results on gh-pages branch for visualization
+# - Alerts on >150% regression (comment on commit, no CI failure)
+# - View results: https://go-ozzo.github.io/ozzo-validation/dev/bench/
+
+on:
+  push:
+    branches: [master]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'LICENSE'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  benchmark:
+    name: Benchmark
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v7
+
+    - name: Set up Go
+      uses: actions/setup-go@v7
+      with:
+        go-version: '1.25'
+        cache: true
+
+    - name: Run benchmarks
+      run: |
+        go test -bench=. -benchmem -run=^$ ./... > benchmark_results.txt
+        cat benchmark_results.txt
+
+    - name: Store benchmark result
+      uses: benchmark-action/github-action-benchmark@v1
+      continue-on-error: true
+      if: github.ref == 'refs/heads/master'
+      with:
+        tool: 'go'
+        output-file-path: benchmark_results.txt
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        auto-push: true
+        alert-threshold: '150%'
+        comment-on-alert: true
+        fail-on-alert: false
+        benchmark-data-dir-path: dev/bench
