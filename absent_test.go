@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestRequired(t *testing.T) {
+func TestNil(t *testing.T) {
 	s1 := "123"
 	s2 := ""
 	var time1 time.Time
@@ -20,75 +20,79 @@ func TestRequired(t *testing.T) {
 		value interface{}
 		err   string
 	}{
-		{"t1", 123, ""},
-		{"t2", "", "cannot be blank"},
-		{"t3", &s1, ""},
-		{"t4", &s2, "cannot be blank"},
-		{"t5", nil, "cannot be blank"},
-		{"t6", time1, "cannot be blank"},
+		{"t1", 123, "must be blank"},
+		{"t2", "", "must be blank"},
+		{"t3", &s1, "must be blank"},
+		{"t4", &s2, "must be blank"},
+		{"t5", nil, ""},
+		{"t6", time1, "must be blank"},
 	}
 
 	for _, test := range tests {
-		r := Required
+		r := Nil
 		err := r.Validate(test.value)
 		assertError(t, test.err, err, test.tag)
 	}
 }
 
-func TestRequiredRule_When(t *testing.T) {
-	r := Required.When(false)
-	err := Validate(nil, r)
-	assert.Nil(t, err)
-
-	r = Required.When(true)
-	err = Validate(nil, r)
-	assert.Equal(t, ErrRequired, err)
-}
-
-func TestNilOrNotEmpty(t *testing.T) {
+func TestEmpty(t *testing.T) {
 	s1 := "123"
 	s2 := ""
+	time1 := time.Now()
+	var time2 time.Time
 	tests := []struct {
 		tag   string
 		value interface{}
 		err   string
 	}{
-		{"t1", 123, ""},
-		{"t2", "", "cannot be blank"},
-		{"t3", &s1, ""},
-		{"t4", &s2, "cannot be blank"},
+		{"t1", 123, "must be blank"},
+		{"t2", "", ""},
+		{"t3", &s1, "must be blank"},
+		{"t4", &s2, ""},
 		{"t5", nil, ""},
+		{"t6", time1, "must be blank"},
+		{"t7", time2, ""},
 	}
 
 	for _, test := range tests {
-		r := NilOrNotEmpty
+		r := Empty
 		err := r.Validate(test.value)
 		assertError(t, test.err, err, test.tag)
 	}
 }
 
-func Test_requiredRule_Error(t *testing.T) {
-	r := Required
-	assert.Equal(t, "cannot be blank", r.Validate(nil).Error())
+func TestAbsentRule_When(t *testing.T) {
+	r := Nil.When(false)
+	err := Validate(42, r)
+	assert.Nil(t, err)
+
+	r = Nil.When(true)
+	err = Validate(42, r)
+	assert.Equal(t, ErrNil, err)
+}
+
+func Test_absentRule_Error(t *testing.T) {
+	r := Nil
+	assert.Equal(t, "must be blank", r.Validate("42").Error())
 	assert.False(t, r.skipNil)
 	r2 := r.Error("123")
-	assert.Equal(t, "cannot be blank", r.Validate(nil).Error())
+	assert.Equal(t, "must be blank", r.Validate("42").Error())
 	assert.False(t, r.skipNil)
 	assert.Equal(t, "123", r2.err.Message())
 	assert.False(t, r2.skipNil)
 
-	r = NilOrNotEmpty
-	assert.Equal(t, "cannot be blank", r.Validate("").Error())
+	r = Empty
+	assert.Equal(t, "must be blank", r.Validate("42").Error())
 	assert.True(t, r.skipNil)
 	r2 = r.Error("123")
-	assert.Equal(t, "cannot be blank", r.Validate("").Error())
+	assert.Equal(t, "must be blank", r.Validate("42").Error())
 	assert.True(t, r.skipNil)
 	assert.Equal(t, "123", r2.err.Message())
 	assert.True(t, r2.skipNil)
 }
 
-func TestRequiredRule_Error(t *testing.T) {
-	r := Required
+func TestAbsentRule_Error(t *testing.T) {
+	r := Nil
 
 	err := NewError("code", "abc")
 	r = r.ErrorObject(err)
@@ -96,5 +100,5 @@ func TestRequiredRule_Error(t *testing.T) {
 	assert.Equal(t, err, r.err)
 	assert.Equal(t, err.Code(), r.err.Code())
 	assert.Equal(t, err.Message(), r.err.Message())
-	assert.NotEqual(t, err, Required.err)
+	assert.NotEqual(t, err, Nil.err)
 }

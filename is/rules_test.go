@@ -5,9 +5,10 @@
 package is
 
 import (
+	"strings"
 	"testing"
 
-	"github.com/go-ozzo/ozzo-validation/v3"
+	"github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -19,6 +20,7 @@ func TestAll(t *testing.T) {
 		err            string
 	}{
 		{"Email", Email, "test@example.com", "example.com", "must be a valid email address"},
+		{"EmailFormat", EmailFormat, "test@example.com", "example.com", "must be a valid email address"},
 		{"URL", URL, "http://example.com", "examplecom", "must be a valid URL"},
 		{"RequestURL", RequestURL, "http://example.com", "examplecom", "must be a valid request URL"},
 		{"RequestURI", RequestURI, "http://example.com", "examplecom", "must be a valid request URI"},
@@ -37,6 +39,7 @@ func TestAll(t *testing.T) {
 		{"MAC", MAC, "0123.4567.89ab", "74.125.19.99", "must be a valid MAC address"},
 		{"Subdomain", Subdomain, "example-subdomain", "example.com", "must be a valid subdomain"},
 		{"Domain", Domain, "example-domain.com", "localhost", "must be a valid domain"},
+		{"Domain", Domain, "example-domain.com", strings.Repeat("a", 256), "must be a valid domain"},
 		{"DNSName", DNSName, "example.com", "abc%", "must be a valid DNS name"},
 		{"Host", Host, "example.com", "abc%", "must be a valid IP address or DNS name"},
 		{"Port", Port, "123", "99999", "must be a valid port number"},
@@ -51,6 +54,8 @@ func TestAll(t *testing.T) {
 		{"UUIDv3", UUIDv3, "b987fbc9-4bed-3078-cf07-9141ba07c9f3", "b987fbc9-4bed-4078-cf07-9141ba07c9f3", "must be a valid UUID v3"},
 		{"UUIDv4", UUIDv4, "57b73598-8764-4ad0-a76a-679bb6640eb1", "b987fbc9-4bed-3078-cf07-9141ba07c9f3", "must be a valid UUID v4"},
 		{"UUIDv5", UUIDv5, "987fbc97-4bed-5078-af07-9141ba07c9f3", "b987fbc9-4bed-3078-cf07-9141ba07c9f3", "must be a valid UUID v5"},
+		{"UUIDv7", UUIDv7, "01890a5d-a4cc-7b6b-8000-000000000000", "b987fbc9-4bed-3078-cf07-9141ba07c9f3", "must be a valid UUID v7"},
+		{"ULID", ULID, "01ARZ3NDEKTSV4RRFFQ69G5FAV", "not-a-ulid", "must be a valid ULID"},
 		{"MongoID", MongoID, "507f1f77bcf86cd799439011", "507f1f77bcf86cd79943901", "must be a valid hex-encoded MongoDB ObjectId"},
 		{"CreditCard", CreditCard, "375556917985515", "375556917985516", "must be a valid credit card number"},
 		{"JSON", JSON, "[1, 2]", "[1, 2,]", "must be in valid JSON format"},

@@ -33,6 +33,8 @@ func TestLength(t *testing.T) {
 		{"t12", 2, 4, &sql.NullString{String: "abc", Valid: true}, ""},
 		{"t13", 2, 2, "abcdf", "the length must be exactly 2"},
 		{"t14", 2, 2, "ab", ""},
+		{"t15", 0, 0, "", ""},
+		{"t16", 0, 0, "ab", "the value must be empty"},
 	}
 
 	for _, test := range tests {
@@ -79,14 +81,27 @@ func TestRuneLength(t *testing.T) {
 
 func Test_LengthRule_Error(t *testing.T) {
 	r := Length(10, 20)
-	assert.Equal(t, "the length must be between 10 and 20", r.message)
+	assert.Equal(t, "the length must be between 10 and 20", r.Validate("abc").Error())
 
 	r = Length(0, 20)
-	assert.Equal(t, "the length must be no more than 20", r.message)
+	assert.Equal(t, "the length must be no more than 20", r.Validate(make([]string, 21)).Error())
 
 	r = Length(10, 0)
-	assert.Equal(t, "the length must be no less than 10", r.message)
+	assert.Equal(t, "the length must be no less than 10", r.Validate([9]string{}).Error())
+
+	r = Length(0, 0)
+	assert.Equal(t, "validation_length_empty_required", r.err.Code())
 
 	r = r.Error("123")
-	assert.Equal(t, "123", r.message)
+	assert.Equal(t, "123", r.err.Message())
+}
+
+func TestLengthRule_ErrorObject(t *testing.T) {
+	r := Length(10, 20)
+	err := NewError("code", "abc")
+	r = r.ErrorObject(err)
+
+	assert.Equal(t, err, r.err)
+	assert.Equal(t, err.Code(), r.err.Code())
+	assert.Equal(t, err.Message(), r.err.Message())
 }

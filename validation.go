@@ -51,7 +51,7 @@ var (
 	ErrorTag = "json"
 
 	// Skip is a special validation rule that indicates all rules following it should be skipped.
-	Skip = &skipRule{}
+	Skip = skipRule{skip: true}
 
 	validatableType            = reflect.TypeOf((*Validatable)(nil)).Elem()
 	validatableWithContextType = reflect.TypeOf((*ValidatableWithContext)(nil)).Elem()
@@ -60,14 +60,14 @@ var (
 // Validate validates the given value and returns the validation error, if any.
 //
 // Validate performs validation using the following steps:
-// 1. For each rule, call its `Validate()` to validate the value. Return if any error is found.
-// 2. If the value being validated implements `Validatable`, call the value's `Validate()`.
-//    Return with the validation result.
-// 3. If the value being validated is a map/slice/array, and the element type implements `Validatable`,
-//    for each element call the element value's `Validate()`. Return with the validation result.
+//  1. For each rule, call its `Validate()` to validate the value. Return if any error is found.
+//  2. If the value being validated implements `Validatable`, call the value's `Validate()`.
+//     Return with the validation result.
+//  3. If the value being validated is a map/slice/array, and the element type implements `Validatable`,
+//     for each element call the element value's `Validate()`. Return with the validation result.
 func Validate(value interface{}, rules ...Rule) error {
 	for _, rule := range rules {
-		if _, ok := rule.(*skipRule); ok {
+		if s, ok := rule.(skipRule); ok && s.skip {
 			return nil
 		}
 		if err := rule.Validate(value); err != nil {
@@ -103,19 +103,19 @@ func Validate(value interface{}, rules ...Rule) error {
 // ValidateWithContext validates the given value with the given context and returns the validation error, if any.
 //
 // ValidateWithContext performs validation using the following steps:
-// 1. For each rule, call its `ValidateWithContext()` to validate the value if the rule implements `RuleWithContext`.
-//    Otherwise call `Validate()` of the rule. Return if any error is found.
-// 2. If the value being validated implements `ValidatableWithContext`, call the value's `ValidateWithContext()`
-//    and return with the validation result.
-// 3. If the value being validated implements `Validatable`, call the value's `Validate()`
-//    and return with the validation result.
-// 4. If the value being validated is a map/slice/array, and the element type implements `ValidatableWithContext`,
-//    for each element call the element value's `ValidateWithContext()`. Return with the validation result.
-// 5. If the value being validated is a map/slice/array, and the element type implements `Validatable`,
-//    for each element call the element value's `Validate()`. Return with the validation result.
+//  1. For each rule, call its `ValidateWithContext()` to validate the value if the rule implements `RuleWithContext`.
+//     Otherwise call `Validate()` of the rule. Return if any error is found.
+//  2. If the value being validated implements `ValidatableWithContext`, call the value's `ValidateWithContext()`
+//     and return with the validation result.
+//  3. If the value being validated implements `Validatable`, call the value's `Validate()`
+//     and return with the validation result.
+//  4. If the value being validated is a map/slice/array, and the element type implements `ValidatableWithContext`,
+//     for each element call the element value's `ValidateWithContext()`. Return with the validation result.
+//  5. If the value being validated is a map/slice/array, and the element type implements `Validatable`,
+//     for each element call the element value's `Validate()`. Return with the validation result.
 func ValidateWithContext(ctx context.Context, value interface{}, rules ...Rule) error {
 	for _, rule := range rules {
-		if _, ok := rule.(*skipRule); ok {
+		if s, ok := rule.(skipRule); ok && s.skip {
 			return nil
 		}
 		if rc, ok := rule.(RuleWithContext); ok {
@@ -228,10 +228,18 @@ func validateSliceWithContext(ctx context.Context, rv reflect.Value) error {
 	return nil
 }
 
-type skipRule struct{}
+type skipRule struct {
+	skip bool
+}
 
-func (r *skipRule) Validate(interface{}) error {
+func (r skipRule) Validate(interface{}) error {
 	return nil
+}
+
+// When determines if all rules following it should be skipped.
+func (r skipRule) When(condition bool) skipRule {
+	r.skip = condition
+	return r
 }
 
 type inlineRule struct {

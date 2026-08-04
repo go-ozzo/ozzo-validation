@@ -5,10 +5,9 @@
 package validation
 
 import (
+	"database/sql"
 	"testing"
 	"time"
-
-	"database/sql"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -221,12 +220,12 @@ func TestIsEmpty(t *testing.T) {
 		{"t4.1", false, true},
 		{"t4.2", true, false},
 		// int
-		{"t5.1", int(0), true},
+		{"t5.1", 0, true},
 		{"t5.2", int8(0), true},
 		{"t5.3", int16(0), true},
 		{"t5.4", int32(0), true},
 		{"t5.5", int64(0), true},
-		{"t5.6", int(1), false},
+		{"t5.6", 1, false},
 		{"t5.7", int8(1), false},
 		{"t5.8", int16(1), false},
 		{"t5.9", int32(1), false},

@@ -19,8 +19,10 @@ type Struct1 struct {
 	Field4 [4]int
 	field5 int
 	Struct2
-	S1 *Struct2
-	S2 Struct2
+	S1               *Struct2
+	S2               Struct2
+	JSONField        int `json:"some_json_field"`
+	JSONIgnoredField int `json:"-"`
 }
 
 type Struct2 struct {
@@ -48,11 +50,11 @@ func TestFindStructField(t *testing.T) {
 	assert.NotNil(t, findStructField(v1, reflect.ValueOf(&s1.S1)))
 	assert.NotNil(t, findStructField(v1, reflect.ValueOf(&s1.Field21)))
 	assert.NotNil(t, findStructField(v1, reflect.ValueOf(&s1.Field22)))
-	assert.NotNil(t, findStructField(v1, reflect.ValueOf(&s1.Struct2.Field22)))
+	assert.NotNil(t, findStructField(v1, reflect.ValueOf(&s1.Field22)))
 	s2 := reflect.ValueOf(&s1.Struct2).Elem()
 	assert.NotNil(t, findStructField(s2, reflect.ValueOf(&s1.Field21)))
-	assert.NotNil(t, findStructField(s2, reflect.ValueOf(&s1.Struct2.Field21)))
-	assert.NotNil(t, findStructField(s2, reflect.ValueOf(&s1.Struct2.Field22)))
+	assert.NotNil(t, findStructField(s2, reflect.ValueOf(&s1.Field21)))
+	assert.NotNil(t, findStructField(s2, reflect.ValueOf(&s1.Field22)))
 	s3 := Struct3{
 		Struct2: &Struct2{},
 	}
@@ -84,7 +86,7 @@ func TestValidateStruct(t *testing.T) {
 		{"t2.4", &m1, []*FieldRules{Field(&m1.D, Length(0, 5))}, ""},
 		{"t2.5", &m1, []*FieldRules{Field(&m1.F, Length(0, 5))}, ""},
 		{"t2.6", &m1, []*FieldRules{Field(&m1.H, Each(&validateAbc{})), Field(&m1.I, Each(&validateAbc{}))}, ""},
-		{"t2.6", &m1, []*FieldRules{Field(&m1.H, Each(&validateXyz{})), Field(&m1.I, Each(&validateXyz{}))}, "H: (0: error xyz; 1: error xyz.); I: (foo: error xyz.)."},
+		{"t2.7", &m1, []*FieldRules{Field(&m1.H, Each(&validateXyz{})), Field(&m1.I, Each(&validateXyz{}))}, "H: (0: error xyz; 1: error xyz.); I: (foo: error xyz.)."},
 		// non-struct pointer
 		{"t3.1", m1, []*FieldRules{}, ErrStructPointer.Error()},
 		{"t3.2", nil, []*FieldRules{}, ErrStructPointer.Error()},
@@ -98,11 +100,17 @@ func TestValidateStruct(t *testing.T) {
 		// validatable field
 		{"t6.1", &m2, []*FieldRules{Field(&m2.E)}, "E: error 123."},
 		{"t6.2", &m2, []*FieldRules{Field(&m2.E, Skip)}, ""},
+		{"t6.3", &m2, []*FieldRules{Field(&m2.E, Skip.When(true))}, ""},
+		{"t6.4", &m2, []*FieldRules{Field(&m2.E, Skip.When(false))}, "E: error 123."},
 		// Required, NotNil
 		{"t7.1", &m2, []*FieldRules{Field(&m2.F, Required)}, "F: cannot be blank."},
 		{"t7.2", &m2, []*FieldRules{Field(&m2.F, NotNil)}, "F: is required."},
-		{"t7.3", &m2, []*FieldRules{Field(&m2.E, Required, Skip)}, ""},
-		{"t7.4", &m2, []*FieldRules{Field(&m2.E, NotNil, Skip)}, ""},
+		{"t7.3", &m2, []*FieldRules{Field(&m2.F, Skip, Required)}, ""},
+		{"t7.4", &m2, []*FieldRules{Field(&m2.F, Skip, NotNil)}, ""},
+		{"t7.5", &m2, []*FieldRules{Field(&m2.F, Skip.When(true), Required)}, ""},
+		{"t7.6", &m2, []*FieldRules{Field(&m2.F, Skip.When(true), NotNil)}, ""},
+		{"t7.7", &m2, []*FieldRules{Field(&m2.F, Skip.When(false), Required)}, "F: cannot be blank."},
+		{"t7.8", &m2, []*FieldRules{Field(&m2.F, Skip.When(false), NotNil)}, "F: is required."},
 		// embedded structs
 		{"t8.1", &m3, []*FieldRules{Field(&m3.M3, Skip)}, ""},
 		{"t8.2", &m3, []*FieldRules{Field(&m3.M3)}, "M3: (A: error abc.)."},
@@ -124,9 +132,7 @@ func TestValidateStruct(t *testing.T) {
 
 	// embedded struct
 	err := Validate(&m3)
-	if assert.NotNil(t, err) {
-		assert.Equal(t, "A: error abc.", err.Error())
-	}
+	assert.EqualError(t, err, "A: error abc.")
 
 	a := struct {
 		Name  string
@@ -136,9 +142,7 @@ func TestValidateStruct(t *testing.T) {
 		Field(&a.Name, Required),
 		Field(&a.Value, Required, Length(5, 10)),
 	)
-	if assert.NotNil(t, err) {
-		assert.Equal(t, "Value: the length must be between 5 and 10.", err.Error())
-	}
+	assert.EqualError(t, err, "Value: the length must be between 5 and 10.")
 }
 
 func TestValidateStructWithContext(t *testing.T) {
@@ -167,7 +171,7 @@ func TestValidateStructWithContext(t *testing.T) {
 		assertError(t, test.err, err, test.tag)
 	}
 
-	//embedded struct
+	// embedded struct
 	err := ValidateWithContext(context.Background(), &m3)
 	if assert.NotNil(t, err) {
 		assert.Equal(t, "A: error abc.", err.Error())
@@ -184,4 +188,21 @@ func TestValidateStructWithContext(t *testing.T) {
 	if assert.NotNil(t, err) {
 		assert.Equal(t, "Value: the length must be between 5 and 10.", err.Error())
 	}
+}
+
+func Test_getErrorFieldName(t *testing.T) {
+	var s1 Struct1
+	v1 := reflect.ValueOf(&s1).Elem()
+
+	sf1 := findStructField(v1, reflect.ValueOf(&s1.Field1))
+	assert.NotNil(t, sf1)
+	assert.Equal(t, "Field1", getErrorFieldName(sf1))
+
+	jsonField := findStructField(v1, reflect.ValueOf(&s1.JSONField))
+	assert.NotNil(t, jsonField)
+	assert.Equal(t, "some_json_field", getErrorFieldName(jsonField))
+
+	jsonIgnoredField := findStructField(v1, reflect.ValueOf(&s1.JSONIgnoredField))
+	assert.NotNil(t, jsonIgnoredField)
+	assert.Equal(t, "JSONIgnoredField", getErrorFieldName(jsonIgnoredField))
 }

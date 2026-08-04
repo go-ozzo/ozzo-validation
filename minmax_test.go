@@ -69,10 +69,10 @@ func TestMin(t *testing.T) {
 
 func TestMinError(t *testing.T) {
 	r := Min(10)
-	assert.Equal(t, "must be no less than 10", r.message)
+	assert.Equal(t, "must be no less than 10", r.Validate(9).Error())
 
 	r = r.Error("123")
-	assert.Equal(t, "123", r.message)
+	assert.Equal(t, "123", r.err.Message())
 }
 
 func TestMax(t *testing.T) {
@@ -131,8 +131,18 @@ func TestMax(t *testing.T) {
 
 func TestMaxError(t *testing.T) {
 	r := Max(10)
-	assert.Equal(t, "must be no greater than 10", r.message)
+	assert.Equal(t, "must be no greater than 10", r.Validate(11).Error())
 
 	r = r.Error("123")
-	assert.Equal(t, "123", r.message)
+	assert.Equal(t, "123", r.err.Message())
+}
+
+func TestThresholdRule_ErrorObject(t *testing.T) {
+	r := Max(10)
+	err := NewError("code", "abc")
+	r = r.ErrorObject(err)
+
+	assert.Equal(t, err, r.err)
+	assert.Equal(t, err.Code(), r.err.Code())
+	assert.Equal(t, err.Message(), r.err.Message())
 }

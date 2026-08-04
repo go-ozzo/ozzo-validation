@@ -38,7 +38,18 @@ func TestNotIn(t *testing.T) {
 
 func Test_NotInRule_Error(t *testing.T) {
 	r := NotIn(1, 2, 3)
-	assert.Equal(t, "must not be in list", r.message)
+	assert.Equal(t, "must not be in list", r.Validate(1).Error())
 	r = r.Error("123")
-	assert.Equal(t, "123", r.message)
+	assert.Equal(t, "123", r.err.Message())
+}
+
+func TestNotInRule_ErrorObject(t *testing.T) {
+	r := NotIn(1, 2, 3)
+
+	err := NewError("code", "abc")
+	r = r.ErrorObject(err)
+
+	assert.Equal(t, err, r.err)
+	assert.Equal(t, err.Code(), r.err.Code())
+	assert.Equal(t, err.Message(), r.err.Message())
 }

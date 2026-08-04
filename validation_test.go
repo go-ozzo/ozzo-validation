@@ -56,22 +56,26 @@ func TestValidate(t *testing.T) {
 
 	// with rules
 	err := Validate("123", &validateAbc{}, &validateXyz{})
-	if assert.NotNil(t, err) {
-		assert.Equal(t, "error abc", err.Error())
-	}
+	assert.EqualError(t, err, "error abc")
 	err = Validate("abc", &validateAbc{}, &validateXyz{})
-	if assert.NotNil(t, err) {
-		assert.Equal(t, "error xyz", err.Error())
-	}
+	assert.EqualError(t, err, "error xyz")
 	err = Validate("abcxyz", &validateAbc{}, &validateXyz{})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	err = Validate("123", &validateAbc{}, Skip, &validateXyz{})
-	if assert.NotNil(t, err) {
-		assert.Equal(t, "error abc", err.Error())
-	}
+	assert.EqualError(t, err, "error abc")
 	err = Validate("abc", &validateAbc{}, Skip, &validateXyz{})
-	assert.Nil(t, err)
+	assert.NoError(t, err)
+
+	err = Validate("123", &validateAbc{}, Skip.When(true), &validateXyz{})
+	assert.EqualError(t, err, "error abc")
+	err = Validate("abc", &validateAbc{}, Skip.When(true), &validateXyz{})
+	assert.NoError(t, err)
+
+	err = Validate("123", &validateAbc{}, Skip.When(false), &validateXyz{})
+	assert.EqualError(t, err, "error abc")
+	err = Validate("abc", &validateAbc{}, Skip.When(false), &validateXyz{})
+	assert.EqualError(t, err, "error xyz")
 }
 
 func stringEqual(str string) RuleFunc {
@@ -131,9 +135,9 @@ func Test_skipRule_Validate(t *testing.T) {
 
 func assertError(t *testing.T, expected string, err error, tag string) {
 	if expected == "" {
-		assert.Nil(t, err, tag)
-	} else if assert.NotNil(t, err, tag) {
-		assert.Equal(t, expected, err.Error(), tag)
+		assert.NoError(t, err, tag)
+	} else {
+		assert.EqualError(t, err, expected, tag)
 	}
 }
 
@@ -152,7 +156,7 @@ func (v *validateContextAbc) Validate(obj interface{}) error {
 	return v.ValidateWithContext(context.Background(), obj)
 }
 
-func (v *validateContextAbc) ValidateWithContext(ctx context.Context, obj interface{}) error {
+func (v *validateContextAbc) ValidateWithContext(_ context.Context, obj interface{}) error {
 	if !strings.Contains(obj.(string), "abc") {
 		return errors.New("error abc")
 	}
@@ -174,7 +178,7 @@ func (v *validateContextXyz) Validate(obj interface{}) error {
 	return v.ValidateWithContext(context.Background(), obj)
 }
 
-func (v *validateContextXyz) ValidateWithContext(ctx context.Context, obj interface{}) error {
+func (v *validateContextXyz) ValidateWithContext(_ context.Context, obj interface{}) error {
 	if !strings.Contains(obj.(string), "xyz") {
 		return errors.New("error xyz")
 	}
@@ -258,7 +262,7 @@ func (s StringValidateContext) Validate() error {
 	return nil
 }
 
-func (s StringValidateContext) ValidateWithContext(ctx context.Context) error {
+func (s StringValidateContext) ValidateWithContext(context.Context) error {
 	if string(s) != "abc" {
 		return errors.New("must be abc with context")
 	}

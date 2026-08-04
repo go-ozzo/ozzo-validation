@@ -1,8 +1,8 @@
 # ozzo-validation
 
+[![CI](https://github.com/go-ozzo/ozzo-validation/actions/workflows/ci.yml/badge.svg)](https://github.com/go-ozzo/ozzo-validation/actions)
+[![codecov](https://codecov.io/gh/go-ozzo/ozzo-validation/branch/master/graph/badge.svg)](https://codecov.io/gh/go-ozzo/ozzo-validation)
 [![GoDoc](https://godoc.org/github.com/go-ozzo/ozzo-validation?status.png)](http://godoc.org/github.com/go-ozzo/ozzo-validation)
-[![Build Status](https://travis-ci.org/go-ozzo/ozzo-validation.svg?branch=master)](https://travis-ci.org/go-ozzo/ozzo-validation)
-[![Coverage Status](https://coveralls.io/repos/github/go-ozzo/ozzo-validation/badge.svg?branch=master)](https://coveralls.io/github/go-ozzo/ozzo-validation?branch=master)
 [![Go Report](https://goreportcard.com/badge/github.com/go-ozzo/ozzo-validation)](https://goreportcard.com/report/github.com/go-ozzo/ozzo-validation)
 
 ## Description
@@ -15,9 +15,11 @@ It has the following features:
 * can validate custom data types as long as they implement the `Validatable` interface.
 * can validate data types that implement the `sql.Valuer` interface (e.g. `sql.NullString`).
 * customizable and well-formatted validation errors.
+* error code and message translation support.
 * provide a rich set of validation rules right out of box.
 * extremely easy to create and use custom validation rules.
 
+For an example on how this library is used in an application, please refer to [go-rest-api](https://github.com/qiangxue/go-rest-api) which is a starter kit for building RESTful APIs in Go.
 
 ## Requirements
 
@@ -36,8 +38,7 @@ or `validation.ValidateStruct()` to validate the value.
 Run the following command to install the package:
 
 ```
-go get github.com/go-ozzo/ozzo-validation/v3
-go get github.com/go-ozzo/ozzo-validation/v3/is
+go get github.com/go-ozzo/ozzo-validation/v4
 ```
 
 ### Validating a Simple Value
@@ -50,8 +51,8 @@ package main
 import (
 	"fmt"
 
-	"github.com/go-ozzo/ozzo-validation/v3"
-	"github.com/go-ozzo/ozzo-validation/v3/is"
+	"github.com/go-ozzo/ozzo-validation/v4"
+	"github.com/go-ozzo/ozzo-validation/v4/is"
 )
 
 func main() {
@@ -81,16 +82,6 @@ to achieve this purpose. A single struct can have rules for multiple fields, and
 rules. For example,
 
 ```go
-package main
-
-import (
-	"fmt"
-	"regexp"
-
-	"github.com/go-ozzo/ozzo-validation/v3"
-	"github.com/go-ozzo/ozzo-validation/v3/is"
-)
-
 type Address struct {
 	Street string
 	City   string
@@ -102,8 +93,8 @@ func (a Address) Validate() error {
 	return validation.ValidateStruct(&a,
 		// Street cannot be empty, and the length must between 5 and 50
 		validation.Field(&a.Street, validation.Required, validation.Length(5, 50)),
-		// City cannot be empty, and the length must between 5 and 50
-		validation.Field(&a.City, validation.Required, validation.Length(5, 50)),
+		// City cannot be empty, and the length must between 1 and 50
+		validation.Field(&a.City, validation.Required, validation.Length(1, 50)),
 		// State cannot be empty, and must be a string consisting of two letters in upper case
 		validation.Field(&a.State, validation.Required, validation.Match(regexp.MustCompile("^[A-Z]{2}$"))),
 		// State cannot be empty, and must be a string consisting of five digits
@@ -111,19 +102,17 @@ func (a Address) Validate() error {
 	)
 }
 
-func main() {
-	a := Address{
-		Street: "123",
-		City:   "Unknown",
-		State:  "Virginia",
-		Zip:    "12345",
-	}
-
-	err := a.Validate()
-	fmt.Println(err)
-	// Output:
-	// Street: the length must be between 5 and 50; State: must be in a valid format.
+a := Address{
+    Street: "123",
+    City:   "Unknown",
+    State:  "Virginia",
+    Zip:    "12345",
 }
+
+err := a.Validate()
+fmt.Println(err)
+// Output:
+// Street: the length must be between 5 and 50; State: must be in a valid format.
 ```
 
 Note that when calling `validation.ValidateStruct` to validate a struct, you should pass to the method a pointer 
@@ -134,6 +123,170 @@ When the struct validation is performed, the fields are validated in the order t
 And when each field is validated, its rules are also evaluated in the order they are associated with the field.
 If a rule fails, an error is recorded for that field, and the validation will continue with the next field.
 
+
+### Validating a Map
+
+Sometimes you might need to work with dynamic data stored in maps rather than a typed model. You can use `validation.Map()`
+in this situation. A single map can have rules for multiple keys, and a key can be associated with multiple 
+rules. For example,
+
+```go
+c := map[string]interface{}{
+	"Name":  "Qiang Xue",
+	"Email": "q",
+	"Address": map[string]interface{}{
+		"Street": "123",
+		"City":   "Unknown",
+		"State":  "Virginia",
+		"Zip":    "12345",
+	},
+}
+
+err := validation.Validate(c,
+	validation.Map(
+		// Name cannot be empty, and the length must be between 5 and 20.
+		validation.Key("Name", validation.Required, validation.Length(5, 20)),
+		// Email cannot be empty and should be in a valid email format.
+		validation.Key("Email", validation.Required, is.Email),
+		// Validate Address using its own validation rules
+		validation.Key("Address", validation.Map(
+			// Street cannot be empty, and the length must between 5 and 50
+			validation.Key("Street", validation.Required, validation.Length(5, 50)),
+			// City cannot be empty, and the length must between 1 and 50
+			validation.Key("City", validation.Required, validation.Length(1, 50)),
+			// State cannot be empty, and must be a string consisting of two letters in upper case
+			validation.Key("State", validation.Required, validation.Match(regexp.MustCompile("^[A-Z]{2}$"))),
+			// State cannot be empty, and must be a string consisting of five digits
+			validation.Key("Zip", validation.Required, validation.Match(regexp.MustCompile("^[0-9]{5}$"))),
+		)),
+	),
+)
+fmt.Println(err)
+// Output:
+// Address: (State: must be in a valid format; Street: the length must be between 5 and 50.); Email: must be a valid email address.
+```
+
+When the map validation is performed, the keys are validated in the order they are specified in `Map`. 
+And when each key is validated, its rules are also evaluated in the order they are associated with the key.
+If a rule fails, an error is recorded for that key, and the validation will continue with the next key.
+
+#### Allowing Extra Keys
+
+By default, `validation.Map()` will return an `Extra: key not expected` error if there's unexpected key inside the map (you have to specify all expected keys in the validation rules).
+
+```go
+c := map[string]interface{}{
+	"Name":  "Qiang Xue",
+	"Email": "q",
+	"Address": map[string]interface{}{
+		"Street": "123",
+		"City":   "Unknown",
+	},
+}
+
+err := validation.Validate(c,
+	validation.Map(
+		// Name cannot be empty, and the length must be between 5 and 20.
+		validation.Key("Name", validation.Required, validation.Length(5, 20)),
+		// Validate Address using its own validation rules
+		validation.Key("Address", validation.Map(
+			// Street cannot be empty.
+			validation.Key("Street", validation.Required),
+		)),
+	),
+)
+fmt.Println(err)
+// Output:
+// Address: (City: key not expected); Email: key not expected.
+```
+
+If you need to allow extra keys, you can achieve this by using `validation.Map().AllowExtraKeys()`, or `validation.DynamicMap()`.
+
+```go
+err := validation.Validate(c,
+	validation.Map(
+		// Name cannot be empty, and the length must be between 5 and 20.
+		validation.Key("Name", validation.Required, validation.Length(5, 20)),
+		// Validate Address using its own validation rules
+		validation.Key("Address", validation.Map(
+			// Street cannot be empty.
+			validation.Key("Street", validation.Required),
+		).AllowExtraKeys()),
+	).AllowExtraKeys(),
+)
+fmt.Println(err)
+// Output:
+// ""
+
+err2 := validation.Validate(c,
+	validation.DynamicMap(
+		// Name cannot be empty, and the length must be between 5 and 20.
+		validation.Key("Name", validation.Required, validation.Length(5, 20)),
+		// Validate Address using its own validation rules
+		validation.Key("Address", validation.DynamicMap(
+			// Street cannot be empty.
+			validation.Key("Street", validation.Required),
+		)),
+	),
+)
+fmt.Println(err2)
+// Output:
+// ""
+```
+
+#### Allowing Optional Keys
+
+By default, `validation.Key()` expect the key to be provided and will return an `XXX: required key is missing.` error if the key doesn't exist in the map.
+
+```go
+c := map[string]interface{}{
+	"Name":  "Qiang Xue",
+}
+
+err := validation.Validate(c,
+	validation.Map(
+		// Name cannot be empty, and the length must be between 5 and 20.
+		validation.Key("Name", validation.Required, validation.Length(5, 20)),
+		// Email cannot be empty and should be in a valid email format.
+		validation.Key("Email", validation.Required, is.Email),
+	),
+)
+fmt.Println(err)
+// Output:
+// Email: required key is missing.
+```
+
+If you need to allow optional key, you can achieve this by using `validation.Key().Optional()` or `validation.OptionalKey()`.
+
+```go
+c := map[string]interface{}{
+	"Name":  "Qiang Xue",
+}
+
+err := validation.Validate(c,
+	validation.Map(
+		// Name cannot be empty, and the length must be between 5 and 20.
+		validation.Key("Name", validation.Required, validation.Length(5, 20)),
+		// Email is optional, when it exists, it cannot be empty and should be in a valid email format.
+		validation.Key("Email", validation.Required, is.Email).Optional(),
+	),
+)
+fmt.Println(err)
+// Output:
+// ""
+
+err2 := validation.Validate(c,
+	validation.Map(
+		// Name cannot be empty, and the length must be between 5 and 20.
+		validation.Key("Name", validation.Required, validation.Length(5, 20)),
+		// Email is optional, when it exists, it cannot be empty and should be in a valid email format.
+		validation.OptionalKey("Email", validation.Required, is.Email),
+	),
+)
+fmt.Println(err2)
+// Output:
+// ""
+```
 
 ### Validation Errors
 
@@ -301,8 +454,7 @@ fields which are map/slices/arrays of validatables.
 
 #### Each
 
-An other option is to use the `validation.Each` method.
-This method allows you to define the rules for the iterables within a struct.
+The `Each` validation rule allows you to apply a set of rules to each element of an array, slice, or map.
 
 ```go
 type Customer struct {
@@ -371,8 +523,6 @@ type Employee struct {
 	Name string
 }
 
-func ()
-
 type Manager struct {
 	Employee
 	Level int
@@ -412,91 +562,36 @@ fmt.Println(err)
 ```
 
 
-## Built-in Validation Rules
+### Conditional Validation
 
-The following rules are provided in the `validation` package:
+Sometimes, we may want to validate a value only when certain condition is met. For example, we want to ensure the 
+`unit` struct field is not empty only when the `quantity` field is not empty; or we may want to ensure either `email`
+or `phone` is provided. The so-called conditional validation can be achieved with the help of `validation.When`.
+The following code implements the aforementioned examples:
 
-* `In(...interface{})`: checks if a value can be found in the given list of values.
-* `Length(min, max int)`: checks if the length of a value is within the specified range.
-  This rule should only be used for validating strings, slices, maps, and arrays.
-* `RuneLength(min, max int)`: checks if the length of a string is within the specified range.
-  This rule is similar as `Length` except that when the value being validated is a string, it checks
-  its rune length instead of byte length.
-* `Min(min interface{})` and `Max(max interface{})`: checks if a value is within the specified range.
-  These two rules should only be used for validating int, uint, float and time.Time types.
-* `Match(*regexp.Regexp)`: checks if a value matches the specified regular expression.
-  This rule should only be used for strings and byte slices.
-* `Date(layout string)`: checks if a string value is a date whose format is specified by the layout.
-  By calling `Min()` and/or `Max()`, you can check additionally if the date is within the specified range.
-* `Required`: checks if a value is not empty (neither nil nor zero).
-* `NotNil`: checks if a pointer value is not nil. Non-pointer values are considered valid.
-* `NilOrNotEmpty`: checks if a value is a nil pointer or a non-empty value. This differs from `Required` in that it treats a nil pointer as valid.
-* `Skip`: this is a special rule used to indicate that all rules following it should be skipped (including the nested ones).
-* `MultipleOf`: checks if the value is a multiple of the specified range.
-* `Each(rules ...Rule)`: checks the elements within an iterable (map/slice/array) with other rules.
+```go
+result := validation.ValidateStruct(&a,
+    validation.Field(&a.Unit, validation.When(a.Quantity != "", validation.Required).Else(validation.Nil)),
+    validation.Field(&a.Phone, validation.When(a.Email == "", validation.Required.Error("Either phone or Email is required.")),
+    validation.Field(&a.Email, validation.When(a.Phone == "", validation.Required.Error("Either phone or Email is required.")),
+)
+```
 
-The `is` sub-package provides a list of commonly used string validation rules that can be used to check if the format
-of a value satisfies certain requirements. Note that these rules only handle strings and byte slices and if a string
- or byte slice is empty, it is considered valid. You may use a `Required` rule to ensure a value is not empty.
-Below is the whole list of the rules provided by the `is` package:
+Note that `validation.When` and `validation.When.Else` can take a list of validation rules. These rules will be executed only when the condition is true (When) or false (Else).
 
-* `Email`: validates if a string is an email or not
-* `URL`: validates if a string is a valid URL
-* `RequestURL`: validates if a string is a valid request URL
-* `RequestURI`: validates if a string is a valid request URI
-* `Alpha`: validates if a string contains English letters only (a-zA-Z)
-* `Digit`: validates if a string contains digits only (0-9)
-* `Alphanumeric`: validates if a string contains English letters and digits only (a-zA-Z0-9)
-* `UTFLetter`: validates if a string contains unicode letters only
-* `UTFDigit`: validates if a string contains unicode decimal digits only
-* `UTFLetterNumeric`: validates if a string contains unicode letters and numbers only
-* `UTFNumeric`: validates if a string contains unicode number characters (category N) only
-* `LowerCase`: validates if a string contains lower case unicode letters only
-* `UpperCase`: validates if a string contains upper case unicode letters only
-* `Hexadecimal`: validates if a string is a valid hexadecimal number
-* `HexColor`: validates if a string is a valid hexadecimal color code
-* `RGBColor`: validates if a string is a valid RGB color in the form of rgb(R, G, B)
-* `Int`: validates if a string is a valid integer number
-* `Float`: validates if a string is a floating point number
-* `UUIDv3`: validates if a string is a valid version 3 UUID
-* `UUIDv4`: validates if a string is a valid version 4 UUID
-* `UUIDv5`: validates if a string is a valid version 5 UUID
-* `UUID`: validates if a string is a valid UUID
-* `CreditCard`: validates if a string is a valid credit card number
-* `ISBN10`: validates if a string is an ISBN version 10
-* `ISBN13`: validates if a string is an ISBN version 13
-* `ISBN`: validates if a string is an ISBN (either version 10 or 13)
-* `JSON`: validates if a string is in valid JSON format
-* `ASCII`: validates if a string contains ASCII characters only
-* `PrintableASCII`: validates if a string contains printable ASCII characters only
-* `Multibyte`: validates if a string contains multibyte characters
-* `FullWidth`: validates if a string contains full-width characters
-* `HalfWidth`: validates if a string contains half-width characters
-* `VariableWidth`: validates if a string contains both full-width and half-width characters
-* `Base64`: validates if a string is encoded in Base64
-* `DataURI`: validates if a string is a valid base64-encoded data URI
-* `E164`: validates if a string is a valid E164 phone number (+19251232233)
-* `CountryCode2`: validates if a string is a valid ISO3166 Alpha 2 country code
-* `CountryCode3`: validates if a string is a valid ISO3166 Alpha 3 country code
-* `DialString`: validates if a string is a valid dial string that can be passed to Dial()
-* `MAC`: validates if a string is a MAC address
-* `IP`: validates if a string is a valid IP address (either version 4 or 6)
-* `IPv4`: validates if a string is a valid version 4 IP address
-* `IPv6`: validates if a string is a valid version 6 IP address
-* `Subdomain`: validates if a string is valid subdomain
-* `Domain`: validates if a string is valid domain
-* `DNSName`: validates if a string is valid DNS name
-* `Host`: validates if a string is a valid IP (both v4 and v6) or a valid DNS name
-* `Port`: validates if a string is a valid port number
-* `MongoID`: validates if a string is a valid Mongo ID
-* `Latitude`: validates if a string is a valid latitude
-* `Longitude`: validates if a string is a valid longitude
-* `SSN`: validates if a string is a social security number (SSN)
-* `Semver`: validates if a string is a valid semantic version
+The above code can also be simplified using the shortcut `validation.Required.When`:
+
+```go
+result := validation.ValidateStruct(&a,
+    validation.Field(&a.Unit, validation.Required.When(a.Quantity != ""), validation.Nil.When(a.Quantity == "")),
+    validation.Field(&a.Phone, validation.Required.When(a.Email == "").Error("Either phone or Email is required.")),
+    validation.Field(&a.Email, validation.Required.When(a.Phone == "").Error("Either phone or Email is required.")),
+)
+```
 
 ### Customizing Error Messages
 
-All built-in validation rules allow you to customize error messages. To do so, simply call the `Error()` method
+All built-in validation rules allow you to customize their error messages. To do so, simply call the `Error()` method
 of the rules. For example,
 
 ```go
@@ -510,6 +605,21 @@ fmt.Println(err)
 // must be a string with five digits
 ```
 
+You can also customize the pre-defined error(s) of a built-in rule such that the customization applies to *every*
+instance of the rule. For example, the `Required` rule uses the pre-defined error `ErrRequired`. You can customize it
+during the application initialization:
+```go
+validation.ErrRequired = validation.ErrRequired.SetMessage("the value is required") 
+```
+
+### Error Code and Message Translation
+
+The errors returned by the validation rules implement the `Error` interface which contains the `Code()` method 
+to provide the error code information. While the message of a validation error is often customized, the code is immutable.
+You can use error code to programmatically check a validation error or look for the translation of the corresponding message.
+
+If you are developing your own validation rules, you can use `validation.NewError()` to create a validation error which
+implements the aforementioned `Error` interface.
 
 ## Creating Custom Rules
 
@@ -616,6 +726,96 @@ fmt.Println(err)
 When performing context-aware validation, if a rule does not implement `validation.RuleWithContext`, its
 `validation.Rule` will be used instead.
 
+
+## Built-in Validation Rules
+
+The following rules are provided in the `validation` package:
+
+* `In(...interface{})`: checks if a value can be found in the given list of values.
+* `NotIn(...interface{})`: checks if a value is NOT among the given list of values.
+* `Length(min, max int)`: checks if the length of a value is within the specified range.
+  This rule should only be used for validating strings, slices, maps, and arrays.
+* `RuneLength(min, max int)`: checks if the length of a string is within the specified range.
+  This rule is similar as `Length` except that when the value being validated is a string, it checks
+  its rune length instead of byte length.
+* `Min(min interface{})` and `Max(max interface{})`: checks if a value is within the specified range.
+  These two rules should only be used for validating int, uint, float and time.Time types.
+* `Match(*regexp.Regexp)`: checks if a value matches the specified regular expression.
+  This rule should only be used for strings and byte slices.
+* `Date(layout string)`: checks if a string value is a date whose format is specified by the layout.
+  By calling `Min()` and/or `Max()`, you can check additionally if the date is within the specified range.
+* `Required`: checks if a value is not empty (neither nil nor zero).
+* `NotNil`: checks if a pointer value is not nil. Non-pointer values are considered valid.
+* `NilOrNotEmpty`: checks if a value is a nil pointer or a non-empty value. This differs from `Required` in that it treats a nil pointer as valid.
+* `Nil`: checks if a value is a nil pointer.
+* `Empty`: checks if a value is empty. nil pointers are considered valid.
+* `Skip`: this is a special rule used to indicate that all rules following it should be skipped (including the nested ones).
+* `MultipleOf`: checks if the value is a multiple of the specified range.
+* `Each(rules ...Rule)`: checks the elements within an iterable (map/slice/array) with other rules.
+* `When(condition, rules ...Rule)`: validates with the specified rules only when the condition is true.
+* `Else(rules ...Rule)`: must be used with `When(condition, rules ...Rule)`, validates with the specified rules only when the condition is false.
+
+The `is` sub-package provides a list of commonly used string validation rules that can be used to check if the format
+of a value satisfies certain requirements. Note that these rules only handle strings and byte slices and if a string
+ or byte slice is empty, it is considered valid. You may use a `Required` rule to ensure a value is not empty.
+Below is the whole list of the rules provided by the `is` package:
+
+* `Email`: validates if a string is an email or not. It also checks if the MX record exists for the email domain.
+* `EmailFormat`: validates if a string is an email or not. It does NOT check the existence of the MX record.
+* `URL`: validates if a string is a valid URL
+* `RequestURL`: validates if a string is a valid request URL
+* `RequestURI`: validates if a string is a valid request URI
+* `Alpha`: validates if a string contains English letters only (a-zA-Z)
+* `Digit`: validates if a string contains digits only (0-9)
+* `Alphanumeric`: validates if a string contains English letters and digits only (a-zA-Z0-9)
+* `UTFLetter`: validates if a string contains unicode letters only
+* `UTFDigit`: validates if a string contains unicode decimal digits only
+* `UTFLetterNumeric`: validates if a string contains unicode letters and numbers only
+* `UTFNumeric`: validates if a string contains unicode number characters (category N) only
+* `LowerCase`: validates if a string contains lower case unicode letters only
+* `UpperCase`: validates if a string contains upper case unicode letters only
+* `Hexadecimal`: validates if a string is a valid hexadecimal number
+* `HexColor`: validates if a string is a valid hexadecimal color code
+* `RGBColor`: validates if a string is a valid RGB color in the form of rgb(R, G, B)
+* `Int`: validates if a string is a valid integer number
+* `Float`: validates if a string is a floating point number
+* `UUIDv3`: validates if a string is a valid version 3 UUID
+* `UUIDv4`: validates if a string is a valid version 4 UUID
+* `UUIDv5`: validates if a string is a valid version 5 UUID
+* `UUIDv7`: validates if a string is a valid version 7 UUID
+* `UUID`: validates if a string is a valid UUID
+* `ULID`: validates if a string is a valid ULID
+* `CreditCard`: validates if a string is a valid credit card number
+* `ISBN10`: validates if a string is an ISBN version 10
+* `ISBN13`: validates if a string is an ISBN version 13
+* `ISBN`: validates if a string is an ISBN (either version 10 or 13)
+* `JSON`: validates if a string is in valid JSON format
+* `ASCII`: validates if a string contains ASCII characters only
+* `PrintableASCII`: validates if a string contains printable ASCII characters only
+* `Multibyte`: validates if a string contains multibyte characters
+* `FullWidth`: validates if a string contains full-width characters
+* `HalfWidth`: validates if a string contains half-width characters
+* `VariableWidth`: validates if a string contains both full-width and half-width characters
+* `Base64`: validates if a string is encoded in Base64
+* `DataURI`: validates if a string is a valid base64-encoded data URI
+* `E164`: validates if a string is a valid E164 phone number (+19251232233)
+* `CountryCode2`: validates if a string is a valid ISO3166 Alpha 2 country code
+* `CountryCode3`: validates if a string is a valid ISO3166 Alpha 3 country code
+* `DialString`: validates if a string is a valid dial string that can be passed to Dial()
+* `MAC`: validates if a string is a MAC address
+* `IP`: validates if a string is a valid IP address (either version 4 or 6)
+* `IPv4`: validates if a string is a valid version 4 IP address
+* `IPv6`: validates if a string is a valid version 6 IP address
+* `Subdomain`: validates if a string is valid subdomain
+* `Domain`: validates if a string is valid domain
+* `DNSName`: validates if a string is valid DNS name
+* `Host`: validates if a string is a valid IP (both v4 and v6) or a valid DNS name
+* `Port`: validates if a string is a valid port number
+* `MongoID`: validates if a string is a valid Mongo ID
+* `Latitude`: validates if a string is a valid latitude
+* `Longitude`: validates if a string is a valid longitude
+* `SSN`: validates if a string is a social security number (SSN)
+* `Semver`: validates if a string is a valid semantic version
 
 ## Credits
 
