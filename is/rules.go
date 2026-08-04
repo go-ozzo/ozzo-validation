@@ -56,6 +56,8 @@ var (
 	ErrUUIDv4 = validation.NewError("validation_is_uuid_v4", "must be a valid UUID v4")
 	// ErrUUIDv5 is the error that returns in case of an invalid UUIDv5 value.
 	ErrUUIDv5 = validation.NewError("validation_is_uuid_v5", "must be a valid UUID v5")
+	// ErrUUIDv7 is the error that returns in case of an invalid UUIDv7 value.
+	ErrUUIDv7 = validation.NewError("validation_is_uuid_v7", "must be a valid UUID v7")
 	// ErrUUID is the error that returns in case of an invalid UUID value.
 	ErrUUID = validation.NewError("validation_is_uuid", "must be a valid UUID")
 	// ErrCreditCard is the error that returns in case of an invalid credit card number.
@@ -169,6 +171,8 @@ var (
 	UUIDv4 = validation.NewStringRuleWithError(govalidator.IsUUIDv4, ErrUUIDv4)
 	// UUIDv5 validates if a string is a valid version 5 UUID
 	UUIDv5 = validation.NewStringRuleWithError(govalidator.IsUUIDv5, ErrUUIDv5)
+	// UUIDv7 validates if a string is a valid version 7 UUID
+	UUIDv7 = validation.NewStringRuleWithError(isUUIDv7, ErrUUIDv7)
 	// UUID validates if a string is a valid UUID
 	UUID = validation.NewStringRuleWithError(govalidator.IsUUID, ErrUUID)
 	// CreditCard validates if a string is a valid credit card number
@@ -279,5 +283,27 @@ func isUTFNumeric(value string) bool {
 			return false
 		}
 	}
+	return true
+}
+
+func isUUIDv7(value string) bool {
+	if !govalidator.IsUUID(value) {
+		return false
+	}
+
+	if len(value) != 36 {
+		return false
+	}
+
+	if value[14] != '7' {
+		return false
+	}
+
+	variantChar := value[19]
+	if variantChar != '8' && variantChar != '9' && variantChar != 'a' && variantChar != 'b' &&
+		variantChar != 'A' && variantChar != 'B' {
+		return false
+	}
+
 	return true
 }
