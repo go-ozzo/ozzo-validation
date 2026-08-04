@@ -41,14 +41,32 @@ type (
 // Use Key() to specify map keys that need to be validated. Each Key() call specifies a single key which can
 // be associated with multiple rules.
 // For example,
-//    validation.Map(
-//        validation.Key("Name", validation.Required),
-//        validation.Key("Value", validation.Required, validation.Length(5, 10)),
-//    )
+//
+//	validation.Map(
+//	    validation.Key("Name", validation.Required),
+//	    validation.Key("Value", validation.Required, validation.Length(5, 10)),
+//	)
 //
 // A nil value is considered valid. Use the Required rule to make sure a map value is present.
 func Map(keys ...*KeyRules) MapRule {
 	return MapRule{keys: keys}
+}
+
+// DynamicMap returns a validation rule that checks the keys and values of a map.
+// The map is allowed to have extra keys by default, compared to original `Map(...)` function that will return an error when unspecified key(s) existed in the map.
+// This rule should only be used for validating maps, or a validation error will be reported.
+// Use Key() to specify map keys that need to be validated. Each Key() call specifies a single key which can
+// be associated with multiple rules.
+// For example,
+//
+//	validation.DynamicMap(
+//	    validation.Key("Name", validation.Required),
+//	    validation.Key("Value", validation.Required, validation.Length(5, 10)),
+//	)
+//
+// A nil value is considered valid. Use the Required rule to make sure a map value is present.
+func DynamicMap(keys ...*KeyRules) MapRule {
+	return MapRule{keys: keys, allowExtraKeys: true}
 }
 
 // AllowExtraKeys configures the rule to ignore extra keys.
@@ -129,6 +147,16 @@ func Key(key interface{}, rules ...Rule) *KeyRules {
 	return &KeyRules{
 		key:   key,
 		rules: rules,
+	}
+}
+
+// OptionalKey specifies a map key and the corresponding validation rules.
+// The rule will be ignored if the key is missing.
+func OptionalKey(key interface{}, rules ...Rule) *KeyRules {
+	return &KeyRules{
+		key:      key,
+		rules:    rules,
+		optional: true,
 	}
 }
 

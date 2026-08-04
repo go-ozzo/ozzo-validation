@@ -86,17 +86,16 @@ func (r LengthRule) ErrorObject(err Error) LengthRule {
 }
 
 func buildLengthRuleError(min, max int) (err Error) {
-	if min == 0 && max > 0 {
+	switch {
+	case min == 0 && max > 0:
 		err = ErrLengthTooLong
-	} else if min > 0 && max == 0 {
+	case min > 0 && max == 0:
 		err = ErrLengthTooShort
-	} else if min > 0 && max > 0 {
-		if min == max {
-			err = ErrLengthInvalid
-		} else {
-			err = ErrLengthOutOfRange
-		}
-	} else {
+	case min > 0 && max > 0 && min == max:
+		err = ErrLengthInvalid
+	case min > 0 && max > 0:
+		err = ErrLengthOutOfRange
+	default:
 		err = ErrLengthEmptyRequired
 	}
 

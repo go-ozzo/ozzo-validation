@@ -56,6 +56,8 @@ var (
 	ErrUUIDv4 = validation.NewError("validation_is_uuid_v4", "must be a valid UUID v4")
 	// ErrUUIDv5 is the error that returns in case of an invalid UUIDv5 value.
 	ErrUUIDv5 = validation.NewError("validation_is_uuid_v5", "must be a valid UUID v5")
+	// ErrUUIDv7 is the error that returns in case of an invalid UUIDv7 value.
+	ErrUUIDv7 = validation.NewError("validation_is_uuid_v7", "must be a valid UUID v7")
 	// ErrUUID is the error that returns in case of an invalid UUID value.
 	ErrUUID = validation.NewError("validation_is_uuid", "must be a valid UUID")
 	// ErrULID is the error that returns in case of an invalid ULID value.
@@ -86,7 +88,7 @@ var (
 	ErrBase64 = validation.NewError("validation_is_base64", "must be encoded in Base64")
 	// ErrDataURI is the error that returns in case of an invalid data URI.
 	ErrDataURI = validation.NewError("validation_is_data_uri", "must be a Base64-encoded data URI")
-	// ErrE164 is the error that returns in case of an invalid e165.
+	// ErrE164 is the error that returns in case of an invalid E.164 number.
 	ErrE164 = validation.NewError("validation_is_e164_number", "must be a valid E164 number")
 	// ErrCountryCode2 is the error that returns in case of an invalid two-letter country code.
 	ErrCountryCode2 = validation.NewError("validation_is_country_code_2_letter", "must be a valid two-letter country code")
@@ -171,6 +173,8 @@ var (
 	UUIDv4 = validation.NewStringRuleWithError(govalidator.IsUUIDv4, ErrUUIDv4)
 	// UUIDv5 validates if a string is a valid version 5 UUID
 	UUIDv5 = validation.NewStringRuleWithError(govalidator.IsUUIDv5, ErrUUIDv5)
+	// UUIDv7 validates if a string is a valid version 7 UUID
+	UUIDv7 = validation.NewStringRuleWithError(isUUIDv7, ErrUUIDv7)
 	// UUID validates if a string is a valid UUID
 	UUID = validation.NewStringRuleWithError(govalidator.IsUUID, ErrUUID)
 	// ULID validates if a string is a valid ULID
@@ -201,7 +205,7 @@ var (
 	Base64 = validation.NewStringRuleWithError(govalidator.IsBase64, ErrBase64)
 	// DataURI validates if a string is a valid base64-encoded data URI
 	DataURI = validation.NewStringRuleWithError(govalidator.IsDataURI, ErrDataURI)
-	// E164 validates if a string is a valid ISO3166 Alpha 2 country code
+	// E164 validates if a string is a valid E.164 phone number
 	E164 = validation.NewStringRuleWithError(isE164Number, ErrE164)
 	// CountryCode2 validates if a string is a valid ISO3166 Alpha 2 country code
 	CountryCode2 = validation.NewStringRuleWithError(govalidator.IsISO3166Alpha2, ErrCountryCode2)
@@ -245,12 +249,12 @@ var (
 	reDigit = regexp.MustCompile("^[0-9]+$")
 	// Subdomain regex source: https://stackoverflow.com/a/7933253
 	reSubdomain = regexp.MustCompile(`^[A-Za-z0-9](?:[A-Za-z0-9\-]{0,61}[A-Za-z0-9])?$`)
-	// E164 regex source: https://stackoverflow.com/a/23299989
-	reE164 = regexp.MustCompile(`^\+?[1-9]\d{1,14}$`)
+	// E164 regex source: https://www.twilio.com/docs/glossary/what-e164
+	reE164 = regexp.MustCompile(`^\+[1-9]\d{1,14}$`)
 	// Domain regex source: https://stackoverflow.com/a/7933253
 	// Slightly modified: Removed 255 max length validation since Go regex does not
 	// support lookarounds. More info: https://stackoverflow.com/a/38935027
-	reDomain = regexp.MustCompile(`^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-z0-9])?\.)+(?:[a-zA-Z]{1,63}| xn--[a-z0-9]{1,59})$`)
+	reDomain = regexp.MustCompile(`^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+(?:[a-zA-Z]{1,63}| xn--[a-z0-9]{1,59})$`)
 )
 
 func isISBN(value string) bool {
@@ -279,9 +283,31 @@ func isDomain(value string) bool {
 
 func isUTFNumeric(value string) bool {
 	for _, c := range value {
-		if unicode.IsNumber(c) == false {
+		if !unicode.IsNumber(c) {
 			return false
 		}
 	}
+	return true
+}
+
+func isUUIDv7(value string) bool {
+	if !govalidator.IsUUID(value) {
+		return false
+	}
+
+	if len(value) != 36 {
+		return false
+	}
+
+	if value[14] != '7' {
+		return false
+	}
+
+	variantChar := value[19]
+	if variantChar != '8' && variantChar != '9' && variantChar != 'a' && variantChar != 'b' &&
+		variantChar != 'A' && variantChar != 'B' {
+		return false
+	}
+
 	return true
 }
