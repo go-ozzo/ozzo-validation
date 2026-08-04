@@ -25,9 +25,10 @@ type DateRule struct {
 // Date returns a validation rule that checks if a string value is in a format that can be parsed into a date.
 // The format of the date should be specified as the layout parameter which accepts the same value as that for time.Parse.
 // For example,
-//    validation.Date(time.ANSIC)
-//    validation.Date("02 Jan 06 15:04 MST")
-//    validation.Date("2006-01-02")
+//
+//	validation.Date(time.ANSIC)
+//	validation.Date("02 Jan 06 15:04 MST")
+//	validation.Date("2006-01-02")
 //
 // By calling Min() and/or Max(), you can let the Date rule to check if a parsed date value is within
 // the specified date range.
