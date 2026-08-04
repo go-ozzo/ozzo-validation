@@ -1,8 +1,8 @@
 # ozzo-validation
 
+[![CI](https://github.com/go-ozzo/ozzo-validation/actions/workflows/ci.yml/badge.svg)](https://github.com/go-ozzo/ozzo-validation/actions)
+[![codecov](https://codecov.io/gh/go-ozzo/ozzo-validation/branch/master/graph/badge.svg)](https://codecov.io/gh/go-ozzo/ozzo-validation)
 [![GoDoc](https://godoc.org/github.com/go-ozzo/ozzo-validation?status.png)](http://godoc.org/github.com/go-ozzo/ozzo-validation)
-[![Build Status](https://travis-ci.org/go-ozzo/ozzo-validation.svg?branch=master)](https://travis-ci.org/go-ozzo/ozzo-validation)
-[![Coverage Status](https://coveralls.io/repos/github/go-ozzo/ozzo-validation/badge.svg?branch=master)](https://coveralls.io/github/go-ozzo/ozzo-validation?branch=master)
 [![Go Report](https://goreportcard.com/badge/github.com/go-ozzo/ozzo-validation)](https://goreportcard.com/report/github.com/go-ozzo/ozzo-validation)
 
 ## Description
@@ -38,7 +38,7 @@ or `validation.ValidateStruct()` to validate the value.
 Run the following command to install the package:
 
 ```
-go get github.com/go-ozzo/ozzo-validation
+go get github.com/go-ozzo/ozzo-validation/v4
 ```
 
 ### Validating a Simple Value
@@ -93,8 +93,8 @@ func (a Address) Validate() error {
 	return validation.ValidateStruct(&a,
 		// Street cannot be empty, and the length must between 5 and 50
 		validation.Field(&a.Street, validation.Required, validation.Length(5, 50)),
-		// City cannot be empty, and the length must between 5 and 50
-		validation.Field(&a.City, validation.Required, validation.Length(5, 50)),
+		// City cannot be empty, and the length must between 1 and 50
+		validation.Field(&a.City, validation.Required, validation.Length(1, 50)),
 		// State cannot be empty, and must be a string consisting of two letters in upper case
 		validation.Field(&a.State, validation.Required, validation.Match(regexp.MustCompile("^[A-Z]{2}$"))),
 		// State cannot be empty, and must be a string consisting of five digits
@@ -152,8 +152,8 @@ err := validation.Validate(c,
 		validation.Key("Address", validation.Map(
 			// Street cannot be empty, and the length must between 5 and 50
 			validation.Key("Street", validation.Required, validation.Length(5, 50)),
-			// City cannot be empty, and the length must between 5 and 50
-			validation.Key("City", validation.Required, validation.Length(5, 50)),
+			// City cannot be empty, and the length must between 1 and 50
+			validation.Key("City", validation.Required, validation.Length(1, 50)),
 			// State cannot be empty, and must be a string consisting of two letters in upper case
 			validation.Key("State", validation.Required, validation.Match(regexp.MustCompile("^[A-Z]{2}$"))),
 			// State cannot be empty, and must be a string consisting of five digits
@@ -170,6 +170,123 @@ When the map validation is performed, the keys are validated in the order they a
 And when each key is validated, its rules are also evaluated in the order they are associated with the key.
 If a rule fails, an error is recorded for that key, and the validation will continue with the next key.
 
+#### Allowing Extra Keys
+
+By default, `validation.Map()` will return an `Extra: key not expected` error if there's unexpected key inside the map (you have to specify all expected keys in the validation rules).
+
+```go
+c := map[string]interface{}{
+	"Name":  "Qiang Xue",
+	"Email": "q",
+	"Address": map[string]interface{}{
+		"Street": "123",
+		"City":   "Unknown",
+	},
+}
+
+err := validation.Validate(c,
+	validation.Map(
+		// Name cannot be empty, and the length must be between 5 and 20.
+		validation.Key("Name", validation.Required, validation.Length(5, 20)),
+		// Validate Address using its own validation rules
+		validation.Key("Address", validation.Map(
+			// Street cannot be empty.
+			validation.Key("Street", validation.Required),
+		)),
+	),
+)
+fmt.Println(err)
+// Output:
+// Address: (City: key not expected); Email: key not expected.
+```
+
+If you need to allow extra keys, you can achieve this by using `validation.Map().AllowExtraKeys()`, or `validation.DynamicMap()`.
+
+```go
+err := validation.Validate(c,
+	validation.Map(
+		// Name cannot be empty, and the length must be between 5 and 20.
+		validation.Key("Name", validation.Required, validation.Length(5, 20)),
+		// Validate Address using its own validation rules
+		validation.Key("Address", validation.Map(
+			// Street cannot be empty.
+			validation.Key("Street", validation.Required),
+		).AllowExtraKeys()),
+	).AllowExtraKeys(),
+)
+fmt.Println(err)
+// Output:
+// ""
+
+err2 := validation.Validate(c,
+	validation.DynamicMap(
+		// Name cannot be empty, and the length must be between 5 and 20.
+		validation.Key("Name", validation.Required, validation.Length(5, 20)),
+		// Validate Address using its own validation rules
+		validation.Key("Address", validation.DynamicMap(
+			// Street cannot be empty.
+			validation.Key("Street", validation.Required),
+		)),
+	),
+)
+fmt.Println(err2)
+// Output:
+// ""
+```
+
+#### Allowing Optional Keys
+
+By default, `validation.Key()` expect the key to be provided and will return an `XXX: required key is missing.` error if the key doesn't exist in the map.
+
+```go
+c := map[string]interface{}{
+	"Name":  "Qiang Xue",
+}
+
+err := validation.Validate(c,
+	validation.Map(
+		// Name cannot be empty, and the length must be between 5 and 20.
+		validation.Key("Name", validation.Required, validation.Length(5, 20)),
+		// Email cannot be empty and should be in a valid email format.
+		validation.Key("Email", validation.Required, is.Email),
+	),
+)
+fmt.Println(err)
+// Output:
+// Email: required key is missing.
+```
+
+If you need to allow optional key, you can achieve this by using `validation.Key().Optional()` or `validation.OptionalKey()`.
+
+```go
+c := map[string]interface{}{
+	"Name":  "Qiang Xue",
+}
+
+err := validation.Validate(c,
+	validation.Map(
+		// Name cannot be empty, and the length must be between 5 and 20.
+		validation.Key("Name", validation.Required, validation.Length(5, 20)),
+		// Email is optional, when it exists, it cannot be empty and should be in a valid email format.
+		validation.Key("Email", validation.Required, is.Email).Optional(),
+	),
+)
+fmt.Println(err)
+// Output:
+// ""
+
+err2 := validation.Validate(c,
+	validation.Map(
+		// Name cannot be empty, and the length must be between 5 and 20.
+		validation.Key("Name", validation.Required, validation.Length(5, 20)),
+		// Email is optional, when it exists, it cannot be empty and should be in a valid email format.
+		validation.OptionalKey("Email", validation.Required, is.Email),
+	),
+)
+fmt.Println(err2)
+// Output:
+// ""
+```
 
 ### Validation Errors
 
@@ -455,8 +572,8 @@ The following code implements the aforementioned examples:
 ```go
 result := validation.ValidateStruct(&a,
     validation.Field(&a.Unit, validation.When(a.Quantity != "", validation.Required).Else(validation.Nil)),
-    validation.Field(&a.Phone, validation.When(a.Email == "", validation.Required.Error('Either phone or Email is required.')),
-    validation.Field(&a.Email, validation.When(a.Phone == "", validation.Required.Error('Either phone or Email is required.')),
+    validation.Field(&a.Phone, validation.When(a.Email == "", validation.Required.Error("Either phone or Email is required.")),
+    validation.Field(&a.Email, validation.When(a.Phone == "", validation.Required.Error("Either phone or Email is required.")),
 )
 ```
 
@@ -467,8 +584,8 @@ The above code can also be simplified using the shortcut `validation.Required.Wh
 ```go
 result := validation.ValidateStruct(&a,
     validation.Field(&a.Unit, validation.Required.When(a.Quantity != ""), validation.Nil.When(a.Quantity == "")),
-    validation.Field(&a.Phone, validation.Required.When(a.Email == "").Error('Either phone or Email is required.')),
-    validation.Field(&a.Email, validation.Required.When(a.Phone == "").Error('Either phone or Email is required.')),
+    validation.Field(&a.Phone, validation.Required.When(a.Email == "").Error("Either phone or Email is required.")),
+    validation.Field(&a.Email, validation.Required.When(a.Phone == "").Error("Either phone or Email is required.")),
 )
 ```
 
@@ -665,7 +782,9 @@ Below is the whole list of the rules provided by the `is` package:
 * `UUIDv3`: validates if a string is a valid version 3 UUID
 * `UUIDv4`: validates if a string is a valid version 4 UUID
 * `UUIDv5`: validates if a string is a valid version 5 UUID
+* `UUIDv7`: validates if a string is a valid version 7 UUID
 * `UUID`: validates if a string is a valid UUID
+* `ULID`: validates if a string is a valid ULID
 * `CreditCard`: validates if a string is a valid credit card number
 * `ISBN10`: validates if a string is an ISBN version 10
 * `ISBN13`: validates if a string is an ISBN version 13

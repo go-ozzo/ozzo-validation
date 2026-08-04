@@ -67,10 +67,19 @@ func TestMap(t *testing.T) {
 		{"t8.3", m4, []*KeyRules{Key("M3")}, ""},
 		// internal error
 		{"t9.1", m5, []*KeyRules{Key("A", &validateAbc{}), Key("B", Required), Key("A", &validateInternalError{})}, "error internal"},
+		// optional keys
+		{"t10.1", m2, []*KeyRules{OptionalKey("G"), OptionalKey("H")}, ""},
+		{"t10.2", m2, []*KeyRules{OptionalKey("G"), Key("H")}, "H: required key is missing."},
 	}
 	for _, test := range tests {
 		err1 := Validate(test.model, Map(test.rules...).AllowExtraKeys())
 		err2 := ValidateWithContext(context.Background(), test.model, Map(test.rules...).AllowExtraKeys())
+		assertError(t, test.err, err1, test.tag)
+		assertError(t, test.err, err2, test.tag)
+	}
+	for _, test := range tests {
+		err1 := Validate(test.model, DynamicMap(test.rules...))
+		err2 := ValidateWithContext(context.Background(), test.model, DynamicMap(test.rules...))
 		assertError(t, test.err, err1, test.tag)
 		assertError(t, test.err, err2, test.tag)
 	}
@@ -81,6 +90,12 @@ func TestMap(t *testing.T) {
 		Key("Value", Required, Length(5, 10)),
 	))
 	assert.EqualError(t, err, "Extra: key not expected; Value: the length must be between 5 and 10.")
+
+	err = Validate(a, DynamicMap(
+		Key("Name", Required),
+		Key("Value", Required, Length(5, 10)),
+	))
+	assert.EqualError(t, err, "Value: the length must be between 5 and 10.")
 }
 
 func TestMapWithContext(t *testing.T) {
