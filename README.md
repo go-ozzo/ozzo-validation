@@ -1,8 +1,8 @@
 # ozzo-validation
 
+[![CI](https://github.com/go-ozzo/ozzo-validation/actions/workflows/ci.yml/badge.svg)](https://github.com/go-ozzo/ozzo-validation/actions)
+[![codecov](https://codecov.io/gh/go-ozzo/ozzo-validation/branch/master/graph/badge.svg)](https://codecov.io/gh/go-ozzo/ozzo-validation)
 [![GoDoc](https://godoc.org/github.com/go-ozzo/ozzo-validation?status.png)](http://godoc.org/github.com/go-ozzo/ozzo-validation)
-[![Build Status](https://travis-ci.org/go-ozzo/ozzo-validation.svg?branch=master)](https://travis-ci.org/go-ozzo/ozzo-validation)
-[![Coverage Status](https://coveralls.io/repos/github/go-ozzo/ozzo-validation/badge.svg?branch=master)](https://coveralls.io/github/go-ozzo/ozzo-validation?branch=master)
 [![Go Report](https://goreportcard.com/badge/github.com/go-ozzo/ozzo-validation)](https://goreportcard.com/report/github.com/go-ozzo/ozzo-validation)
 
 ## Description
@@ -38,7 +38,7 @@ or `validation.ValidateStruct()` to validate the value.
 Run the following command to install the package:
 
 ```
-go get github.com/go-ozzo/ozzo-validation
+go get github.com/go-ozzo/ozzo-validation/v4
 ```
 
 ### Validating a Simple Value
@@ -93,8 +93,8 @@ func (a Address) Validate() error {
 	return validation.ValidateStruct(&a,
 		// Street cannot be empty, and the length must between 5 and 50
 		validation.Field(&a.Street, validation.Required, validation.Length(5, 50)),
-		// City cannot be empty, and the length must between 5 and 50
-		validation.Field(&a.City, validation.Required, validation.Length(5, 50)),
+		// City cannot be empty, and the length must between 1 and 50
+		validation.Field(&a.City, validation.Required, validation.Length(1, 50)),
 		// State cannot be empty, and must be a string consisting of two letters in upper case
 		validation.Field(&a.State, validation.Required, validation.Match(regexp.MustCompile("^[A-Z]{2}$"))),
 		// State cannot be empty, and must be a string consisting of five digits
@@ -152,8 +152,8 @@ err := validation.Validate(c,
 		validation.Key("Address", validation.Map(
 			// Street cannot be empty, and the length must between 5 and 50
 			validation.Key("Street", validation.Required, validation.Length(5, 50)),
-			// City cannot be empty, and the length must between 5 and 50
-			validation.Key("City", validation.Required, validation.Length(5, 50)),
+			// City cannot be empty, and the length must between 1 and 50
+			validation.Key("City", validation.Required, validation.Length(1, 50)),
 			// State cannot be empty, and must be a string consisting of two letters in upper case
 			validation.Key("State", validation.Required, validation.Match(regexp.MustCompile("^[A-Z]{2}$"))),
 			// State cannot be empty, and must be a string consisting of five digits
@@ -455,8 +455,8 @@ The following code implements the aforementioned examples:
 ```go
 result := validation.ValidateStruct(&a,
     validation.Field(&a.Unit, validation.When(a.Quantity != "", validation.Required).Else(validation.Nil)),
-    validation.Field(&a.Phone, validation.When(a.Email == "", validation.Required.Error('Either phone or Email is required.')),
-    validation.Field(&a.Email, validation.When(a.Phone == "", validation.Required.Error('Either phone or Email is required.')),
+    validation.Field(&a.Phone, validation.When(a.Email == "", validation.Required.Error("Either phone or Email is required.")),
+    validation.Field(&a.Email, validation.When(a.Phone == "", validation.Required.Error("Either phone or Email is required.")),
 )
 ```
 
@@ -467,8 +467,8 @@ The above code can also be simplified using the shortcut `validation.Required.Wh
 ```go
 result := validation.ValidateStruct(&a,
     validation.Field(&a.Unit, validation.Required.When(a.Quantity != ""), validation.Nil.When(a.Quantity == "")),
-    validation.Field(&a.Phone, validation.Required.When(a.Email == "").Error('Either phone or Email is required.')),
-    validation.Field(&a.Email, validation.Required.When(a.Phone == "").Error('Either phone or Email is required.')),
+    validation.Field(&a.Phone, validation.Required.When(a.Email == "").Error("Either phone or Email is required.")),
+    validation.Field(&a.Email, validation.Required.When(a.Phone == "").Error("Either phone or Email is required.")),
 )
 ```
 
