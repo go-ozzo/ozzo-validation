@@ -72,3 +72,16 @@ func TestEachWithContext(t *testing.T) {
 		assertError(t, test.err, err, test.tag)
 	}
 }
+
+func TestEachAndBy(t *testing.T) {
+	var byAddr bool
+	var s string
+	Each(By(func(v interface{}) error {
+		_, byAddr = v.(*string)
+		return nil
+	})).Validate([]*string{&s})
+
+	if !byAddr {
+		t.Fatal("slice of pointers does not get passed to `By` function by ref")
+	}
+}
