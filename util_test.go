@@ -195,8 +195,8 @@ func TestIsEmpty(t *testing.T) {
 	var s1 string
 	var s2 = "a"
 	var s3 *string
-	s4 := struct{A string}{}
-	s5 := struct{A string}{A: "a"}
+	s4 := struct{ A string }{}
+	s5 := struct{ A string }{A: "a"}
 	time1 := time.Now()
 	var time2 time.Time
 	tests := []struct {
