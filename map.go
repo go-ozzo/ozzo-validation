@@ -149,8 +149,8 @@ func Key(key interface{}, rules ...Rule) *KeyRules {
 	}
 }
 
-// Key specifies an optional map key and the corresponding validation rules.
-// the rule will be ignored if the key is missing.
+// OptionalKey specifies a map key and the corresponding validation rules.
+// The rule will be ignored if the key is missing.
 func OptionalKey(key interface{}, rules ...Rule) *KeyRules {
 	return &KeyRules{
 		key:      key,
