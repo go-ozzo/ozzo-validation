@@ -84,11 +84,9 @@ func (r DateRule) Max(max time.Time) DateRule {
 // specify a time zone of its own. This matters when Min/Max are constructed in a
 // specific time zone: without it, values are parsed as UTC (time.Parse's default),
 // which can make dates that are actually within range appear out of range.
-// If not called, UTC is used, preserving the previous behavior. Passing nil resets it to UTC.
+// If not called, UTC is used, preserving the previous behavior. Passing nil defers back
+// to that default too, since Validate falls back to UTC whenever loc is nil.
 func (r DateRule) Location(loc *time.Location) DateRule {
-	if loc == nil {
-		loc = time.UTC
-	}
 	r.loc = loc
 	return r
 }
