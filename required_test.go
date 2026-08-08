@@ -97,4 +97,6 @@ func TestRequiredRule_Error(t *testing.T) {
 	assert.Equal(t, err.Code(), r.err.Code())
 	assert.Equal(t, err.Message(), r.err.Message())
 	assert.NotEqual(t, err, Required.err)
+
+	assert.Equal(t, err, r.Validate(nil))
 }
