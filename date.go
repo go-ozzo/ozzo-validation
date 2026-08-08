@@ -20,6 +20,7 @@ type DateRule struct {
 	layout        string
 	min, max      time.Time
 	err, rangeErr Error
+	loc           *time.Location
 }
 
 // Date returns a validation rule that checks if a string value is in a format that can be parsed into a date.
@@ -39,6 +40,7 @@ func Date(layout string) DateRule {
 		layout:   layout,
 		err:      ErrDateInvalid,
 		rangeErr: ErrDateOutOfRange,
+		loc:      time.UTC,
 	}
 }
 
@@ -78,6 +80,19 @@ func (r DateRule) Max(max time.Time) DateRule {
 	return r
 }
 
+// Location sets the time.Location used to interpret the date string when it doesn't
+// specify a time zone of its own. This matters when Min/Max are constructed in a
+// specific time zone: without it, values are parsed as UTC (time.Parse's default),
+// which can make dates that are actually within range appear out of range.
+// If not called, UTC is used, preserving the previous behavior. Passing nil resets it to UTC.
+func (r DateRule) Location(loc *time.Location) DateRule {
+	if loc == nil {
+		loc = time.UTC
+	}
+	r.loc = loc
+	return r
+}
+
 // Validate checks if the given value is a valid date.
 func (r DateRule) Validate(value interface{}) error {
 	value, isNil := Indirect(value)
@@ -90,7 +105,7 @@ func (r DateRule) Validate(value interface{}) error {
 		return err
 	}
 
-	date, err := time.Parse(r.layout, str)
+	date, err := time.ParseInLocation(r.layout, str, r.loc)
 	if err != nil {
 		return r.err
 	}
