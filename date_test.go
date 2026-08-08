@@ -89,3 +89,41 @@ func TestDateRule_MinMax(t *testing.T) {
 		assert.Equal(t, "the date is out of range", err.Error())
 	}
 }
+
+func TestDateRule_Location(t *testing.T) {
+	r := Date(time.ANSIC)
+	assert.Equal(t, time.UTC, r.loc)
+	kolkata, err := time.LoadLocation("Asia/Kolkata")
+	if err != nil {
+		t.Skip("Asia/Kolkata tzdata not available:", err)
+	}
+	r = r.Location(kolkata)
+	assert.Equal(t, kolkata, r.loc)
+	r = r.Location(nil)
+	assert.Equal(t, time.UTC, r.loc)
+
+	// Reproduces https://github.com/go-ozzo/ozzo-validation/issues (DateRule always
+	// parses as UTC via time.Parse, so a date near the Min/Max boundary in a
+	// non-UTC location can be wrongly reported as out of range).
+	minTime := time.Date(2022, 1, 31, 23, 0, 0, 0, kolkata)
+	maxTime := time.Date(2022, 2, 1, 2, 0, 0, 0, kolkata)
+
+	withoutLoc := Date("2006-01-02").Min(minTime).Max(maxTime)
+	err2 := withoutLoc.Validate("2022-02-01")
+	if assert.NotNil(t, err2) {
+		assert.Equal(t, "the date is out of range", err2.Error())
+	}
+
+	withLoc := Date("2006-01-02").Min(minTime).Max(maxTime).Location(kolkata)
+	assert.Nil(t, withLoc.Validate("2022-02-01"))
+
+	// DateRule is exported, so a zero value (bypassing the Date constructor, and
+	// therefore its default loc: time.UTC) is constructible by external code.
+	// Validate must not panic in that case.
+	zeroRule := DateRule{layout: "2006-01-02"}
+	var zeroErr error
+	assert.NotPanics(t, func() {
+		zeroErr = zeroRule.Validate("2020-01-01")
+	})
+	assert.Nil(t, zeroErr)
+}
