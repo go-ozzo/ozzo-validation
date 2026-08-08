@@ -1,13 +1,12 @@
-name: Benchmark Comparison
+name: Benchmark Run
 
-# Benchmark Comparison Strategy:
-# - Runs on PRs to master (detect performance regressions)
-# - Compares PR benchmarks with base branch using benchstat
-# - Posts results as PR comment (informational, not blocking)
-# - Uses 5 iterations for reasonable CI time vs statistical significance
+# Two-workflow pattern for fork PR safety (GitHub Security Lab recommended):
+# 1. This workflow: runs benchmarks in sandboxed pull_request context (read-only token)
+# 2. benchmark-comment.yml: posts results via workflow_run (write token, no fork code)
 #
-# Note: GitHub Actions shared runners have ~10-20% variance.
-# Results are directional, not absolute. Major regressions (>30%) are reliable.
+# Why: pull_request from forks gets read-only GITHUB_TOKEN.
+# Using pull_request_target would give write access to fork code = "pwn request" vulnerability.
+# See: https://securitylab.github.com/resources/github-actions-preventing-pwn-requests/
 
 on:
   pull_request:
@@ -21,11 +20,10 @@ on:
 
 permissions:
   contents: read
-  pull-requests: write
 
 jobs:
-  benchmark-compare:
-    name: Benchmark Comparison
+  benchmark-run:
+    name: Benchmark Run
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
 
@@ -54,21 +52,14 @@ jobs:
     - name: Run base branch benchmarks
       working-directory: base
       run: |
-        echo "# Base branch benchmarks - ${{ github.event.pull_request.base.sha }}" > ../base-bench.txt
-        echo "# Generated: $(date -Iseconds)" >> ../base-bench.txt
-        echo "" >> ../base-bench.txt
-        go test -bench=. -benchmem -count=5 -benchtime=100ms -run=^$ ./... 2>/dev/null >> ../base-bench.txt || true
+        go test -bench=. -benchmem -count=5 -benchtime=100ms -run=^$ ./... > ../base-bench.txt 2>/dev/null || true
 
     - name: Run PR branch benchmarks
       working-directory: pr
       run: |
-        echo "# PR branch benchmarks - ${{ github.event.pull_request.head.sha }}" > ../pr-bench.txt
-        echo "# Generated: $(date -Iseconds)" >> ../pr-bench.txt
-        echo "" >> ../pr-bench.txt
-        go test -bench=. -benchmem -count=5 -benchtime=100ms -run=^$ ./... 2>/dev/null >> ../pr-bench.txt || true
+        go test -bench=. -benchmem -count=5 -benchtime=100ms -run=^$ ./... > ../pr-bench.txt 2>/dev/null || true
 
     - name: Compare benchmarks
-      id: benchstat
       run: |
         benchstat base-bench.txt pr-bench.txt > full-comparison.txt 2>&1 || echo "benchstat comparison failed" > full-comparison.txt
 
@@ -76,8 +67,6 @@ jobs:
         REGRESSIONS=$(grep -E "\+[0-9]+\.[0-9]+%" full-comparison.txt | grep -v "~" | head -10 || echo "")
 
         echo "## Benchmark Comparison" > comparison.md
-        echo "" >> comparison.md
-        echo "Comparing \`${{ github.event.pull_request.base.ref }}\` → PR #${{ github.event.pull_request.number }}" >> comparison.md
         echo "" >> comparison.md
 
         if [ -n "$GEOMEAN" ]; then
@@ -98,30 +87,17 @@ jobs:
 
         echo "> Full results available in workflow artifacts. CI runners have ~10-20% variance." >> comparison.md
 
-        cat comparison.md
+    - name: Save PR number
+      run: echo "${{ github.event.pull_request.number }}" > pr-number.txt
 
     - name: Upload benchmark results
       uses: actions/upload-artifact@v7
       with:
-        name: benchmark-comparison
+        name: benchmark-results
         path: |
           base-bench.txt
           pr-bench.txt
           full-comparison.txt
-        retention-days: 30
-
-    - name: Find existing comment
-      uses: peter-evans/find-comment@v4
-      id: fc
-      with:
-        issue-number: ${{ github.event.pull_request.number }}
-        comment-author: 'github-actions[bot]'
-        body-includes: '## Benchmark Comparison'
-
-    - name: Create or update comment
-      uses: peter-evans/create-or-update-comment@v5
-      with:
-        comment-id: ${{ steps.fc.outputs.comment-id }}
-        issue-number: ${{ github.event.pull_request.number }}
-        body-path: comparison.md
-        edit-mode: replace
+          comparison.md
+          pr-number.txt
+        retention-days: 7
