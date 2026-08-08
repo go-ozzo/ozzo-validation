@@ -105,7 +105,12 @@ func (r DateRule) Validate(value interface{}) error {
 		return err
 	}
 
-	date, err := time.ParseInLocation(r.layout, str, r.loc)
+	loc := r.loc
+	if loc == nil {
+		loc = time.UTC
+	}
+
+	date, err := time.ParseInLocation(r.layout, str, loc)
 	if err != nil {
 		return r.err
 	}

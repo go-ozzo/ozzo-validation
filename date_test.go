@@ -116,4 +116,14 @@ func TestDateRule_Location(t *testing.T) {
 
 	withLoc := Date("2006-01-02").Min(minTime).Max(maxTime).Location(kolkata)
 	assert.Nil(t, withLoc.Validate("2022-02-01"))
+
+	// DateRule is exported, so a zero value (bypassing the Date constructor, and
+	// therefore its default loc: time.UTC) is constructible by external code.
+	// Validate must not panic in that case.
+	zeroRule := DateRule{layout: "2006-01-02"}
+	var zeroErr error
+	assert.NotPanics(t, func() {
+		zeroErr = zeroRule.Validate("2020-01-01")
+	})
+	assert.Nil(t, zeroErr)
 }
