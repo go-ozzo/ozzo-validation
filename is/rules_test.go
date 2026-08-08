@@ -13,6 +13,10 @@ import (
 )
 
 func TestAll(t *testing.T) {
+	domainLabel := strings.Repeat("a", 63)
+	domain255 := domainLabel + "." + domainLabel + "." + domainLabel + "." + strings.Repeat("a", 63)
+	origin255 := "https://" + strings.Repeat("a", 247)
+
 	tests := []struct {
 		tag            string
 		rule           validation.Rule
@@ -40,6 +44,7 @@ func TestAll(t *testing.T) {
 		{"Subdomain", Subdomain, "example-subdomain", "example.com", "must be a valid subdomain"},
 		{"Domain", Domain, "example-domain.com", "localhost", "must be a valid domain"},
 		{"Domain", Domain, "example-domain.com", strings.Repeat("a", 256), "must be a valid domain"},
+		{"Domain_max_length", Domain, domain255, domain255 + "a", "must be a valid domain"},
 		{"DNSName", DNSName, "example.com", "abc%", "must be a valid DNS name"},
 		{"Host", Host, "example.com", "abc%", "must be a valid IP address or DNS name"},
 		{"Port", Port, "123", "99999", "must be a valid port number"},
@@ -55,6 +60,9 @@ func TestAll(t *testing.T) {
 		{"UUIDv4", UUIDv4, "57b73598-8764-4ad0-a76a-679bb6640eb1", "b987fbc9-4bed-3078-cf07-9141ba07c9f3", "must be a valid UUID v4"},
 		{"UUIDv5", UUIDv5, "987fbc97-4bed-5078-af07-9141ba07c9f3", "b987fbc9-4bed-3078-cf07-9141ba07c9f3", "must be a valid UUID v5"},
 		{"UUIDv7", UUIDv7, "01890a5d-a4cc-7b6b-8000-000000000000", "b987fbc9-4bed-3078-cf07-9141ba07c9f3", "must be a valid UUID v7"},
+		{"UUIDv7_not_a_uuid", UUIDv7, "01890a5d-a4cc-7b6b-9000-000000000000", "not-a-uuid", "must be a valid UUID v7"},
+		{"UUIDv7_invalid_variant", UUIDv7, "01890a5d-a4cc-7b6b-a000-000000000000", "01890a5d-a4cc-7b6b-c000-000000000000", "must be a valid UUID v7"},
+		{"UUIDv7_variant_b", UUIDv7, "01890a5d-a4cc-7b6b-b000-000000000000", "57b73598-8764-4ad0-a76a-679bb6640eb1", "must be a valid UUID v7"},
 		{"ULID", ULID, "01ARZ3NDEKTSV4RRFFQ69G5FAV", "not-a-ulid", "must be a valid ULID"},
 		{"MongoID", MongoID, "507f1f77bcf86cd799439011", "507f1f77bcf86cd79943901", "must be a valid hex-encoded MongoDB ObjectId"},
 		{"CreditCard", CreditCard, "375556917985515", "375556917985516", "must be a valid credit card number"},
@@ -83,6 +91,7 @@ func TestAll(t *testing.T) {
 		{"Origin_http", Origin, "http://localhost", "ftp://example.com", "must be a valid origin"},
 		{"Origin_subdomain", Origin, "https://sub.example.com", "https://", "must be a valid origin"},
 		{"Origin_localhost_port", Origin, "http://localhost:3000", "https://-invalid.com", "must be a valid origin"},
+		{"Origin_max_length", Origin, origin255, origin255 + "a", "must be a valid origin"},
 	}
 
 	for _, test := range tests {

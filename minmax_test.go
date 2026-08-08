@@ -60,6 +60,8 @@ func TestMin(t *testing.T) {
 		{"t5.2", 0, true, 0, "must be greater than 0"},
 		{"t5.3", float64(0), true, float64(0), "must be greater than 0"},
 		{"t5.4", 1, false, 0, "must be no less than 1"},
+		// nil value tests
+		{"t6.1", 1, false, nil, ""},
 	}
 
 	for _, test := range tests {
@@ -122,6 +124,8 @@ func TestMax(t *testing.T) {
 		{"t4.4", date20000601, false, date0, ""},
 		{"t4.5", date20000601, true, date20000601, "must be less than 2000-06-01 00:00:00 +0000 UTC"},
 		{"t4.6", date20000601, true, 1, "cannot convert int to time.Time"},
+		// nil value tests
+		{"t5.1", 2, false, nil, ""},
 	}
 
 	for _, test := range tests {

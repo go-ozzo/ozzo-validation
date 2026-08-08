@@ -59,4 +59,6 @@ func TestNotNilRule_ErrorObject(t *testing.T) {
 	assert.Equal(t, err.Code(), r.err.Code())
 	assert.Equal(t, err.Message(), r.err.Message())
 	assert.NotEqual(t, err, NotNil.err)
+
+	assert.Equal(t, err, r.Validate(nil))
 }
