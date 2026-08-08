@@ -100,7 +100,7 @@ func TestDateRule_Location(t *testing.T) {
 	r = r.Location(kolkata)
 	assert.Equal(t, kolkata, r.loc)
 	r = r.Location(nil)
-	assert.Equal(t, time.UTC, r.loc)
+	assert.Nil(t, r.loc)
 
 	// Reproduces https://github.com/go-ozzo/ozzo-validation/issues (DateRule always
 	// parses as UTC via time.Parse, so a date near the Min/Max boundary in a
