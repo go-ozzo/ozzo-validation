@@ -112,7 +112,14 @@ func (r MapRule) ValidateWithContext(ctx context.Context, m interface{}) error {
 			err = ErrKeyWrongType
 		} else if vv := value.MapIndex(kv); !vv.IsValid() {
 			if !kr.optional {
-				err = ErrKeyMissing
+				if ctx == nil {
+					err = Validate(nil, kr.rules...)
+				} else {
+					err = ValidateWithContext(ctx, nil, kr.rules...)
+				}
+				if err == nil {
+					err = ErrKeyMissing
+				}
 			}
 		} else if ctx == nil {
 			err = Validate(vv.Interface(), kr.rules...)
