@@ -80,6 +80,36 @@ func (r MapRule) Validate(m interface{}) error {
 	return r.ValidateWithContext(nil, m)
 }
 
+// validateMapKey validates a single map key against its rules, returning the
+// resulting error, or nil if the key is valid (or optional and missing).
+func validateMapKey(ctx context.Context, value reflect.Value, kt reflect.Type, kr *KeyRules) error {
+	kv := reflect.ValueOf(kr.key)
+	if !kt.AssignableTo(kv.Type()) {
+		return ErrKeyWrongType
+	}
+
+	vv := value.MapIndex(kv)
+	if !vv.IsValid() {
+		if kr.optional {
+			return nil
+		}
+		if err := validateWithOptionalContext(ctx, nil, kr.rules...); err != nil {
+			return err
+		}
+		return ErrKeyMissing
+	}
+
+	return validateWithOptionalContext(ctx, vv.Interface(), kr.rules...)
+}
+
+// validateWithOptionalContext calls ValidateWithContext if ctx is set, or Validate otherwise.
+func validateWithOptionalContext(ctx context.Context, value interface{}, rules ...Rule) error {
+	if ctx == nil {
+		return Validate(value, rules...)
+	}
+	return ValidateWithContext(ctx, value, rules...)
+}
+
 // ValidateWithContext checks if the given value is valid or not.
 func (r MapRule) ValidateWithContext(ctx context.Context, m interface{}) error {
 	value := reflect.ValueOf(m)
@@ -107,18 +137,7 @@ func (r MapRule) ValidateWithContext(ctx context.Context, m interface{}) error {
 	}
 
 	for _, kr := range r.keys {
-		var err error
-		if kv := reflect.ValueOf(kr.key); !kt.AssignableTo(kv.Type()) {
-			err = ErrKeyWrongType
-		} else if vv := value.MapIndex(kv); !vv.IsValid() {
-			if !kr.optional {
-				err = ErrKeyMissing
-			}
-		} else if ctx == nil {
-			err = Validate(vv.Interface(), kr.rules...)
-		} else {
-			err = ValidateWithContext(ctx, vv.Interface(), kr.rules...)
-		}
+		err := validateMapKey(ctx, value, kt, kr)
 		if err != nil {
 			if ie, ok := err.(InternalError); ok && ie.InternalError() != nil {
 				return err
