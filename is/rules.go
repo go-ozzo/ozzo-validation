@@ -7,6 +7,7 @@ package is
 
 import (
 	"regexp"
+	"strconv"
 	"unicode"
 
 	"github.com/asaskevich/govalidator"
@@ -237,10 +238,12 @@ var (
 	Port = validation.NewStringRuleWithError(govalidator.IsPort, ErrPort)
 	// MongoID validates if a string is a valid Mongo ID
 	MongoID = validation.NewStringRuleWithError(govalidator.IsMongoID, ErrMongoID)
-	// Latitude validates if a string is a valid latitude
-	Latitude = validation.NewStringRuleWithError(govalidator.IsLatitude, ErrLatitude)
-	// Longitude validates if a string is a valid longitude
-	Longitude = validation.NewStringRuleWithError(govalidator.IsLongitude, ErrLongitude)
+	// Latitude validates if a value is a valid latitude, in the range [-90, 90].
+	// The value can be a string (e.g. "45.5"), or a float32/float64.
+	Latitude = coordinateRangeRule{bound: 90, err: ErrLatitude}
+	// Longitude validates if a value is a valid longitude, in the range [-180, 180].
+	// The value can be a string (e.g. "-122.4"), or a float32/float64.
+	Longitude = coordinateRangeRule{bound: 180, err: ErrLongitude}
 	// SSN validates if a string is a social security number (SSN)
 	SSN = validation.NewStringRuleWithError(govalidator.IsSSN, ErrSSN)
 	// Semver validates if a string is a valid semantic version
@@ -323,4 +326,57 @@ func isUUIDv7(value string) bool {
 	}
 
 	return true
+}
+
+// coordinateRangeRule validates that a value falls within [-bound, bound] degrees.
+// It accepts strings (parsed as decimal degrees) as well as float32/float64 values
+// directly, so it works for both string-based input (e.g. query params) and the
+// float fields most geo-coordinate structs actually use.
+type coordinateRangeRule struct {
+	bound float64
+	err   validation.Error
+}
+
+// Error sets the error message for the rule.
+func (r coordinateRangeRule) Error(message string) coordinateRangeRule {
+	r.err = r.err.SetMessage(message)
+	return r
+}
+
+// ErrorObject sets the error struct for the rule.
+func (r coordinateRangeRule) ErrorObject(err validation.Error) coordinateRangeRule {
+	r.err = err
+	return r
+}
+
+// Validate checks if the given value is valid or not.
+func (r coordinateRangeRule) Validate(value interface{}) error {
+	value, isNil := validation.Indirect(value)
+	if isNil || validation.IsEmpty(value) {
+		return nil
+	}
+
+	v, ok := toCoordinate(value)
+	if !ok || v < -r.bound || v > r.bound {
+		return r.err
+	}
+
+	return nil
+}
+
+func toCoordinate(value interface{}) (float64, bool) {
+	switch v := value.(type) {
+	case float32:
+		return float64(v), true
+	case float64:
+		return v, true
+	case string:
+		f, err := strconv.ParseFloat(v, 64)
+		return f, err == nil
+	case []byte:
+		f, err := strconv.ParseFloat(string(v), 64)
+		return f, err == nil
+	default:
+		return 0, false
+	}
 }

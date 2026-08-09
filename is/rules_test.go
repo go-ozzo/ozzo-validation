@@ -108,6 +108,70 @@ func TestAll(t *testing.T) {
 	}
 }
 
+func TestLatitudeLongitude_Numeric(t *testing.T) {
+	tests := []struct {
+		tag   string
+		rule  validation.Rule
+		value interface{}
+		err   string
+	}{
+		{"Latitude_float64_valid", Latitude, float64(45.5), ""},
+		{"Latitude_float64_boundary", Latitude, float64(90), ""},
+		{"Latitude_float64_invalid", Latitude, float64(90.1), "must be a valid latitude"},
+		{"Latitude_float32_valid", Latitude, float32(-90), ""},
+		{"Latitude_float32_invalid", Latitude, float32(-90.1), "must be a valid latitude"},
+		{"Longitude_float64_valid", Longitude, float64(-122.4), ""},
+		{"Longitude_float64_boundary", Longitude, float64(180), ""},
+		{"Longitude_float64_invalid", Longitude, float64(180.1), "must be a valid longitude"},
+		{"Longitude_float32_valid", Longitude, float32(180), ""},
+		{"Longitude_wrong_type", Longitude, 45, "must be a valid longitude"},
+		{"Latitude_bytes_valid", Latitude, []byte("45.5"), ""},
+		{"Latitude_bytes_invalid", Latitude, []byte("abc"), "must be a valid latitude"},
+	}
+
+	for _, test := range tests {
+		err := test.rule.Validate(test.value)
+		assertError(t, test.err, err, test.tag)
+	}
+}
+
+func TestCoordinateRangeRule_Error(t *testing.T) {
+	r := Latitude.Error("bad lat")
+	err := r.Validate(float64(100))
+	if assert.NotNil(t, err) {
+		assert.Equal(t, "bad lat", err.Error())
+	}
+
+	r2 := Longitude.ErrorObject(validation.NewError("code", "bad lng"))
+	err2 := r2.Validate(float64(200))
+	if assert.NotNil(t, err2) {
+		assert.Equal(t, "bad lng", err2.Error())
+		assert.Equal(t, "code", err2.(validation.Error).Code())
+	}
+}
+
+type geoPosition struct {
+	Latitude  float32
+	Longitude float32
+}
+
+func TestLatitudeLongitude_StructField(t *testing.T) {
+	g := geoPosition{Latitude: 45.5, Longitude: 200}
+	err := validation.ValidateStruct(&g,
+		validation.Field(&g.Latitude, validation.Required, Latitude),
+		validation.Field(&g.Longitude, validation.Required, Longitude),
+	)
+	if assert.NotNil(t, err) {
+		assert.Equal(t, "Longitude: must be a valid longitude.", err.Error())
+	}
+
+	g2 := geoPosition{Latitude: 45.5, Longitude: 100}
+	assert.Nil(t, validation.ValidateStruct(&g2,
+		validation.Field(&g2.Latitude, validation.Required, Latitude),
+		validation.Field(&g2.Longitude, validation.Required, Longitude),
+	))
+}
+
 func assertError(t *testing.T, expected string, err error, tag string) {
 	if expected == "" {
 		assert.Nil(t, err, tag)
