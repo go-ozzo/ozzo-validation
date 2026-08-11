@@ -376,7 +376,14 @@ func toCoordinate(value interface{}) (float64, bool) {
 	case []byte:
 		f, err := strconv.ParseFloat(string(v), 64)
 		return f, err == nil
-	default:
-		return 0, false
 	}
+
+	if i, err := validation.ToInt(value); err == nil {
+		return float64(i), true
+	}
+	if u, err := validation.ToUint(value); err == nil {
+		return float64(u), true
+	}
+
+	return 0, false
 }

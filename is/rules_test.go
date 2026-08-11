@@ -124,9 +124,14 @@ func TestLatitudeLongitude_Numeric(t *testing.T) {
 		{"Longitude_float64_boundary", Longitude, float64(180), ""},
 		{"Longitude_float64_invalid", Longitude, float64(180.1), "must be a valid longitude"},
 		{"Longitude_float32_valid", Longitude, float32(180), ""},
-		{"Longitude_wrong_type", Longitude, 45, "must be a valid longitude"},
 		{"Latitude_bytes_valid", Latitude, []byte("45.5"), ""},
 		{"Latitude_bytes_invalid", Latitude, []byte("abc"), "must be a valid latitude"},
+		{"Longitude_int_valid", Longitude, 45, ""},
+		{"Longitude_int_invalid", Longitude, 200, "must be a valid longitude"},
+		{"Longitude_int8_valid", Longitude, int8(-90), ""},
+		{"Latitude_uint_valid", Latitude, uint(90), ""},
+		{"Latitude_uint_invalid", Latitude, uint(91), "must be a valid latitude"},
+		{"Longitude_wrong_type", Longitude, true, "must be a valid longitude"},
 	}
 
 	for _, test := range tests {
