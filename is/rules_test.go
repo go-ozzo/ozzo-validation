@@ -108,6 +108,31 @@ func TestAll(t *testing.T) {
 	}
 }
 
+func TestCurrencyCode_ISO4217(t *testing.T) {
+	tests := []struct {
+		tag   string
+		value string
+		err   string
+	}{
+		// active codes added after govalidator's ISO4217List went stale (#206)
+		{"VES_valid", "VES", ""},
+		{"VED_valid", "VED", ""},
+		{"MRU_valid", "MRU", ""},
+		{"SLE_valid", "SLE", ""},
+		{"XCG_valid", "XCG", ""},
+		{"ZWG_valid", "ZWG", ""},
+		// withdrawn / never-valid codes must still be rejected
+		{"USS_withdrawn", "USS", "must be valid ISO 4217 currency code"},
+		{"ANG_withdrawn", "ANG", "must be valid ISO 4217 currency code"},
+		{"BGN_withdrawn", "BGN", "must be valid ISO 4217 currency code"},
+		{"XYZ_unknown", "XYZ", "must be valid ISO 4217 currency code"},
+	}
+	for _, test := range tests {
+		err := CurrencyCode.Validate(test.value)
+		assertError(t, test.err, err, test.tag)
+	}
+}
+
 func TestLatitudeLongitude_Numeric(t *testing.T) {
 	tests := []struct {
 		tag   string
