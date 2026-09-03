@@ -39,7 +39,6 @@ const (
 // By calling Exclusive, the rule will check if the value is strictly greater than the specified value.
 // Note that the value being checked and the threshold value must be of the same type.
 // Only int, uint, float and time.Time types are supported.
-// An empty value is considered valid. Please use the Required rule to make sure a value is not empty.
 func Min(min interface{}) ThresholdRule {
 	return ThresholdRule{
 		threshold: min,
@@ -52,7 +51,6 @@ func Min(min interface{}) ThresholdRule {
 // By calling Exclusive, the rule will check if the value is strictly less than the specified value.
 // Note that the value being checked and the threshold value must be of the same type.
 // Only int, uint, float and time.Time types are supported.
-// An empty value is considered valid. Please use the Required rule to make sure a value is not empty.
 func Max(max interface{}) ThresholdRule {
 	return ThresholdRule{
 		threshold: max,
