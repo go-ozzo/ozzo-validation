@@ -7,6 +7,7 @@ package validation
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -118,13 +119,7 @@ func (es Errors) Error() string {
 		return ""
 	}
 
-	keys := make([]string, len(es))
-	i := 0
-	for key := range es {
-		keys[i] = key
-		i++
-	}
-	sort.Strings(keys)
+	keys := es.sortedKeys()
 
 	var s strings.Builder
 	for i, key := range keys {
@@ -142,6 +137,52 @@ func (es Errors) Error() string {
 	}
 	s.WriteString(".")
 	return s.String()
+}
+
+// Is implements the interface relied upon by the standard library's errors.Is.
+// It reports whether any of the errors contained in es matches target according
+// to errors.Is. This makes a validation.Errors value (such as the one returned
+// by Validate or ValidateStruct) usable with errors.Is against a sentinel error,
+// including errors nested in the Errors values produced for maps, slices and
+// nested structs.
+//
+// Fields are examined in sorted key order and nil field errors are skipped.
+func (es Errors) Is(target error) bool {
+	if target == nil {
+		return false
+	}
+	for _, key := range es.sortedKeys() {
+		if err := es[key]; err != nil && errors.Is(err, target) {
+			return true
+		}
+	}
+	return false
+}
+
+// As implements the interface relied upon by the standard library's errors.As.
+// It looks for the first error contained in es that matches target according to
+// errors.As; if one is found, target is set to that error value and As reports
+// true. Like Is, it recurses into the Errors values produced for maps, slices
+// and nested structs, examines fields in sorted key order and skips nil field
+// errors.
+func (es Errors) As(target interface{}) bool {
+	for _, key := range es.sortedKeys() {
+		if err := es[key]; err != nil && errors.As(err, target) {
+			return true
+		}
+	}
+	return false
+}
+
+// sortedKeys returns the keys of es sorted in increasing order. It gives the
+// Error, Is and As methods a deterministic iteration order over the fields.
+func (es Errors) sortedKeys() []string {
+	keys := make([]string, 0, len(es))
+	for key := range es {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	return keys
 }
 
 // MarshalJSON converts the Errors into a valid JSON.
@@ -181,3 +222,9 @@ func NewError(code, message string) Error {
 
 // Assert that our ErrorObject implements the Error interface.
 var _ Error = ErrorObject{}
+
+// Assert that Errors implements the hook interfaces used by errors.Is and errors.As.
+var (
+	_ interface{ Is(error) bool }       = Errors{}
+	_ interface{ As(interface{}) bool } = Errors{}
+)

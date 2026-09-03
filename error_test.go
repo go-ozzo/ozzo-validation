@@ -6,6 +6,7 @@ package validation
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -43,6 +44,57 @@ func TestErrors_Error(t *testing.T) {
 	assert.NotPanics(t, func() {
 		_ = errs.Error()
 	})
+}
+
+func TestErrors_Is(t *testing.T) {
+	sentinel := errors.New("sentinel")
+
+	assert.True(t, errors.Is(Errors{"A": errors.New("a"), "B": sentinel}, sentinel))
+	assert.False(t, errors.Is(Errors{"A": errors.New("a"), "B": errors.New("b")}, sentinel))
+
+	// wrapped field errors are matched through the errors chain
+	assert.True(t, errors.Is(Errors{"A": fmt.Errorf("wrapped: %w", sentinel)}, sentinel))
+
+	// errors nested in Errors (maps, slices, nested structs) are matched too
+	assert.True(t, errors.Is(Errors{"A": Errors{"0": sentinel}}, sentinel))
+
+	// nil field errors and empty Errors do not match, and no target never matches
+	assert.False(t, errors.Is(Errors{"A": nil}, sentinel))
+	assert.False(t, errors.Is(Errors{}, sentinel))
+	assert.False(t, errors.Is(Errors{"A": errors.New("a")}, nil))
+}
+
+type customError struct {
+	code int
+}
+
+func (e customError) Error() string { return fmt.Sprintf("custom %d", e.code) }
+
+func TestErrors_As(t *testing.T) {
+	var target customError
+
+	assert.True(t, errors.As(Errors{"A": errors.New("a"), "B": customError{code: 7}}, &target))
+	assert.Equal(t, 7, target.code)
+
+	// errors nested in Errors are found too
+	target = customError{}
+	assert.True(t, errors.As(Errors{"A": Errors{"0": customError{code: 9}}}, &target))
+	assert.Equal(t, 9, target.code)
+
+	// wrapped field errors are unwrapped
+	target = customError{}
+	assert.True(t, errors.As(Errors{"A": fmt.Errorf("wrapped: %w", customError{code: 3})}, &target))
+	assert.Equal(t, 3, target.code)
+
+	// fields are scanned in sorted key order, so the "A" match wins over "B"
+	target = customError{}
+	assert.True(t, errors.As(Errors{"B": customError{code: 2}, "A": customError{code: 1}}, &target))
+	assert.Equal(t, 1, target.code)
+
+	// no matching field, nil field errors and empty Errors report false
+	target = customError{}
+	assert.False(t, errors.As(Errors{"A": errors.New("a"), "B": nil}, &target))
+	assert.False(t, errors.As(Errors{}, &target))
 }
 
 func TestErrors_MarshalMessage(t *testing.T) {
