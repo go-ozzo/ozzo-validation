@@ -95,6 +95,7 @@ func ToFloat(value interface{}) (float64, error) {
 // - string, array: len() == 0
 // - slice, map: nil or len() == 0
 // - interface, pointer: nil or the referenced value is empty
+// - struct: all fields have default values
 func IsEmpty(value interface{}) bool {
 	v := reflect.ValueOf(value)
 	switch v.Kind() {
