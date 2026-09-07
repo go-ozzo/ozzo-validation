@@ -4,11 +4,16 @@
 
 package validation
 
+import (
+	"reflect"
+)
+
 // ErrNotInInvalid is the error that returns when a value is in a list.
 var ErrNotInInvalid = NewError("validation_not_in_invalid", "must not be in list")
 
 // NotIn returns a validation rule that checks if a value is absent from the given list of values.
-// Note that the value being checked and the possible range of values must be of the same type.
+// reflect.DeepEqual() will be used to determine if two values are equal.
+// For more details please refer to https://golang.org/pkg/reflect/#DeepEqual
 // An empty value is considered valid. Use the Required rule to make sure a value is not empty.
 func NotIn(values ...interface{}) NotInRule {
 	return NotInRule{
@@ -31,7 +36,7 @@ func (r NotInRule) Validate(value interface{}) error {
 	}
 
 	for _, e := range r.elements {
-		if e == value {
+		if reflect.DeepEqual(e, value) { // mirror In: == panics on uncomparable kinds such as []byte
 			return r.err
 		}
 	}
