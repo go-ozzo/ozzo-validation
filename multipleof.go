@@ -40,21 +40,29 @@ func (r MultipleOfRule) Validate(value interface{}) error {
 	rv := reflect.ValueOf(r.base)
 	switch rv.Kind() {
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		base := rv.Int()
+		if base == 0 {
+			return fmt.Errorf("multiple of base must not be zero")
+		}
 		v, err := ToInt(value)
 		if err != nil {
 			return err
 		}
-		if v%rv.Int() == 0 {
+		if v%base == 0 {
 			return nil
 		}
 
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+		base := rv.Uint()
+		if base == 0 {
+			return fmt.Errorf("multiple of base must not be zero")
+		}
 		v, err := ToUint(value)
 		if err != nil {
 			return err
 		}
 
-		if v%rv.Uint() == 0 {
+		if v%base == 0 {
 			return nil
 		}
 	default:
