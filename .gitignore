@@ -34,3 +34,10 @@ _testmain.go
 # Dev docs (private)
 docs/dev/
 tmp/
+
+# Test and build outputs
+*.out
+coverage.*
+
+# Private project state (pm skill)
+/.pm/
