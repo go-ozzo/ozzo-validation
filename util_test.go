@@ -252,8 +252,8 @@ func TestIsEmpty(t *testing.T) {
 		{"t8.2", &s2, false},
 		{"t8.3", s3, true},
 		// struct
-		{"t9.1", s4, true},
-		{"t9.2", &s4, true},
+		{"t9.1", s4, false},
+		{"t9.2", &s4, false},
 		{"t9.3", s5, false},
 		{"t9.4", &s5, false},
 		// time.Time
