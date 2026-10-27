@@ -47,7 +47,9 @@ jobs:
         cache: false
 
     - name: Install benchstat
-      run: go install golang.org/x/perf/cmd/benchstat@latest
+      # Pinned: newer x/perf requires a newer Go than this job runs (GOTOOLCHAIN=local).
+      # Last x/perf with go 1.25 in go.mod: fd4a688 (2026-08-13).
+      run: go install golang.org/x/perf/cmd/benchstat@v0.0.0-20260813145340-fd4a688df892
 
     - name: Run base branch benchmarks
       working-directory: base
