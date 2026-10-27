@@ -159,3 +159,13 @@ func TestMapMissingKeyErrorCode(t *testing.T) {
 		}
 	}
 }
+
+func TestMapMissingKeySkip(t *testing.T) {
+	m := map[string]interface{}{}
+	// a Skip before the custom Required stops the scan: the error stays ErrKeyMissing
+	err := Validate(m, Map(Key("X", Skip, Required.Error("is required"))))
+	assert.EqualError(t, err, "X: required key is missing.")
+	// a Skip that does not apply does not stop it
+	err = Validate(m, Map(Key("X", Skip.When(false), Required.Error("is required"))))
+	assert.EqualError(t, err, "X: is required.")
+}

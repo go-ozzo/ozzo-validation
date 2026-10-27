@@ -89,6 +89,8 @@ func TestErrors_Is(t *testing.T) {
 	assert.False(t, errors.Is(Errors{}, sentinel))
 	assert.False(t, errors.Is(Errors{"A": errors.New("a")}, nil))
 	assert.False(t, errors.Is(Errors(nil), sentinel))
+	// errors.Is never passes a nil target to Is, but a direct call may
+	assert.False(t, Errors{"A": errors.New("a")}.Is(nil))
 
 	// an Errors is not comparable, so it does not match itself
 	es := Errors{"A": errors.New("a")}
