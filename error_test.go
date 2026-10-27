@@ -35,15 +35,21 @@ func TestErrors_Error(t *testing.T) {
 	errs = Errors{}
 	assert.Equal(t, "", errs.Error())
 
-	// issue #147: nil value should not cause panic
-	errs = Errors{
-		"A": errors.New("A1"),
-		"B": nil,
-		"C": errors.New("C1"),
+	// issue #147: nil entries are skipped, with no stray separator
+	nilTests := []struct {
+		tag      string
+		errs     Errors
+		expected string
+	}{
+		{"nil in the middle", Errors{"A": errors.New("A1"), "B": nil, "C": errors.New("C1")}, "A: A1; C: C1."},
+		{"nil first", Errors{"A": nil, "B": errors.New("B1")}, "B: B1."},
+		{"nil last", Errors{"A": errors.New("A1"), "B": nil}, "A: A1."},
+		{"only nil", Errors{"A": nil}, ""},
+		{"all nil", Errors{"A": nil, "B": nil}, ""},
 	}
-	assert.NotPanics(t, func() {
-		_ = errs.Error()
-	})
+	for _, test := range nilTests {
+		assert.Equal(t, test.expected, test.errs.Error(), test.tag)
+	}
 }
 
 func TestErrors_Is(t *testing.T) {

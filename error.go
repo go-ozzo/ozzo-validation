@@ -108,11 +108,13 @@ func (es Errors) Error() string {
 	keys := es.sortedKeys()
 
 	var s strings.Builder
-	for i, key := range keys {
+	for _, key := range keys {
 		if es[key] == nil {
 			continue
 		}
-		if i > 0 {
+		// Decide the separator by what was written, not by the key index: skipped nil entries
+		// must not leave a leading "; ".
+		if s.Len() > 0 {
 			s.WriteString("; ")
 		}
 		if errs, ok := es[key].(Errors); ok {
@@ -120,6 +122,10 @@ func (es Errors) Error() string {
 		} else {
 			_, _ = fmt.Fprintf(&s, "%v: %v", key, es[key].Error())
 		}
+	}
+	if s.Len() == 0 {
+		// Only nil entries: report the same as an empty Errors.
+		return ""
 	}
 	s.WriteString(".")
 	return s.String()
