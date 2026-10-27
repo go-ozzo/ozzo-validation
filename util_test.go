@@ -27,6 +27,9 @@ func TestEnsureString(t *testing.T) {
 		{"t3", bytes, "abc", false},
 		{"t4", &bytes, "", true},
 		{"t5", 100, "", true},
+		// #233: nil must report an error, not panic; a nil byte slice is an empty string
+		{"t6", nil, "", true},
+		{"t7", []byte(nil), "", false},
 	}
 	for _, test := range tests {
 		s, err := EnsureString(test.value)
