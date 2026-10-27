@@ -136,6 +136,9 @@ func IsEmpty(value interface{}) bool {
 // for example a struct whose zero value means "not set". IsEmpty, and so Required,
 // NilOrNotEmpty, Empty and every rule that skips empty values, use it.
 // Implement it on the value receiver: IsEmpty sees the struct value, not a pointer to it.
+// It is honored only for struct types, and only through the value receiver: a named
+// non-struct type (such as type ID string) with an IsEmpty method is checked by its kind
+// as usual, and an IsEmpty defined on a pointer receiver is ignored.
 type EmptyChecker interface {
 	IsEmpty() bool
 }
