@@ -23,7 +23,7 @@ For an example on how this library is used in an application, please refer to [g
 
 ## Requirements
 
-Go 1.13 or above.
+Go 1.21 or above. CI tests the minimum (Go 1.21) and the two supported Go releases (oldstable and stable).
 
 
 ## Getting Started
