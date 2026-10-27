@@ -513,6 +513,48 @@ used in this case so that you can detect if a value is entered or not by checkin
 You can use the `validation.NotNil` rule to ensure a value is entered (even if it is a zero value).
 
 
+### Empty Values
+
+Most rules, such as `Length`, `Match`, `In`, `Min`, `Max`, `Date` and the rules in the `is` package, consider an
+empty value valid and skip it. Use `validation.Required` to make sure a value is not empty. A value is empty if it is
+
+* a nil pointer or interface, or a pointer to an empty value,
+* a zero number, `false`, an empty string, slice, map or array,
+* the zero `time.Time`.
+
+Any other struct is not empty, even when all its fields have zero values. This keeps `Required` on a nested struct
+from hiding the struct's own validation errors.
+
+When an empty value must be validated too, there are two opt-ins:
+
+* `ValidateEmpty()` makes `Min` and `Max` check empty values against the threshold. Use it when zero is a meaningful
+  input, for example a value that must be strictly positive:
+
+  ```go
+  err := validation.Validate(0, validation.Min(0).Exclusive().ValidateEmpty())
+  fmt.Println(err)
+  // Output:
+  // must be greater than 0
+  ```
+
+* A struct type can define when its value is empty by implementing `validation.EmptyChecker` on its value receiver.
+  `Required`, `NilOrNotEmpty`, `Empty` and the rules that skip empty values then use it:
+
+  ```go
+  type Address struct {
+      Street string
+      City   string
+  }
+
+  func (a Address) IsEmpty() bool { return a == Address{} }
+
+  err := validation.Validate(Address{}, validation.Required)
+  fmt.Println(err)
+  // Output:
+  // cannot be blank
+  ```
+
+
 ### Embedded Structs
 
 The `validation.ValidateStruct` method will properly validate a struct that contains embedded structs. In particular,
@@ -757,6 +799,7 @@ The following rules are provided in the `validation` package:
   its rune length instead of byte length.
 * `Min(min interface{})` and `Max(max interface{})`: checks if a value is within the specified range.
   These two rules should only be used for validating int, uint, float and time.Time types.
+  Empty values are considered valid; call `ValidateEmpty()` to check them too (see [Empty Values](#empty-values)).
 * `Match(*regexp.Regexp)`: checks if a value matches the specified regular expression.
   This rule should only be used for strings and byte slices.
 * `Date(layout string)`: checks if a string value is a date whose format is specified by the layout.
