@@ -99,6 +99,25 @@ func (e ErrorObject) Message() string {
 	return e.message
 }
 
+// Is reports whether target is a validation Error with the same non-empty code. It makes
+// errors.Is(err, ErrRequired) and the like work: an ErrorObject holds a params map, so it
+// cannot be compared with ==, and a rule with a custom message (Required.Error("...")) keeps
+// the code of the error it was built from. Params are not compared.
+//
+// An error with an empty code never matches, not even itself, so give the sentinel errors
+// of your own rules a code: NewError("my_code", "...").
+func (e ErrorObject) Is(target error) bool {
+	if e.code == "" {
+		return false
+	}
+	if p, ok := target.(*ErrorObject); ok && p == nil {
+		// Code() on a nil *ErrorObject would panic.
+		return false
+	}
+	t, ok := target.(Error)
+	return ok && e.code == t.Code()
+}
+
 // Error returns the error string of Errors.
 func (es Errors) Error() string {
 	if len(es) == 0 {
@@ -132,11 +151,12 @@ func (es Errors) Error() string {
 }
 
 // Is implements the interface relied upon by the standard library's errors.Is.
-// It reports whether any of the errors contained in es matches target according
-// to errors.Is. This makes a validation.Errors value (such as the one returned
-// by Validate or ValidateStruct) usable with errors.Is against a sentinel error,
-// including errors nested in the Errors values produced for maps, slices and
-// nested structs.
+// It reports whether any entry of es matches target according to errors.Is,
+// including entries of the Errors nested for maps, slices and nested structs.
+// What an entry matches is up to the entry: an error returned by a By rule
+// matches its sentinel, and an ErrorObject matches a validation Error with the
+// same code (see ErrorObject.Is), so errors.Is(err, ErrRequired) reports whether
+// any field failed Required.
 //
 // Fields are examined in sorted key order and nil field errors are skipped.
 func (es Errors) Is(target error) bool {
@@ -202,8 +222,11 @@ func NewError(code, message string) Error {
 	}
 }
 
-// Assert that our ErrorObject implements the Error interface.
-var _ Error = ErrorObject{}
+// Assert that our ErrorObject implements the Error interface and the hook used by errors.Is.
+var (
+	_ Error                       = ErrorObject{}
+	_ interface{ Is(error) bool } = ErrorObject{}
+)
 
 // Assert that Errors implements the hook interface used by errors.Is.
 var _ interface{ Is(error) bool } = Errors{}

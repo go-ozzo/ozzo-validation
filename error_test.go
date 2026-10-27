@@ -70,6 +70,66 @@ func TestErrors_Is(t *testing.T) {
 	assert.False(t, errors.Is(Errors{"A": errors.New("a")}, nil))
 }
 
+type isTestInner struct {
+	Name string
+}
+
+func (i isTestInner) Validate() error {
+	return ValidateStruct(&i, Field(&i.Name, Required))
+}
+
+func TestErrorObject_Is(t *testing.T) {
+	// a direct error, also with a custom message, and wrapped
+	assert.True(t, errors.Is(Validate("", Required), ErrRequired))
+	assert.True(t, errors.Is(Validate("", Required.Error("custom")), ErrRequired))
+	assert.True(t, errors.Is(fmt.Errorf("wrapped: %w", Validate("", Required)), ErrRequired))
+	// params do not matter, only the code
+	assert.True(t, errors.Is(Validate("abc", Length(5, 10)), ErrLengthOutOfRange))
+
+	// through ValidateStruct, a nested struct, Each and Map
+	var s struct {
+		DB    string
+		Inner isTestInner
+		Tags  []string
+		Attrs map[string]interface{}
+	}
+	s.Tags = []string{"a", ""}
+	s.Attrs = map[string]interface{}{"k": ""}
+	err := ValidateStruct(&s,
+		Field(&s.Inner),
+		Field(&s.Tags, Each(Required)),
+		Field(&s.Attrs, Map(Key("k", Required))),
+	)
+	if assert.Error(t, err) {
+		assert.True(t, errors.Is(err, ErrRequired))
+		assert.True(t, errors.Is(err.(Errors)["Inner"], ErrRequired))
+		assert.True(t, errors.Is(err.(Errors)["Tags"], ErrRequired))
+		assert.True(t, errors.Is(err.(Errors)["Attrs"], ErrRequired))
+		assert.False(t, errors.Is(err, ErrNilOrNotEmpty))
+	}
+	assert.True(t, errors.Is(ValidateStruct(&s, Field(&s.DB, Required)), ErrRequired))
+
+	// different codes do not match, and neither do errors without a code
+	assert.False(t, errors.Is(Validate("", Required), ErrNilOrNotEmpty))
+	assert.False(t, errors.Is(NewError("", "a"), NewError("", "a")))
+	assert.False(t, NewError("", "a").(ErrorObject).Is(NewError("", "a")))
+	assert.False(t, errors.Is(NewError("code", "a"), errors.New("code")))
+	assert.False(t, NewError("code", "a").(ErrorObject).Is(nil))
+	// any Error implementation with the same code matches
+	assert.True(t, errors.Is(NewError("code", "a"), &ErrorObject{code: "code"}))
+	// targets that are not a usable Error report false without panicking
+	assert.False(t, errors.Is(NewError("code", "a"), (*ErrorObject)(nil)))
+	assert.False(t, errors.Is(NewError("code", "a"), Errors{"A": NewError("code", "a")}))
+	assert.False(t, errors.Is(Errors{"A": NewError("code", "a")}, (*ErrorObject)(nil)))
+
+	// sentinels returned by By rules still match, and do not match by code
+	sentinel := errors.New("sentinel")
+	rule := By(func(interface{}) error { return sentinel })
+	err = ValidateStruct(&s, Field(&s.DB, rule))
+	assert.True(t, errors.Is(err, sentinel))
+	assert.False(t, errors.Is(err, ErrRequired))
+}
+
 type customError struct {
 	code int
 }
