@@ -66,5 +66,6 @@ jobs:
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v9
         with:
-          version: latest
+          # Pinned for reproducible lint results; bump on purpose.
+          version: v2.15.0
           args: --timeout=5m
