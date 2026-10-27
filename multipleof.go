@@ -66,7 +66,8 @@ func (r MultipleOfRule) Validate(value interface{}) error {
 			return nil
 		}
 	default:
-		return fmt.Errorf("type not supported: %v", rv.Type())
+		// %T, not rv.Type(): a nil base has no reflect type and rv.Type() would panic.
+		return fmt.Errorf("type not supported: %T", r.base)
 	}
 
 	return r.err.SetParams(map[string]interface{}{"base": r.base})
