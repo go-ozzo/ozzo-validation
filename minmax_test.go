@@ -55,7 +55,7 @@ func TestMin(t *testing.T) {
 		{"t4.6", date20000601, true, 1, "cannot convert int to time.Time"},
 		{"t4.7", struct{}{}, false, 1, "type not supported: struct {}"},
 		{"t4.8", date0, false, date20000601, ""},
-		// Zero values are empty and skipped, as in v4.3.0 (#234)
+		// Zero values are empty and skipped, as in v4.3.0 (#234); ValidateEmpty checks them
 		{"t5.1", 0, false, 0, ""},
 		{"t5.2", 0, true, 0, ""},
 		{"t5.3", float64(0), true, float64(0), ""},
@@ -154,4 +154,39 @@ func TestThresholdRule_ErrorObject(t *testing.T) {
 	assert.Equal(t, err, r.err)
 	assert.Equal(t, err.Code(), r.err.Code())
 	assert.Equal(t, err.Message(), r.err.Message())
+}
+
+func TestThresholdRule_ValidateEmpty(t *testing.T) {
+	date0 := time.Time{}
+	date1900 := time.Date(1900, 1, 1, 0, 0, 0, 0, time.UTC)
+	zero := 0
+
+	tests := []struct {
+		tag   string
+		rule  ThresholdRule
+		value interface{}
+		err   string
+	}{
+		{"int 0 below Min", Min(1).ValidateEmpty(), 0, "must be no less than 1"},
+		{"uint 0 below Min", Min(uint(2)).ValidateEmpty(), uint(0), "must be no less than 2"},
+		{"float 0 below Min", Min(float64(2)).ValidateEmpty(), float64(0), "must be no less than 2"},
+		{"int 0 not above exclusive Min (#165)", Min(0).Exclusive().ValidateEmpty(), 0, "must be greater than 0"},
+		{"float 0 not above exclusive Min", Min(float64(0)).Exclusive().ValidateEmpty(), float64(0), "must be greater than 0"},
+		{"zero time below Min (#180)", Min(date1900).ValidateEmpty(), date0, "must be no less than 1900-01-01 00:00:00 +0000 UTC"},
+		{"int 0 above Max", Max(-1).ValidateEmpty(), 0, "must be no greater than -1"},
+		{"pointer to 0", Min(1).ValidateEmpty(), &zero, "must be no less than 1"},
+		{"int 0 within range", Min(0).ValidateEmpty(), 0, ""},
+		{"zero time within range", Max(date1900).ValidateEmpty(), date0, ""},
+		{"nil pointer stays valid", Min(1).ValidateEmpty(), (*int)(nil), ""},
+		{"empty value of the wrong type", Min(10).ValidateEmpty(), "", "cannot convert string to int64"},
+		{"ValidateEmpty before Exclusive", Min(0).ValidateEmpty().Exclusive(), 0, "must be greater than 0"},
+	}
+
+	for _, test := range tests {
+		assertError(t, test.err, test.rule.Validate(test.value), test.tag)
+	}
+
+	// Without ValidateEmpty, empty values are skipped.
+	assert.NoError(t, Min(1).Validate(0))
+	assert.NoError(t, Min(date1900).Validate(date0))
 }

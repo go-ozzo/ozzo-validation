@@ -23,9 +23,10 @@ var (
 
 // ThresholdRule is a validation rule that checks if a value satisfies the specified threshold requirement.
 type ThresholdRule struct {
-	threshold interface{}
-	operator  int
-	err       Error
+	threshold     interface{}
+	operator      int
+	err           Error
+	validateEmpty bool
 }
 
 const (
@@ -39,7 +40,8 @@ const (
 // By calling Exclusive, the rule will check if the value is strictly greater than the specified value.
 // Note that the value being checked and the threshold value must be of the same type.
 // Only int, uint, float and time.Time types are supported.
-// An empty value is considered valid. Please use the Required rule to make sure a value is not empty.
+// An empty value is considered valid. Please use the Required rule to make sure a value is not empty,
+// or call ValidateEmpty to check empty values against the threshold too.
 func Min(min interface{}) ThresholdRule {
 	return ThresholdRule{
 		threshold: min,
@@ -52,7 +54,8 @@ func Min(min interface{}) ThresholdRule {
 // By calling Exclusive, the rule will check if the value is strictly less than the specified value.
 // Note that the value being checked and the threshold value must be of the same type.
 // Only int, uint, float and time.Time types are supported.
-// An empty value is considered valid. Please use the Required rule to make sure a value is not empty.
+// An empty value is considered valid. Please use the Required rule to make sure a value is not empty,
+// or call ValidateEmpty to check empty values against the threshold too.
 func Max(max interface{}) ThresholdRule {
 	return ThresholdRule{
 		threshold: max,
@@ -74,10 +77,18 @@ func (r ThresholdRule) Exclusive() ThresholdRule {
 	return r
 }
 
+// ValidateEmpty makes the rule check empty values (0, 0.0, a zero time.Time) against the threshold
+// instead of accepting them. Use it when zero is a meaningful input, for example when
+// Min(0).Exclusive() must reject 0. A nil pointer is still considered valid.
+func (r ThresholdRule) ValidateEmpty() ThresholdRule {
+	r.validateEmpty = true
+	return r
+}
+
 // Validate checks if the given value is valid or not.
 func (r ThresholdRule) Validate(value interface{}) error {
 	value, isNil := Indirect(value)
-	if isNil || IsEmpty(value) {
+	if isNil || !r.validateEmpty && IsEmpty(value) {
 		return nil
 	}
 
