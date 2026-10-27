@@ -18,6 +18,10 @@ on:
 permissions:
   contents: write
 
+env:
+  # Run the Go that setup-go installed; never download a newer one.
+  GOTOOLCHAIN: local
+
 jobs:
   benchmark:
     name: Benchmark
