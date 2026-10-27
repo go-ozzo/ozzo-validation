@@ -56,6 +56,11 @@ func (e internalError) InternalError() error {
 	return e.error
 }
 
+// Unwrap returns the wrapped error, so that errors.Is and errors.As reach it.
+func (e internalError) Unwrap() error {
+	return e.error
+}
+
 // SetCode set the error's translation code.
 func (e ErrorObject) SetCode(code string) Error {
 	e.code = code

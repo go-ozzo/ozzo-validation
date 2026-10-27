@@ -20,6 +20,25 @@ func TestNewInternalError(t *testing.T) {
 	}
 }
 
+func TestInternalError_Unwrap(t *testing.T) {
+	cause := customError{code: 5}
+	err := error(NewInternalError(cause))
+	assert.True(t, errors.Is(err, cause))
+
+	var target customError
+	if assert.True(t, errors.As(err, &target)) {
+		assert.Equal(t, 5, target.code)
+	}
+
+	// also when the InternalError is returned by ValidateStruct, and when it is wrapped
+	assert.True(t, errors.Is(ValidateStruct(struct{}{}), ErrStructPointer))
+	assert.True(t, errors.Is(fmt.Errorf("validate: %w", err), cause))
+
+	// the InternalError itself is still found
+	var ie InternalError
+	assert.True(t, errors.As(fmt.Errorf("validate: %w", err), &ie))
+}
+
 func TestErrors_Error(t *testing.T) {
 	errs := Errors{
 		"B": errors.New("B1"),
