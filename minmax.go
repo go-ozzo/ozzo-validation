@@ -42,9 +42,9 @@ const (
 // Only int, uint, float and time.Time types are supported.
 // An empty value is considered valid. Please use the Required rule to make sure a value is not empty,
 // or call ValidateEmpty to check empty values against the threshold too.
-func Min(min interface{}) ThresholdRule {
+func Min(threshold interface{}) ThresholdRule {
 	return ThresholdRule{
-		threshold: min,
+		threshold: threshold,
 		operator:  greaterEqualThan,
 		err:       ErrMinGreaterEqualThanRequired,
 	}
@@ -56,9 +56,9 @@ func Min(min interface{}) ThresholdRule {
 // Only int, uint, float and time.Time types are supported.
 // An empty value is considered valid. Please use the Required rule to make sure a value is not empty,
 // or call ValidateEmpty to check empty values against the threshold too.
-func Max(max interface{}) ThresholdRule {
+func Max(threshold interface{}) ThresholdRule {
 	return ThresholdRule{
-		threshold: max,
+		threshold: threshold,
 		operator:  lessEqualThan,
 		err:       ErrMaxLessEqualThanRequired,
 	}
