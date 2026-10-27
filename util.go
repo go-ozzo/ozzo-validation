@@ -97,6 +97,7 @@ func ToFloat(value interface{}) (float64, error) {
 // - slice, map: nil or len() == 0
 // - interface, pointer: nil or the referenced value is empty
 // - time.Time: the zero time
+// - a struct implementing EmptyChecker: its IsEmpty method returns true
 //
 // Any other struct is not empty.
 func IsEmpty(value interface{}) bool {
@@ -123,9 +124,20 @@ func IsEmpty(value interface{}) bool {
 		if t, ok := value.(time.Time); ok {
 			return t.IsZero()
 		}
+		if ec, ok := value.(EmptyChecker); ok {
+			return ec.IsEmpty()
+		}
 	}
 
 	return false
+}
+
+// EmptyChecker is implemented by a struct type that defines when its value is empty,
+// for example a struct whose zero value means "not set". IsEmpty, and so Required,
+// NilOrNotEmpty, Empty and every rule that skips empty values, use it.
+// Implement it on the value receiver: IsEmpty sees the struct value, not a pointer to it.
+type EmptyChecker interface {
+	IsEmpty() bool
 }
 
 // Indirect returns the value that the given interface or pointer references to.

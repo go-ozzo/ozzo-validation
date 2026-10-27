@@ -18,6 +18,7 @@ var (
 // - string, array, slice, map: len() > 0
 // - interface, pointer: not nil and the referenced value is not empty
 // - time.Time: not the zero time
+// - a struct implementing EmptyChecker: its IsEmpty method returns false
 // - any other type, including any other struct
 var Required = RequiredRule{skipNil: false, condition: true}
 
