@@ -24,7 +24,7 @@ func EnsureString(value interface{}) (string, error) {
 	if v.Kind() == reflect.String {
 		return v.String(), nil
 	}
-	if v.Type() == bytesType {
+	if v.Kind() == reflect.Slice && v.Type() == bytesType {
 		return string(v.Interface().([]byte)), nil
 	}
 	return "", errors.New("must be either a string or byte slice")
