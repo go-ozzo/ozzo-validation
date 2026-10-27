@@ -351,6 +351,49 @@ it to validate both struct and non-struct values. Compared to using `ValidateStr
 it has the drawback that you have to redundantly specify the error keys while `ValidateStruct` can automatically 
 find them out.
 
+#### Checking for an Error
+
+`errors.Is` finds an error anywhere in `validation.Errors`, including the errors nested for maps, slices and nested
+structs. A validation error matches a built-in error by its code, so the check also holds when the rule has a custom
+message:
+
+```go
+err := validation.ValidateStruct(&c,
+	validation.Field(&c.Name, validation.Required.Error("is required")),
+)
+fmt.Println(errors.Is(err, validation.ErrRequired))
+// Output:
+// true
+```
+
+An error returned by a `By` rule matches its own sentinel the same way. `errors.As(err, &e)` with a
+`validation.Error` target does not look inside `validation.Errors`: it reports whether `err` itself is a single
+validation error, not a map of field errors.
+
+#### Listing Field Errors
+
+`validation.Flatten(err)` returns all errors as a flat, sorted list of `validation.FieldError`, walking into nested
+`validation.Errors`. Each entry has the path of keys to the error, its code, its rendered message and params, and the
+error itself. `Field()` joins the path with dots and `Pointer()` returns it as an RFC 6901 JSON Pointer, which stays
+unambiguous when a key contains a dot:
+
+```go
+for _, fe := range validation.Flatten(err) {
+	fmt.Println(fe.Field(), fe.Pointer(), fe.Code, fe.Message)
+}
+// Output:
+// id /id validation_length_out_of_range the length must be between 3 and 10
+// items.1.name /items/1/name validation_required cannot be blank
+```
+
+Each level is sorted: slice indexes come first in numeric order, so `items.2` comes before `items.10`, then the other
+keys in string order. A single error that is not a `validation.Errors`, such as the one `validation.Validate` returns,
+is one entry with an empty path. `Errors.Flatten()` does the same for a `validation.Errors` value.
+
+Errors that are not validation errors have an empty code. That includes internal errors that `Each` or a slice of
+validatables put into the map, so check `fe.Err` with `errors.As` for a `validation.InternalError` before sending
+`fe.Message` to a client.
+
 
 ### Internal Errors
 
