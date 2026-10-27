@@ -170,6 +170,10 @@ When the map validation is performed, the keys are validated in the order they a
 And when each key is validated, its rules are also evaluated in the order they are associated with the key.
 If a rule fails, an error is recorded for that key, and the validation will continue with the next key.
 
+If a key is missing, the error `required key is missing` is recorded and the key's rules are not called.
+To report your own message instead, customize a `Required` or `NotNil` rule of the key,
+e.g. `validation.Key("Name", validation.Required.Error("name is required"))`.
+
 #### Allowing Extra Keys
 
 By default, `validation.Map()` will return an `Extra: key not expected` error if there's unexpected key inside the map (you have to specify all expected keys in the validation rules).
