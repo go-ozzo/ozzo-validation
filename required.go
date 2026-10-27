@@ -17,7 +17,8 @@ var (
 // - bool: true
 // - string, array, slice, map: len() > 0
 // - interface, pointer: not nil and the referenced value is not empty
-// - struct: at least one field has a non-default value
+// - time.Time: not the zero time
+// - any other type, including any other struct
 var Required = RequiredRule{skipNil: false, condition: true}
 
 // NilOrNotEmpty checks if a value is a nil pointer or a value that is not empty.
