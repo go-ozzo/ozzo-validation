@@ -621,6 +621,23 @@ You can use error code to programmatically check a validation error or look for 
 If you are developing your own validation rules, you can use `validation.NewError()` to create a validation error which
 implements the aforementioned `Error` interface.
 
+### Smaller Binaries: `-tags ozzo_validation_no_template`
+
+Error messages are rendered with `text/template`, which fills in params such as `{{.min}}` and `{{.max}}`.
+`text/template` makes a binary noticeably larger, so you can build without it:
+
+```shell
+go build -tags ozzo_validation_no_template ./...
+```
+
+With the tag, a simple replacement fills in the params, and all built-in messages read exactly as without the tag. It
+supports only field placeholders: `{{.key}}`, and `{{ .key }}`, `{{.key }}` or `{{ .key}}` with one space. A param is
+formatted with `fmt.Sprint`. Custom messages that use more of the template language read differently:
+
+- pipelines, conditionals and functions (`{{.min | printf "%d"}}`, `{{if .min}}…{{end}}`) are left as written;
+- a placeholder whose key is not in the params is left as written, instead of `<no value>`;
+- a pointer param prints as a pointer address, while the template prints the value it points to.
+
 ## Creating Custom Rules
 
 Creating a custom rule is as simple as implementing the `validation.Rule` interface. The interface contains a single

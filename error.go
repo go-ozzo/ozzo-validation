@@ -5,13 +5,11 @@
 package validation
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"sort"
 	"strings"
-	"text/template"
 )
 
 type (
@@ -99,18 +97,6 @@ func (e ErrorObject) SetMessage(message string) Error {
 // Message return the error's message.
 func (e ErrorObject) Message() string {
 	return e.message
-}
-
-// Error returns the error message.
-func (e ErrorObject) Error() string {
-	if len(e.params) == 0 {
-		return e.message
-	}
-
-	res := bytes.Buffer{}
-	_ = template.Must(template.New("err").Parse(e.message)).Execute(&res, e.params)
-
-	return res.String()
 }
 
 // Error returns the error string of Errors.

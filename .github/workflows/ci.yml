@@ -26,6 +26,9 @@ jobs:
           go-version: ${{ matrix.go-version }}
           cache: true
 
+      - name: Test (no template)
+        run: go test -tags ozzo_validation_no_template -race -covermode=atomic ./...
+
       - name: Test
         run: go test -race -coverprofile=coverage.txt -covermode=atomic ./...
 
