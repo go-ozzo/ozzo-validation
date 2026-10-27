@@ -7,6 +7,7 @@ package validation
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -68,6 +69,26 @@ func TestErrors_Is(t *testing.T) {
 	assert.False(t, errors.Is(Errors{"A": nil}, sentinel))
 	assert.False(t, errors.Is(Errors{}, sentinel))
 	assert.False(t, errors.Is(Errors{"A": errors.New("a")}, nil))
+	assert.False(t, errors.Is(Errors(nil), sentinel))
+
+	// an Errors is not comparable, so it does not match itself
+	es := Errors{"A": errors.New("a")}
+	assert.False(t, errors.Is(es, es))
+}
+
+func BenchmarkErrorsIs100k(b *testing.B) {
+	es := make(Errors, 100000)
+	for i := 0; i < 100000; i++ {
+		es[strconv.Itoa(i)] = ErrRequired
+	}
+	sentinel := errors.New("sentinel")
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		if errors.Is(es, sentinel) {
+			b.Fatal("unexpected match")
+		}
+	}
 }
 
 type isTestInner struct {

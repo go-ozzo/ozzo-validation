@@ -158,13 +158,16 @@ func (es Errors) Error() string {
 // same code (see ErrorObject.Is), so errors.Is(err, ErrRequired) reports whether
 // any field failed Required.
 //
-// Fields are examined in sorted key order and nil field errors are skipped.
+// Nil field errors are skipped. An Errors is not comparable, so errors.Is(es, es) is false.
+// Errors that contain themselves are not supported, as in Error().
 func (es Errors) Is(target error) bool {
 	if target == nil {
 		return false
 	}
-	for _, key := range es.sortedKeys() {
-		if err := es[key]; err != nil && errors.Is(err, target) {
+	// A plain range: the result does not depend on the order, and sorting the keys
+	// costs an allocation per call.
+	for _, err := range es {
+		if err != nil && errors.Is(err, target) {
 			return true
 		}
 	}
@@ -176,8 +179,8 @@ func (es Errors) Is(target error) bool {
 // reporting false for an Errors; an As that looks inside the map would make it
 // return the first field's error and lose the field names.
 
-// sortedKeys returns the keys of es sorted in increasing order. It gives the
-// Error and Is methods a deterministic iteration order over the fields.
+// sortedKeys returns the keys of es sorted in increasing order. It gives Error a
+// deterministic iteration order over the fields.
 func (es Errors) sortedKeys() []string {
 	keys := make([]string, 0, len(es))
 	for key := range es {
