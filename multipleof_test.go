@@ -31,6 +31,12 @@ func TestMultipleOfZero(t *testing.T) {
 	assert.Nil(t, MultipleOf(10).Validate(20))
 }
 
+func TestMultipleOfNilBase(t *testing.T) {
+	var err error
+	assert.NotPanics(t, func() { err = MultipleOf(nil).Validate(4) })
+	assert.EqualError(t, err, "type not supported: <nil>")
+}
+
 func Test_MultipleOf_Error(t *testing.T) {
 	r := MultipleOf(10)
 	assert.Equal(t, "must be multiple of 10", r.Validate(3).Error())
