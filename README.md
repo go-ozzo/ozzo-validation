@@ -872,8 +872,8 @@ Below is the whole list of the rules provided by the `is` package:
 * `Host`: validates if a string is a valid IP (both v4 and v6) or a valid DNS name
 * `Port`: validates if a string is a valid port number
 * `MongoID`: validates if a string is a valid Mongo ID
-* `Latitude`: validates if a string is a valid latitude
-* `Longitude`: validates if a string is a valid longitude
+* `Latitude`: validates if a string or a number is a valid latitude, in the range [-90, 90] (strings in decimal degrees)
+* `Longitude`: validates if a string or a number is a valid longitude, in the range [-180, 180] (strings in decimal degrees)
 * `SSN`: validates if a string is a social security number (SSN)
 * `Semver`: validates if a string is a valid semantic version
 

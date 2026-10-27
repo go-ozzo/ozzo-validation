@@ -5,9 +5,11 @@
 package is
 
 import (
+	"math"
 	"strings"
 	"testing"
 
+	"github.com/asaskevich/govalidator"
 	"github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/stretchr/testify/assert"
 )
@@ -156,7 +158,7 @@ func TestLatitudeLongitude_Numeric(t *testing.T) {
 		{"Longitude_int8_valid", Longitude, int8(-90), ""},
 		{"Latitude_uint_valid", Latitude, uint(90), ""},
 		{"Latitude_uint_invalid", Latitude, uint(91), "must be a valid latitude"},
-		{"Longitude_wrong_type", Longitude, true, "must be a valid longitude"},
+		{"Longitude_wrong_type", Longitude, true, "must be either a string or byte slice"},
 	}
 
 	for _, test := range tests {
@@ -165,7 +167,7 @@ func TestLatitudeLongitude_Numeric(t *testing.T) {
 	}
 }
 
-func TestCoordinateRangeRule_Error(t *testing.T) {
+func TestLatitudeLongitude_Error(t *testing.T) {
 	r := Latitude.Error("bad lat")
 	err := r.Validate(float64(100))
 	if assert.NotNil(t, err) {
@@ -208,4 +210,38 @@ func assertError(t *testing.T, expected string, err error, tag string) {
 	} else if assert.NotNil(t, err, tag) {
 		assert.Equal(t, expected, err.Error(), tag)
 	}
+}
+
+// String coordinates must validate exactly as with govalidator's patterns up to v4.4.1:
+// strconv.ParseFloat syntax (exponents, hex, NaN, Inf) is not accepted.
+func TestLatitudeLongitude_StringsAsV441(t *testing.T) {
+	inputs := []string{
+		"0", "-0", "+0", "00", "45", "45.5", "-45.5", "+45.5", "89.999999", "90", "90.0", "90.000", "90.1", "-90", "-90.1",
+		"179.9", "180", "180.0", "180.1", "-180", "181", "1000",
+		"NaN", "nan", "Inf", "+Inf", "-Inf", "infinity", "1e1", "1E1", "4.5e1", "0x1p-2", "0x10",
+		"45.", ".5", "-.5", " 45", "45 ", "4_5", "45,5", "--45", "abc",
+	}
+	for _, s := range inputs {
+		assert.Equal(t, govalidator.IsLatitude(s), Latitude.Validate(s) == nil, "Latitude %q", s)
+		assert.Equal(t, govalidator.IsLongitude(s), Longitude.Validate(s) == nil, "Longitude %q", s)
+		assert.Equal(t, govalidator.IsLatitude(s), Latitude.Validate([]byte(s)) == nil, "Latitude []byte %q", s)
+	}
+}
+
+func TestLatitudeLongitude_NonFinite(t *testing.T) {
+	for _, v := range []interface{}{math.NaN(), math.Inf(1), math.Inf(-1), float32(math.NaN()), float32(math.Inf(1))} {
+		assert.EqualError(t, Latitude.Validate(v), "must be a valid latitude", "Latitude %v", v)
+		assert.EqualError(t, Longitude.Validate(v), "must be a valid longitude", "Longitude %v", v)
+	}
+}
+
+func TestLatitudeLongitude_CustomErrorKeepsNumbers(t *testing.T) {
+	r := Latitude.Error("bad lat")
+	assert.NoError(t, r.Validate(45.5))
+	assert.EqualError(t, r.Validate(91.0), "bad lat")
+	assert.EqualError(t, r.Validate("NaN"), "bad lat")
+
+	type degrees float64
+	assert.NoError(t, Longitude.Validate(degrees(-122.4)), "named float type")
+	assert.EqualError(t, Longitude.Validate(degrees(181)), "must be a valid longitude", "named float type")
 }

@@ -7,7 +7,7 @@ package is
 
 import (
 	"regexp"
-	"strconv"
+
 	"unicode"
 
 	"github.com/asaskevich/govalidator"
@@ -238,12 +238,14 @@ var (
 	Port = validation.NewStringRuleWithError(govalidator.IsPort, ErrPort)
 	// MongoID validates if a string is a valid Mongo ID
 	MongoID = validation.NewStringRuleWithError(govalidator.IsMongoID, ErrMongoID)
-	// Latitude validates if a value is a valid latitude, in the range [-90, 90].
-	// The value can be a string (e.g. "45.5"), or a float32/float64.
-	Latitude = coordinateRangeRule{bound: 90, err: ErrLatitude}
-	// Longitude validates if a value is a valid longitude, in the range [-180, 180].
-	// The value can be a string (e.g. "-122.4"), or a float32/float64.
-	Longitude = coordinateRangeRule{bound: 180, err: ErrLongitude}
+	// Latitude validates if a value is a valid latitude, in the range [-90, 90]: a string or byte slice in
+	// decimal degrees (e.g. "45.5", "-0.75"; no exponent, hex, NaN or Inf), or a finite number of an int,
+	// uint or float type.
+	Latitude = validation.NewStringRuleWithError(isLatitude, ErrLatitude).AllowNumber(inCoordinateRange(90))
+	// Longitude validates if a value is a valid longitude, in the range [-180, 180]: a string or byte slice
+	// in decimal degrees (e.g. "-122.4"; no exponent, hex, NaN or Inf), or a finite number of an int, uint
+	// or float type.
+	Longitude = validation.NewStringRuleWithError(isLongitude, ErrLongitude).AllowNumber(inCoordinateRange(180))
 	// SSN validates if a string is a social security number (SSN)
 	SSN = validation.NewStringRuleWithError(govalidator.IsSSN, ErrSSN)
 	// Semver validates if a string is a valid semantic version
@@ -264,6 +266,10 @@ var (
 	reDomain = regexp.MustCompile(`^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+(?:[a-zA-Z]{1,63}| xn--[a-z0-9]{1,59})$`)
 	// Origin regex: scheme + host + optional port, no path. Labels must not start/end with hyphen.
 	reOrigin = regexp.MustCompile(`^https?://([a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?\.)*[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(:\d{1,5})?$`)
+	// reLatitude and reLongitude are the decimal-degree patterns of govalidator (IsLatitude, IsLongitude),
+	// which is.Latitude and is.Longitude used up to v4.4.1. Kept identical so string inputs validate as before.
+	reLatitude  = regexp.MustCompile(`^[-+]?([1-8]?\d(\.\d+)?|90(\.0+)?)$`)
+	reLongitude = regexp.MustCompile(`^[-+]?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?)$`)
 )
 
 func isISBN(value string) bool {
@@ -328,62 +334,21 @@ func isUUIDv7(value string) bool {
 	return true
 }
 
-// coordinateRangeRule validates that a value falls within [-bound, bound] degrees.
-// It accepts strings (parsed as decimal degrees) as well as float32/float64 values
-// directly, so it works for both string-based input (e.g. query params) and the
-// float fields most geo-coordinate structs actually use.
-type coordinateRangeRule struct {
-	bound float64
-	err   validation.Error
+func isLatitude(value string) bool {
+	return reLatitude.MatchString(value)
 }
 
-// Error sets the error message for the rule.
-func (r coordinateRangeRule) Error(message string) coordinateRangeRule {
-	r.err = r.err.SetMessage(message)
-	return r
+func isLongitude(value string) bool {
+	return reLongitude.MatchString(value)
 }
 
-// ErrorObject sets the error struct for the rule.
-func (r coordinateRangeRule) ErrorObject(err validation.Error) coordinateRangeRule {
-	r.err = err
-	return r
+// inCoordinateRange returns the number check for a coordinate within [-bound, bound] degrees.
+func inCoordinateRange(bound float64) func(float64) bool {
+	return func(v float64) bool {
+		return v >= -bound && v <= bound
+	}
 }
 
-// Validate checks if the given value is valid or not.
-func (r coordinateRangeRule) Validate(value interface{}) error {
-	value, isNil := validation.Indirect(value)
-	if isNil || validation.IsEmpty(value) {
-		return nil
-	}
-
-	v, ok := toCoordinate(value)
-	if !ok || v < -r.bound || v > r.bound {
-		return r.err
-	}
-
-	return nil
-}
-
-func toCoordinate(value interface{}) (float64, bool) {
-	switch v := value.(type) {
-	case float32:
-		return float64(v), true
-	case float64:
-		return v, true
-	case string:
-		f, err := strconv.ParseFloat(v, 64)
-		return f, err == nil
-	case []byte:
-		f, err := strconv.ParseFloat(string(v), 64)
-		return f, err == nil
-	}
-
-	if i, err := validation.ToInt(value); err == nil {
-		return float64(i), true
-	}
-	if u, err := validation.ToUint(value); err == nil {
-		return float64(u), true
-	}
-
-	return 0, false
-}
+// Latitude and Longitude must stay StringRule values: they were StringRule up to v4.4.1,
+// and code that stores or passes them as validation.StringRule must keep compiling.
+var _, _ validation.StringRule = Latitude, Longitude
