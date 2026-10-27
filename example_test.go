@@ -190,3 +190,33 @@ func Example_seven() {
 	// Output:
 	// Address: (State: must be in a valid format; Street: the length must be between 5 and 50.); Email: must be a valid email address.
 }
+
+func ExampleThresholdRule_ValidateEmpty() {
+	// Min and Max skip empty values: 0 counts as "not set".
+	fmt.Println(validation.Validate(0, validation.Min(0).Exclusive()))
+	// ValidateEmpty checks 0 against the threshold as well.
+	fmt.Println(validation.Validate(0, validation.Min(0).Exclusive().ValidateEmpty()))
+	// Output:
+	// <nil>
+	// must be greater than 0
+}
+
+type Location struct {
+	Latitude  string
+	Longitude string
+}
+
+// IsEmpty reports a Location with no coordinates as empty.
+func (l Location) IsEmpty() bool { return l == Location{} }
+
+func ExampleEmptyChecker() {
+	// Location implements validation.EmptyChecker, so Required can tell when it is not set.
+	fmt.Println(validation.Validate(Location{}, validation.Required))
+	fmt.Println(validation.Validate(Location{Latitude: "52.52", Longitude: "13.40"}, validation.Required))
+	// A struct without IsEmpty is never empty.
+	fmt.Println(validation.Validate(struct{ Name string }{}, validation.Required))
+	// Output:
+	// cannot be blank
+	// <nil>
+	// <nil>
+}
