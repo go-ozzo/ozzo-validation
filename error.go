@@ -151,23 +151,13 @@ func (es Errors) Is(target error) bool {
 	return false
 }
 
-// As implements the interface relied upon by the standard library's errors.As.
-// It looks for the first error contained in es that matches target according to
-// errors.As; if one is found, target is set to that error value and As reports
-// true. Like Is, it recurses into the Errors values produced for maps, slices
-// and nested structs, examines fields in sorted key order and skips nil field
-// errors.
-func (es Errors) As(target interface{}) bool {
-	for _, key := range es.sortedKeys() {
-		if err := es[key]; err != nil && errors.As(err, target) {
-			return true
-		}
-	}
-	return false
-}
+// Errors deliberately has no As method (and no Unwrap() []error). Code that tells
+// a single-value error from a field map relies on errors.As(err, &validation.Error)
+// reporting false for an Errors; an As that looks inside the map would make it
+// return the first field's error and lose the field names.
 
 // sortedKeys returns the keys of es sorted in increasing order. It gives the
-// Error, Is and As methods a deterministic iteration order over the fields.
+// Error and Is methods a deterministic iteration order over the fields.
 func (es Errors) sortedKeys() []string {
 	keys := make([]string, 0, len(es))
 	for key := range es {
@@ -215,8 +205,5 @@ func NewError(code, message string) Error {
 // Assert that our ErrorObject implements the Error interface.
 var _ Error = ErrorObject{}
 
-// Assert that Errors implements the hook interfaces used by errors.Is and errors.As.
-var (
-	_ interface{ Is(error) bool }       = Errors{}
-	_ interface{ As(interface{}) bool } = Errors{}
-)
+// Assert that Errors implements the hook interface used by errors.Is.
+var _ interface{ Is(error) bool } = Errors{}
