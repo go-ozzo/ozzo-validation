@@ -301,3 +301,33 @@ func TestIndirect(t *testing.T) {
 		assert.Equal(t, test.isNil, isNil, test.tag)
 	}
 }
+
+type emptyCheckerAddress struct {
+	Street string
+	City   string
+}
+
+func (a emptyCheckerAddress) IsEmpty() bool { return a == emptyCheckerAddress{} }
+
+type emptyCheckerPtrReceiver struct{ A int }
+
+func (p *emptyCheckerPtrReceiver) IsEmpty() bool { return true }
+
+func TestEmptyChecker(t *testing.T) {
+	assert.True(t, IsEmpty(emptyCheckerAddress{}))
+	assert.True(t, IsEmpty(&emptyCheckerAddress{}))
+	assert.False(t, IsEmpty(emptyCheckerAddress{City: "Berlin"}))
+
+	assert.EqualError(t, Validate(emptyCheckerAddress{}, Required), "cannot be blank")
+	assert.NoError(t, Validate(emptyCheckerAddress{City: "Berlin"}, Required))
+	assert.NoError(t, Validate((*emptyCheckerAddress)(nil), NilOrNotEmpty))
+	assert.EqualError(t, Validate(&emptyCheckerAddress{}, NilOrNotEmpty), "cannot be blank")
+	assert.NoError(t, Validate(emptyCheckerAddress{}, Empty))
+	assert.EqualError(t, Validate(emptyCheckerAddress{City: "Berlin"}, Empty), "must be blank")
+
+	// A pointer-receiver method is not seen: IsEmpty gets the struct value.
+	assert.False(t, IsEmpty(emptyCheckerPtrReceiver{}))
+	// A struct without the method is never empty.
+	assert.False(t, IsEmpty(struct{ A int }{}))
+	assert.NoError(t, Validate(struct{ A int }{}, Required))
+}
