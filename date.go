@@ -69,14 +69,14 @@ func (r DateRule) RangeErrorObject(err Error) DateRule {
 }
 
 // Min sets the minimum date range. A zero value means skipping the minimum range validation.
-func (r DateRule) Min(min time.Time) DateRule {
-	r.min = min
+func (r DateRule) Min(earliest time.Time) DateRule {
+	r.min = earliest
 	return r
 }
 
 // Max sets the maximum date range. A zero value means skipping the maximum range validation.
-func (r DateRule) Max(max time.Time) DateRule {
-	r.max = max
+func (r DateRule) Max(latest time.Time) DateRule {
+	r.max = latest
 	return r
 }
 
