@@ -76,31 +76,35 @@ type customError struct {
 
 func (e customError) Error() string { return fmt.Sprintf("custom %d", e.code) }
 
-func TestErrors_As(t *testing.T) {
-	var target customError
+// errors.As must not look inside an Errors: callers use errors.As(err, &validation.Error)
+// to tell a single-value error from a field map, and a match would lose the field names.
+func TestErrors_NotAs(t *testing.T) {
+	type config struct {
+		DB string
+	}
+	var c config
+	err := ValidateStruct(&c, Field(&c.DB, Required))
+	if assert.Error(t, err) {
+		var single Error
+		assert.False(t, errors.As(err, &single), "a field map must not match validation.Error")
+		assert.Nil(t, single)
 
-	assert.True(t, errors.As(Errors{"A": errors.New("a"), "B": customError{code: 7}}, &target))
-	assert.Equal(t, 7, target.code)
+		var fields Errors
+		if assert.True(t, errors.As(err, &fields)) {
+			assert.Equal(t, "cannot be blank", fields["DB"].Error())
+		}
+	}
 
-	// errors nested in Errors are found too
-	target = customError{}
-	assert.True(t, errors.As(Errors{"A": Errors{"0": customError{code: 9}}}, &target))
-	assert.Equal(t, 9, target.code)
+	var custom customError
+	assert.False(t, errors.As(Errors{"A": customError{code: 7}}, &custom))
+	assert.False(t, errors.As(Errors{"A": Errors{"0": customError{code: 9}}}, &custom))
+	assert.Equal(t, customError{}, custom)
 
-	// wrapped field errors are unwrapped
-	target = customError{}
-	assert.True(t, errors.As(Errors{"A": fmt.Errorf("wrapped: %w", customError{code: 3})}, &target))
-	assert.Equal(t, 3, target.code)
-
-	// fields are scanned in sorted key order, so the "A" match wins over "B"
-	target = customError{}
-	assert.True(t, errors.As(Errors{"B": customError{code: 2}, "A": customError{code: 1}}, &target))
-	assert.Equal(t, 1, target.code)
-
-	// no matching field, nil field errors and empty Errors report false
-	target = customError{}
-	assert.False(t, errors.As(Errors{"A": errors.New("a"), "B": nil}, &target))
-	assert.False(t, errors.As(Errors{}, &target))
+	// a single-value error still matches validation.Error
+	var single Error
+	if assert.True(t, errors.As(Validate("", Required), &single)) {
+		assert.Equal(t, ErrRequired.Code(), single.Code())
+	}
 }
 
 func TestErrors_MarshalMessage(t *testing.T) {
