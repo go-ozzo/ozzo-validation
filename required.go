@@ -74,3 +74,13 @@ func (r RequiredRule) ErrorObject(err Error) RequiredRule {
 	r.err = err
 	return r
 }
+
+// missingKeyError implements missingKeyErrorer: a customized Required error replaces ErrKeyMissing
+// for a missing map key. NilOrNotEmpty (skipNil) accepts nil and a false condition disables the
+// rule, so neither does.
+func (r RequiredRule) missingKeyError() error {
+	if r.condition && !r.skipNil && r.err != nil {
+		return r.err
+	}
+	return nil
+}

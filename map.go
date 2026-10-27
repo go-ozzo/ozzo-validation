@@ -93,13 +93,34 @@ func validateMapKey(ctx context.Context, value reflect.Value, kt reflect.Type, k
 		if kr.optional {
 			return nil
 		}
-		if err := validateWithOptionalContext(ctx, nil, kr.rules...); err != nil {
-			return err
-		}
-		return ErrKeyMissing
+		return missingKeyError(kr.rules)
 	}
 
 	return validateWithOptionalContext(ctx, vv.Interface(), kr.rules...)
+}
+
+// missingKeyErrorer is implemented by the rules whose customized error replaces ErrKeyMissing
+// when a required map key is missing. missingKeyError returns nil when the error was not customized.
+type missingKeyErrorer interface {
+	missingKeyError() error
+}
+
+// missingKeyError returns the error for a missing required map key. The key's rules are never
+// called with a nil value: rules written for the key's type may not expect nil (#222). The first
+// Required or NotNil rule with an error set by Error or ErrorObject provides the error (#134);
+// otherwise it is ErrKeyMissing.
+func missingKeyError(rules []Rule) error {
+	for _, rule := range rules {
+		if s, ok := rule.(skipRule); ok && s.skip {
+			break
+		}
+		if r, ok := rule.(missingKeyErrorer); ok {
+			if err := r.missingKeyError(); err != nil {
+				return err
+			}
+		}
+	}
+	return ErrKeyMissing
 }
 
 // validateWithOptionalContext calls ValidateWithContext if ctx is set, or Validate otherwise.
@@ -162,6 +183,11 @@ func (r MapRule) ValidateWithContext(ctx context.Context, m interface{}) error {
 }
 
 // Key specifies a map key and the corresponding validation rules.
+//
+// If the key is missing, ErrKeyMissing is reported and the rules are not called. A Required or NotNil
+// rule among them whose message or error was customized with Error or ErrorObject reports its own
+// error instead. A Required nested in When, or a change of the global ErrRequired, does not:
+// the error stays ErrKeyMissing.
 func Key(key interface{}, rules ...Rule) *KeyRules {
 	return &KeyRules{
 		key:   key,

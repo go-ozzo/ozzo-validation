@@ -48,6 +48,15 @@ func TestMap(t *testing.T) {
 		{"t4.4", m1, []*KeyRules{Key("X", Required.Error("is required"))}, "X: is required."},
 		// missing key: a rule that doesn't flag nil as invalid (no Required) still falls back to ErrKeyMissing
 		{"t4.5", m1, []*KeyRules{Key("X", Length(3, 5))}, "X: required key is missing."},
+		// missing key: rules are never called (#222 narrowed); only a customized Required/NotNil error replaces ErrKeyMissing
+		{"t4.6", m1, []*KeyRules{Key("X", Required)}, "X: required key is missing."},
+		{"t4.7", m1, []*KeyRules{Key("X", By(func(v interface{}) error { _ = v.(string); return nil }))}, "X: required key is missing."},
+		{"t4.8", m1, []*KeyRules{Key("X", NotNil.Error("must be set"))}, "X: must be set."},
+		{"t4.9", m1, []*KeyRules{Key("X", Required.ErrorObject(NewError("code", "is mandatory")))}, "X: is mandatory."},
+		{"t4.10", m1, []*KeyRules{Key("X", Length(3, 5), Required.Error("is required"))}, "X: is required."},
+		{"t4.11", m1, []*KeyRules{Key("X", NilOrNotEmpty.Error("is required"))}, "X: required key is missing."},
+		{"t4.12", m1, []*KeyRules{Key("X", Required.When(false).Error("is required"))}, "X: required key is missing."},
+		{"t4.13", m1, []*KeyRules{Key("X", When(true, Required.Error("is required")))}, "X: required key is missing."},
 		// non-string keys
 		{"t5.1", m6, []*KeyRules{Key(11, &validateAbc{}), Key(22, &validateXyz{})}, ""},
 		{"t5.2", m6, []*KeyRules{Key(11, &validateXyz{}), Key(22, &validateAbc{})}, "11: error xyz; 22: error abc."},
@@ -134,5 +143,19 @@ func TestMapWithContext(t *testing.T) {
 	))
 	if assert.NotNil(t, err) {
 		assert.Equal(t, "Extra: key not expected; Value: the length must be between 5 and 10.", err.Error())
+	}
+}
+
+func TestMapMissingKeyErrorCode(t *testing.T) {
+	m := map[string]interface{}{}
+	for _, rules := range [][]Rule{nil, {Required}, {NotNil}, {Length(3, 5)}} {
+		err := Validate(m, Map(Key("X", rules...)))
+		es, ok := err.(Errors)
+		if assert.True(t, ok, "%v", rules) {
+			e, ok := es["X"].(Error)
+			if assert.True(t, ok, "%v", rules) {
+				assert.Equal(t, "validation_key_missing", e.Code(), "%v", rules)
+			}
+		}
 	}
 }

@@ -42,3 +42,9 @@ func (r notNilRule) ErrorObject(err Error) notNilRule {
 	r.err = err
 	return r
 }
+
+// missingKeyError implements missingKeyErrorer: a customized NotNil error replaces ErrKeyMissing
+// for a missing map key.
+func (r notNilRule) missingKeyError() error {
+	return r.err
+}
