@@ -84,7 +84,7 @@ func (r MapRule) Validate(m interface{}) error {
 // resulting error, or nil if the key is valid (or optional and missing).
 func validateMapKey(ctx context.Context, value reflect.Value, kt reflect.Type, kr *KeyRules) error {
 	kv := reflect.ValueOf(kr.key)
-	if !kt.AssignableTo(kv.Type()) {
+	if !kv.Type().AssignableTo(kt) || !kv.Comparable() {
 		return ErrKeyWrongType
 	}
 

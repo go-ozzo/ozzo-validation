@@ -169,3 +169,24 @@ func TestMapMissingKeySkip(t *testing.T) {
 	err = Validate(m, Map(Key("X", Skip.When(false), Required.Error("is required"))))
 	assert.EqualError(t, err, "X: is required.")
 }
+
+func TestMapInterfaceKeys(t *testing.T) {
+	m := map[interface{}]interface{}{"A": "abc", 11: "xyz"}
+
+	assert.NoError(t, Validate(m, Map(Key("A", &validateAbc{}), Key(11, &validateXyz{}))))
+
+	err := Validate(m, Map(Key("A", &validateXyz{}), Key(11, &validateXyz{})))
+	assert.EqualError(t, err, "A: error xyz.")
+
+	err = Validate(m, Map(Key("A")))
+	assert.EqualError(t, err, "11: key not expected.")
+	err = Validate(m, Map(Key("A"), Key("B")))
+	assert.EqualError(t, err, "11: key not expected; B: required key is missing.")
+
+	// keys that cannot be map keys are reported, not passed to MapIndex (which would panic)
+	type holder struct{ v interface{} }
+	err = Validate(m, DynamicMap(Key([]int{1}, Required)))
+	assert.EqualError(t, err, "[1]: key not the correct type.")
+	err = Validate(m, DynamicMap(Key(holder{v: []int{1}}, Required)))
+	assert.EqualError(t, err, "{[1]}: key not the correct type.")
+}
