@@ -2,8 +2,10 @@ package validation
 
 import (
 	"context"
+	"database/sql"
 	"regexp"
 	"testing"
+	"time"
 )
 
 type benchStruct struct {
@@ -120,6 +122,17 @@ func BenchmarkValidateWithConditional(b *testing.B) {
 			Field(&s.Email, When(s.Name != "", Required, Length(5, 255))),
 			Field(&s.Age, When(s.Age > 0, Min(1), Max(150))),
 		)
+	}
+}
+
+func BenchmarkValidateTimeAndValuer(b *testing.B) {
+	created := time.Date(2026, 1, 2, 3, 4, 5, 0, time.UTC)
+	name := sql.NullString{String: "John", Valid: true}
+
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		Validate(created, Required, Min(created.AddDate(-1, 0, 0)))
+		Validate(name, Required, Length(1, 100))
 	}
 }
 

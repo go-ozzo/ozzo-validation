@@ -13,8 +13,7 @@ import (
 )
 
 var (
-	bytesType  = reflect.TypeOf([]byte(nil))
-	valuerType = reflect.TypeOf((*driver.Valuer)(nil)).Elem()
+	bytesType = reflect.TypeOf([]byte(nil))
 )
 
 // EnsureString ensures the given value is a string.
@@ -165,8 +164,8 @@ func Indirect(value interface{}) (interface{}, bool) {
 		}
 	}
 
-	if rv.Type().Implements(valuerType) {
-		return indirectValuer(value.(driver.Valuer))
+	if valuer, ok := value.(driver.Valuer); ok {
+		return indirectValuer(valuer)
 	}
 
 	return value, false
