@@ -710,6 +710,47 @@ You can use error code to programmatically check a validation error or look for 
 If you are developing your own validation rules, you can use `validation.NewError()` to create a validation error which
 implements the aforementioned `Error` interface.
 
+Choose a message catalog for the current request's language and look up the returned error's code. `SetMessage()`
+returns an error with the translated message template while preserving its code and parameters:
+
+```go
+package main
+
+import (
+	"fmt"
+
+	validation "github.com/go-ozzo/ozzo-validation/v4"
+)
+
+func translate(err error, messages map[string]string) error {
+	if ruleErr, ok := err.(validation.Error); ok {
+		if message, ok := messages[ruleErr.Code()]; ok {
+			return ruleErr.SetMessage(message)
+		}
+	}
+	return err
+}
+
+func main() {
+	messages := map[string]string{
+		validation.ErrLengthOutOfRange.Code(): "debe tener entre {{.min}} y {{.max}} caracteres",
+	}
+	err := validation.Validate("go", validation.Length(3, 10))
+	if err != nil {
+		fmt.Println(translate(err, messages))
+	}
+}
+
+// Output: debe tener entre 3 y 10 caracteres
+```
+
+If the catalog has no entry for the code, the helper returns the original error. It also returns `nil` unchanged after
+successful validation. The example translates the returned error without changing the predefined global errors.
+
+This helper handles a single `validation.Error`. Struct and collection validation can return nested `validation.Errors`;
+translate their individual errors instead of asserting that the outer map is a `validation.Error`. For example, use
+[`validation.Flatten()`](#listing-field-errors) to visit each entry and pass its `Err` to the helper.
+
 ### Smaller Binaries: `-tags ozzo_validation_no_template`
 
 Error messages are rendered with `text/template`, which fills in params such as `{{.min}}` and `{{.max}}`.
