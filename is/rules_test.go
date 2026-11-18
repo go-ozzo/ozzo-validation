@@ -94,6 +94,13 @@ func TestAll(t *testing.T) {
 		{"Origin_subdomain", Origin, "https://sub.example.com", "https://", "must be a valid origin"},
 		{"Origin_localhost_port", Origin, "http://localhost:3000", "https://-invalid.com", "must be a valid origin"},
 		{"Origin_max_length", Origin, origin255, origin255 + "a", "must be a valid origin"},
+		{"EnvVar", EnvVar, "PATH", "1VAR", "must be a valid environment variable name"},
+		{"EnvVar_underscore", EnvVar, "_", "MY-VAR", "must be a valid environment variable name"},
+		{"EnvVar_lowercase", EnvVar, "my_var_1", "MY VAR", "must be a valid environment variable name"},
+		{"EnvVar_leading_underscore", EnvVar, "_foo9", "FOO=bar", "must be a valid environment variable name"},
+		{"EnvVar_mixed_case", EnvVar, "Go_Path", "$HOME", "must be a valid environment variable name"},
+		{"EnvVar_non_ascii", EnvVar, "VAR_X", "VARé", "must be a valid environment variable name"},
+		{"EnvVar_trailing_newline", EnvVar, "A1", "PATH\n", "must be a valid environment variable name"},
 	}
 
 	for _, test := range tests {

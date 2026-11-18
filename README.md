@@ -923,6 +923,7 @@ Below is the whole list of the rules provided by the `is` package:
 * `Longitude`: validates if a string or a number is a valid longitude, in the range [-180, 180] (strings in decimal degrees)
 * `SSN`: validates if a string is a social security number (SSN)
 * `Semver`: validates if a string is a valid semantic version
+* `EnvVar`: validates if a string is a valid POSIX environment variable name (letters, digits and `_`, not starting with a digit)
 
 ## Credits
 

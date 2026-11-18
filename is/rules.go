@@ -7,7 +7,6 @@ package is
 
 import (
 	"regexp"
-
 	"unicode"
 
 	"github.com/asaskevich/govalidator"
@@ -129,6 +128,8 @@ var (
 	ErrSemver = validation.NewError("validation_is_semver", "must be a valid semantic version")
 	// ErrOrigin is the error that returns in case of an invalid origin.
 	ErrOrigin = validation.NewError("validation_is_origin", "must be a valid origin")
+	// ErrEnvVar is the error that returns in case of an invalid environment variable name.
+	ErrEnvVar = validation.NewError("validation_is_env_var", "must be a valid environment variable name")
 )
 
 var (
@@ -252,6 +253,9 @@ var (
 	Semver = validation.NewStringRuleWithError(govalidator.IsSemver, ErrSemver)
 	// Origin validates if a string is valid origin
 	Origin = validation.NewStringRuleWithError(isOrigin, ErrOrigin)
+	// EnvVar validates if a string is a valid POSIX environment variable name: ASCII letters, digits and
+	// underscores, not starting with a digit (e.g. "PATH", "_foo", "MY_VAR_1").
+	EnvVar = validation.NewStringRuleWithError(isEnvVar, ErrEnvVar)
 )
 
 var (
@@ -270,6 +274,10 @@ var (
 	// which is.Latitude and is.Longitude used up to v4.4.1. Kept identical so string inputs validate as before.
 	reLatitude  = regexp.MustCompile(`^[-+]?([1-8]?\d(\.\d+)?|90(\.0+)?)$`)
 	reLongitude = regexp.MustCompile(`^[-+]?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?)$`)
+	// reEnvVar matches a POSIX "name" (XBD 3.235): underscores, digits and letters of the portable character set,
+	// not starting with a digit. This is what a shell accepts in NAME=value and $NAME.
+	// See https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap03.html#tag_03_235
+	reEnvVar = regexp.MustCompile(`^[a-zA-Z_][a-zA-Z0-9_]*$`)
 )
 
 func isISBN(value string) bool {
@@ -332,6 +340,10 @@ func isUUIDv7(value string) bool {
 	}
 
 	return true
+}
+
+func isEnvVar(value string) bool {
+	return reEnvVar.MatchString(value)
 }
 
 func isLatitude(value string) bool {
