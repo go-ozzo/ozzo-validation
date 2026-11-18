@@ -94,6 +94,16 @@ func TestAll(t *testing.T) {
 		{"Origin_subdomain", Origin, "https://sub.example.com", "https://", "must be a valid origin"},
 		{"Origin_localhost_port", Origin, "http://localhost:3000", "https://-invalid.com", "must be a valid origin"},
 		{"Origin_max_length", Origin, origin255, origin255 + "a", "must be a valid origin"},
+		{"MIMEType", MIMEType, "text/html", "html", "must be a valid MIME type"},
+		{"MIMEType_suffix", MIMEType, "application/vnd.api+json", "text/", "must be a valid MIME type"},
+		{"MIMEType_param", MIMEType, "text/html; charset=utf-8", "/json", "must be a valid MIME type"},
+		{"MIMEType_quoted_param", MIMEType, "text/plain;charset=\"utf-8\"", "text html", "must be a valid MIME type"},
+		{"MIMEType_uppercase", MIMEType, "TEXT/HTML", "a/b/c", "must be a valid MIME type"},
+		{"MIMEType_wildcard", MIMEType, "*/*", "text/html; charset", "must be a valid MIME type"},
+		{"MIMEType_multi_param", MIMEType, "multipart/form-data; boundary=abc; charset=utf-8", "text/html;;", "must be a valid MIME type"},
+		{"MIMEType_leading_space", MIMEType, "image/png", " text/html", "must be a valid MIME type"},
+		{"MIMEType_trailing_space", MIMEType, "image/svg+xml", "text/html ", "must be a valid MIME type"},
+		{"MIMEType_bad_char", MIMEType, "application/x-www-form-urlencoded", "text/ht(ml", "must be a valid MIME type"},
 	}
 
 	for _, test := range tests {

@@ -6,8 +6,9 @@
 package is
 
 import (
+	"mime"
 	"regexp"
-
+	"strings"
 	"unicode"
 
 	"github.com/asaskevich/govalidator"
@@ -129,6 +130,8 @@ var (
 	ErrSemver = validation.NewError("validation_is_semver", "must be a valid semantic version")
 	// ErrOrigin is the error that returns in case of an invalid origin.
 	ErrOrigin = validation.NewError("validation_is_origin", "must be a valid origin")
+	// ErrMIMEType is the error that returns in case of an invalid MIME type.
+	ErrMIMEType = validation.NewError("validation_is_mime_type", "must be a valid MIME type")
 )
 
 var (
@@ -252,6 +255,10 @@ var (
 	Semver = validation.NewStringRuleWithError(govalidator.IsSemver, ErrSemver)
 	// Origin validates if a string is valid origin
 	Origin = validation.NewStringRuleWithError(isOrigin, ErrOrigin)
+	// MIMEType validates if a string is a valid MIME type (media type), as used in a Content-Type header:
+	// type "/" subtype with optional parameters (e.g. "text/html", "application/vnd.api+json",
+	// "text/html; charset=utf-8"). It checks the syntax only, not whether the type is registered.
+	MIMEType = validation.NewStringRuleWithError(isMIMEType, ErrMIMEType)
 )
 
 var (
@@ -332,6 +339,18 @@ func isUUIDv7(value string) bool {
 	}
 
 	return true
+}
+
+// isMIMEType reports whether value is a type/subtype media type with optional parameters (RFC 2045, RFC 7231).
+// mime.ParseMediaType alone is not enough: it also accepts a bare token such as "attachment" (it parses
+// Content-Disposition too), returns the media type together with an error for malformed parameters, and
+// trims surrounding whitespace.
+func isMIMEType(value string) bool {
+	if strings.TrimSpace(value) != value {
+		return false
+	}
+	mediaType, _, err := mime.ParseMediaType(value)
+	return err == nil && strings.Contains(mediaType, "/")
 }
 
 func isLatitude(value string) bool {
